@@ -17,9 +17,10 @@ type ClusterCreateRequest struct {
 }
 
 type ClusterMetadata struct {
-	Username    string   `json:"username"`
-	Password    string   `json:"password"`
-	Database    string   `json:"database"`
-	RestoreFrom string   `json:"restore_from"`
-	Extensions  []string `json:"extensions"`
+	Username      string   `json:"username"`
+	Password      string   `json:"password"`
+	Database      string   `json:"database"`
+	RestoreFrom   string   `json:"restore_from"`
+	ObjectStoreId string   `json:"ObjectStoreId"`
+	Extensions    []string `json:"extensions"`
 }
