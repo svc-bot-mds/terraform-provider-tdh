@@ -68,11 +68,12 @@ type clusterResourceModel struct {
 
 // clusterMetadataModel maps order item data.
 type clusterMetadataModel struct {
-	Username    types.String `tfsdk:"username"`
-	Password    types.String `tfsdk:"password"`
-	Database    types.String `tfsdk:"database"`
-	RestoreFrom types.String `tfsdk:"restore_from"`
-	Extensions  types.Set    `tfsdk:"extensions"`
+	Username      types.String `tfsdk:"username"`
+	Password      types.String `tfsdk:"password"`
+	Database      types.String `tfsdk:"database"`
+	RestoreFrom   types.String `tfsdk:"restore_from"`
+	Extensions    types.Set    `tfsdk:"extensions"`
+	ObjectStoreId types.String `tfsdk:"object_storage_id"`
 }
 
 type MetadataModel struct {
@@ -113,7 +114,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`." +
+		MarkdownDescription: "Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`, `cluster_metadata`." +
 			"\nChanging only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: " +
 			"`tdh_cluster_network_policies_association`.",
 		Attributes: map[string]schema.Attribute{
@@ -242,6 +243,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 						"metrics_endpoints": types.SetType{
 							ElemType: types.StringType,
 						},
+						"object_storage_id": types.StringType,
 					},
 				},
 				PlanModifiers: []planmodifier.Object{
@@ -265,6 +267,14 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 						MarkdownDescription: "List of metrics endpoints exposed on the instance.",
 						Computed:            true,
 						ElementType:         types.StringType,
+					},
+					"object_storage_id": schema.StringAttribute{
+						MarkdownDescription: "ID of the object storage for backup operations.",
+						Computed:            true,
+						Optional:            true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
 					},
 				},
 			},
@@ -293,6 +303,10 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 						Description: "Set of extensions to be enabled on the cluster.",
 						Optional:    true,
 						ElementType: types.StringType,
+					},
+					"object_storage_id": schema.StringAttribute{
+						MarkdownDescription: "ID of the object storage for backup operations.",
+						Optional:            true,
 					},
 				},
 			},
@@ -345,9 +359,10 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 		Version:           plan.Version.ValueString(),
 		StoragePolicyName: plan.StoragePolicyName.ValueString(),
 		ClusterMetadata: controller.ClusterMetadata{
-			Username: plan.ClusterMetadata.Username.ValueString(),
-			Password: plan.ClusterMetadata.Password.ValueString(),
-			Database: plan.ClusterMetadata.Database.ValueString(),
+			Username:      plan.ClusterMetadata.Username.ValueString(),
+			Password:      plan.ClusterMetadata.Password.ValueString(),
+			Database:      plan.ClusterMetadata.Database.ValueString(),
+			ObjectStoreId: plan.ClusterMetadata.ObjectStoreId.ValueString(),
 		},
 	}
 
