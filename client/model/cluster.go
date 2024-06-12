@@ -27,5 +27,6 @@ type ClusterMetadata struct {
 	ClusterName      string   `json:"clusterName,omitempty" tfsdk:"cluster_name"`
 	ManagerUri       string   `json:"managerUri,omitempty" tfsdk:"manager_uri"`
 	ConnectionUri    string   `json:"connectionUri,omitempty" tfsdk:"connection_uri"`
+	ObjectStoreId    string   `json:"objectStoreId,omitempty" tfsdk:"object_storage_id"`
 	MetricsEndpoints []string `json:"metricsEnpoints" tfsdk:"metrics_endpoints"`
 }
