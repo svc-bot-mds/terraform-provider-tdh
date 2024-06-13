@@ -36,7 +36,7 @@ func TestAccUserResource(t *testing.T) {
  		 									email      = "developer-tf-user@vmware.com"
   											tags       = ["new-user-tf", "create-tf-user"]
   											role_ids   = [for role in data.tdh_roles.all.roles : role.role_id if contains(local.service_roles, role.name)]
-  											policy_ids = [for policy in data.tdh_policies.policies.policies: policy.id if contains(local.policies, policy.name) ]
+  											policy_ids = [for policy in data.tdh_policies.policies.list: policy.id if contains(local.policies, policy.name) ]
   											timeouts   = {
     											create = "1m"
   											}
@@ -80,7 +80,7 @@ data "tdh_users" "users" {
 										resource "tdh_user" "temp" {
  		 									email      = "developer-tf-user@vmware.com"
   											tags       = ["new-user-tf", "update-tf-user"]
-  											policy_ids = [for policy in data.tdh_policies.policies.policies: policy.id if contains(local.policies, policy.name) ]
+  											policy_ids = [for policy in data.tdh_policies.policies.list: policy.id if contains(local.policies, policy.name) ]
   											timeouts   = {
     											create = "1m"
   											}
