@@ -11,9 +11,9 @@ const (
 
 func GetAll() []string {
 	return []string{
-		RABBITMQ,
-		MYSQL,
 		POSTGRES,
+		MYSQL,
+		RABBITMQ,
 		REDIS,
 	}
 }

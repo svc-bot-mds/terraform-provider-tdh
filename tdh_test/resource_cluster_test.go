@@ -25,7 +25,7 @@ func TestAccClusterResource(t *testing.T) {
 					resource "tdh_cluster" "test" {
 er						name               = "testing-from-tf-instance4"
 						service_type       = local.service_type
-						cloud_provider     = local.provider
+						provider_type     = local.provider
 						instance_size      = local.instance_type
 						region             = local.region
 						network_policy_ids = ["646f030f8c626b5a2b59d158"]
@@ -36,7 +36,7 @@ er						name               = "testing-from-tf-instance4"
 						}
 
 						lifecycle {
-							ignore_changes = [instance_size, name, cloud_provider, region, service_type]
+							ignore_changes = [instance_size, name, provider_type, region, service_type]
 						}
 					}
 				`,
@@ -59,7 +59,7 @@ er						name               = "testing-from-tf-instance4"
 					resource "tdh_cluster" "test" {
 						name               = "testing-from-tf-instance4"
 						service_type       = local.service_type
-						cloud_provider     = local.provider
+						provider_type     = local.provider
 						instance_size      = local.instance_type
 						region             = local.region
 						network_policy_ids = ["646f030f8c626b5a2b59d158"]
@@ -70,7 +70,7 @@ er						name               = "testing-from-tf-instance4"
 						}
 
 						lifecycle {
-							ignore_changes = [instance_size, name, cloud_provider, region, service_type]
+							ignore_changes = [instance_size, name, provider_type, region, service_type]
 						}
 }`,
 				Check: resource.ComposeAggregateTestCheckFunc(
