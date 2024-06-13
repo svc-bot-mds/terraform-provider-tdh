@@ -178,3 +178,40 @@ func (s *Service) GetClusterMetaData(id string) (*model.ClusterMetaData, error) 
 
 	return &response, err
 }
+
+func (s *Service) GetClusterCountByService() ([]model.ClusterCountByService, error) {
+	var response []model.ClusterCountByService
+
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, FleetManagement, SRE_cluster, Count)
+
+	_, err := s.Api.Get(&reqUrl, nil, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetResourceByService() ([]model.ResourceByService, error) {
+	var response []model.ResourceByService
+
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, FleetManagement, SRE_cluster, ResourceByService)
+
+	_, err := s.Api.Get(&reqUrl, nil, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetFleetDetails(query *FleetsQuery) (model.Paged[model.SreCustomerInfo], error) {
+	var response model.Paged[model.SreCustomerInfo]
+
+	reqUrl := fmt.Sprintf("%s/%s", s.Endpoint, Mdsfleets)
+
+	_, err := s.Api.Get(&reqUrl, query, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+
+}

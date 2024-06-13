@@ -95,6 +95,25 @@ func (s *Service) GetCertificates(query *CertificateQuery) (model.Paged[model.Ce
 	return response, nil
 }
 
+func (s *Service) GetDnsconfig(query *DNSQuery) (model.Paged[model.Dns], error) {
+	var response model.Paged[model.Dns]
+	if query == nil {
+		return response, fmt.Errorf("query cannot be nil")
+	}
+
+	reqUrl := fmt.Sprintf("%s/%s", s.Endpoint, DNSConfig)
+
+	if query.Size == 0 {
+		query.Size = defaultPage.Size
+	}
+
+	_, err := s.Api.Get(&reqUrl, query, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
 func (s *Service) GetTshirtSizes(query *TshirtSizesQuery) (model.Paged[model.TshirtSize], error) {
 	var response model.Paged[model.TshirtSize]
 	if query == nil {
@@ -144,7 +163,7 @@ func (s *Service) CreateDataPlane(requestBody *DataPlaneCreateRequest) (*model.T
 		return nil, fmt.Errorf("requestBody cannot be nil")
 	}
 	var response model.TaskResponse
-	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, K8sCluster)
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, K8sCluster, DataplaneOnboard)
 
 	_, err := s.Api.Post(&urlPath, requestBody, &response)
 	if err != nil {
@@ -154,8 +173,22 @@ func (s *Service) CreateDataPlane(requestBody *DataPlaneCreateRequest) (*model.T
 	return &response, err
 }
 
+func (s *Service) UpdateDataPlane(id string, requestBody *DataPlaneUpdateRequest) error {
+	if requestBody == nil {
+		return fmt.Errorf("requestBody cannot be nil")
+	}
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, K8sCluster, id)
+
+	_, err := s.Api.Patch(&urlPath, requestBody, nil)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
 func (s *Service) GetDataPlanes(query *DataPlaneQuery) (model.Paged[model.DataPlane], error) {
-	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, K8sCluster)
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Internal, K8sCluster)
 	var response model.Paged[model.DataPlane]
 
 	if query.Size == 0 {
@@ -171,7 +204,7 @@ func (s *Service) GetDataPlanes(query *DataPlaneQuery) (model.Paged[model.DataPl
 }
 
 func (s *Service) GetDataPlaneById(id string) (model.DataPlane, error) {
-	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, K8sCluster, id)
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, K8sCluster, id)
 	var response model.DataPlane
 
 	_, err := s.Api.Get(&urlPath, nil, &response)
@@ -184,7 +217,7 @@ func (s *Service) GetDataPlaneById(id string) (model.DataPlane, error) {
 
 // DeleteDataPlane - Submits a request to delete dataplane
 func (s *Service) DeleteDataPlane(id string) error {
-	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, K8sCluster, id)
+	urlPath := fmt.Sprintf("%s/%s/%s/%s/%s", s.Endpoint, Internal, K8sCluster, DataplaneOnboard, id)
 
 	_, err := s.Api.Delete(&urlPath, nil, nil)
 	if err != nil {
@@ -239,7 +272,7 @@ func (s *Service) CreateCertificate(requestBody *CertificateCreateRequest) (*mod
 		return nil, fmt.Errorf("requestBody cannot be nil")
 	}
 	var response model.Certificate
-	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Certificate)
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Internal, Certificate)
 
 	_, err := s.Api.Post(&urlPath, requestBody, &response)
 	if err != nil {
@@ -359,4 +392,28 @@ func (s *Service) DeleteObjectStorage(id string) error {
 	}
 
 	return err
+}
+
+func (s *Service) GetOrgHealthDetails() (model.OrgHealthDetails, error) {
+	var response model.OrgHealthDetails
+
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, FleetMangement, OrgHealth, Details)
+
+	_, err := s.Api.Get(&reqUrl, nil, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetDataplaneCounts() (model.DataplneCounts, error) {
+	var response model.DataplneCounts
+
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, FleetMangement, Dataplane, Count)
+
+	_, err := s.Api.Get(&reqUrl, nil, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
 }

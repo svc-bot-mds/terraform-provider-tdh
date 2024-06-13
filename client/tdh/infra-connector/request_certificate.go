@@ -7,6 +7,7 @@ type CertificateCreateRequest struct {
 	Certificate    string `json:"certificate"`
 	CertificateCA  string `json:"certificateCA"`
 	CertificateKey string `json:"certificateKey"`
+	Shared         bool   `json:"shared"`
 }
 
 type CertificateUpdateRequest struct {

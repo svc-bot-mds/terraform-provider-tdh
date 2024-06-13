@@ -8,6 +8,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/service_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/SRE"
 	"os"
 	"strings"
 
@@ -299,9 +300,11 @@ func (p *tdhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewServiceRolesDatasource,
 		NewCloudAccountsDatasource,
 		NewProviderTypesDataSource,
-		NewCloudProviderRegionsDataSource,
-		NewTshirtSizeDatasource,
-		NewCertificatesDatasource,
+		SRE.NewCertificatesDatasource,
+		SRE.NewDnsDatasource,
+		SRE.NewSmtpDatasource,
+		SRE.NewFleetHealthDatasource,
+		SRE.NewDataplaneDatasource,
 		NewObjectStorageDatasource,
 		NewTasksDataSource,
 	}
@@ -316,9 +319,9 @@ func (p *tdhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewServiceAccountResource,
 		NewPolicyResource,
 		NewNetworkPolicyResource,
-		NewByocDataPlaneResourceResource,
+		NewDataPlaneResource,
 		NewCloudAccountResource,
-		NewCertificateResource,
+		SRE.NewCertificateResource,
 		NewObjectStorageResource,
 	}
 }

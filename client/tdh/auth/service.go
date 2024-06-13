@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/oauth_type"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/core"
 )
 
@@ -88,4 +89,28 @@ func (s *Service) processAuthResponse(response *TokenResponse) error {
 	}
 
 	return nil
+}
+
+func (s *Service) GetSmtpDetails() (model.Smtp, error) {
+	var response model.Smtp
+
+	reqUrl := fmt.Sprintf("%s/%s", s.Endpoint, SMTP)
+
+	_, err := s.Api.Get(&reqUrl, nil, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) UpdateSmtpDetails(requestBody SmtpRequest) (model.Smtp, error) {
+	var response model.Smtp
+
+	reqUrl := fmt.Sprintf("%s/%s", s.Endpoint, SMTP)
+
+	_, err := s.Api.Patch(&reqUrl, requestBody, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
 }
