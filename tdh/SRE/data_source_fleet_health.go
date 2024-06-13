@@ -281,7 +281,7 @@ func (d *fleetHealthDatasource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	clusterCount, err := d.client.Controller.GetCountercultureService()
+	clusterCount, err := d.client.Controller.GetClusterCountByService()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read TDH Cluster Count Details",

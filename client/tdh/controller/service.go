@@ -179,7 +179,7 @@ func (s *Service) GetClusterMetaData(id string) (*model.ClusterMetaData, error) 
 	return &response, err
 }
 
-func (s *Service) GetCountercultureService() ([]model.ClusterCountByService, error) {
+func (s *Service) GetClusterCountByService() ([]model.ClusterCountByService, error) {
 	var response []model.ClusterCountByService
 
 	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, FleetManagement, SRE_cluster, Count)
