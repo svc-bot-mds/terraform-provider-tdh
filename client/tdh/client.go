@@ -9,6 +9,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/service-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/task"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/upgrade-service"
 	"net/http"
 	"strings"
@@ -27,6 +28,7 @@ type Client struct {
 	CustomerMetadata *customer_metadata.Service
 	ServiceMetadata  *service_metadata.Service
 	UpgradeService   *upgrade_service.Service
+	TaskService      *task.Service
 }
 
 // NewClient -
@@ -63,6 +65,7 @@ func prepareClient(host *string, root *core.Root) *Client {
 		CustomerMetadata: customer_metadata.NewService(host, root),
 		ServiceMetadata:  service_metadata.NewService(host, root),
 		UpgradeService:   upgrade_service.NewService(host, root),
+		TaskService:      task.NewService(host, root),
 	}
 }
 
