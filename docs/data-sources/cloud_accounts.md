@@ -3,12 +3,12 @@
 page_title: "tdh_cloud_accounts Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch all cloud accounts on TDH for BYOC.
+  Used to fetch all cloud accounts on TDH.
 ---
 
 # tdh_cloud_accounts (Data Source)
 
-Used to fetch all cloud accounts on TDH for BYOC.
+Used to fetch all cloud accounts on TDH.
 
 ## Example Usage
 

@@ -300,8 +300,6 @@ func (p *tdhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewServiceRolesDatasource,
 		NewCloudAccountsDatasource,
 		NewProviderTypesDataSource,
-		NewCloudProviderRegionsDataSource,
-		NewTshirtSizeDatasource,
 		SRE.NewCertificatesDatasource,
 		SRE.NewDnsDatasource,
 		SRE.NewSmtpDatasource,
