@@ -1,4 +1,4 @@
-package tdh
+package SRE
 
 import (
 	"context"
@@ -137,9 +137,10 @@ func (r *certificateResource) Create(ctx context.Context, req resource.CreateReq
 		Certificate:    plan.Certificate.ValueString(),
 		CertificateCA:  plan.CertificateCA.ValueString(),
 		CertificateKey: plan.CertificateKey.ValueString(),
+		Shared:         true,
 	}
 
-	tflog.Info(ctx, "req param", map[string]interface{}{"reeed": certificateRequest})
+	//tflog.Info(ctx, "req param", map[string]interface{}{"requestbody": certificateRequest})
 	certificate, err := r.client.InfraConnector.CreateCertificate(certificateRequest)
 	if err != nil {
 		apiErr := core.ApiError{}
@@ -171,10 +172,17 @@ func (r *certificateResource) Update(ctx context.Context, req resource.UpdateReq
 	tflog.Info(ctx, "INIT__Update")
 
 	// Retrieve values from plan
-	var state CertificateResourceModel
+	var state, plan CertificateResourceModel
 	diags := req.Plan.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if msg := r.validateUpdateRequest(&state, &plan); msg != "OK" {
+		resp.Diagnostics.AddError(
+			"Certificate Update is not allowed", msg,
+		)
 		return
 	}
 
@@ -284,4 +292,12 @@ func saveFromCertificateCreateResponse(state *CertificateResourceModel,
 	state.ExpirationTime = types.StringValue(certificateResponse.ExpiryTime)
 	state.CreatedBy = types.StringValue(certificateResponse.CreatedBy)
 	return 0
+}
+
+func (r *certificateResource) validateUpdateRequest(state *CertificateResourceModel, plan *CertificateResourceModel) string {
+	if state.Name != plan.Name || state.DomainName != plan.DomainName || state.CertificateKey != plan.CertificateKey ||
+		state.CertificateCA != plan.CertificateCA || state.Certificate != plan.Certificate || state.ProviderType != plan.ProviderType {
+		return `Updating certificates is not allowed`
+	}
+	return "OK"
 }
