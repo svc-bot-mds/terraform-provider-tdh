@@ -9,7 +9,6 @@ resource "tdh_cluster" "example" {
   dedicated          = false
   shared             = false
 
-  // if cluster getting self hosted via byoc
   data_plane_id = "dataplane id"
   // non editable fields
   lifecycle {
