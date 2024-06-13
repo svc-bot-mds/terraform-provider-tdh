@@ -308,6 +308,7 @@ func (p *tdhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		SRE.NewFleetHealthDatasource,
 		SRE.NewDataplaneDatasource,
 		NewObjectStorageDatasource,
+		NewTasksDataSource,
 	}
 }
 
