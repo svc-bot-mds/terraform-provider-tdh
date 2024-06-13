@@ -17,8 +17,8 @@ func TestMdsPoliciesDataSource(t *testing.T) {
 }`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.tdh_policies.policies", "id"),
-					resource.TestCheckResourceAttr("data.tdh_policies.policies", "policies.#", "27"),
-					resource.TestCheckResourceAttr("data.tdh_policies.policies", "policies.0.name", "test-tfddwqe"),
+					resource.TestCheckResourceAttr("data.tdh_policies.policies", "list.#", "27"),
+					resource.TestCheckResourceAttr("data.tdh_policies.policies", "list.0.name", "test-tfddwqe"),
 					resource.TestCheckResourceAttr("data.tdh_policies.policies", "id", common.DataSource+common.PoliciesId),
 				),
 			},

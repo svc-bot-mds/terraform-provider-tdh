@@ -21,10 +21,7 @@ func main() {
 		return
 	}
 
-	query := customer_metadata.PoliciesQuery{
-		IdentityType: "LOCAL_USER_ACCOUNT",
-	}
-	response, err := client.CustomerMetadata.GetPolicies(&query)
+	response, err := client.CustomerMetadata.GetLocalUsers(&customer_metadata.LocalUsersQuery{})
 
 	fmt.Println(response)
 }
