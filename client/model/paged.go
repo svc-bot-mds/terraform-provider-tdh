@@ -13,8 +13,9 @@ type PageInfo struct {
 }
 
 type PageQuery struct {
-	Index int `schema:"page"`
-	Size  int `schema:"size"`
+	Index int    `schema:"page"`
+	Size  int    `schema:"size"`
+	Sort  string `schema:"sort,omitempty"`
 }
 
 func (p *Paged[T]) Get() *[]T {
