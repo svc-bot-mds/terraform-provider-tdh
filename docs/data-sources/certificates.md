@@ -3,12 +3,12 @@
 page_title: "tdh_certificates Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch all certificates on TDH for BYOC.
+  Used to fetch all certificates on TDH for SRE
 ---
 
 # tdh_certificates (Data Source)
 
-Used to fetch all certificates on TDH for BYOC.
+Used to fetch all certificates on TDH for SRE
 
 
 
@@ -25,10 +25,14 @@ Used to fetch all certificates on TDH for BYOC.
 
 Read-Only:
 
+- `created_by` (String) Certifacte Created By
+- `dataplane_count` (Number) Number of dataplane using the given certificate
 - `domain_name` (String) Domain name of the certificate
 - `expiry_time` (String) Expiry Time of the certificate
 - `id` (String) ID of the certificate.
 - `name` (String) Name of the certificate.
+- `organization` (String) Org name on which the certificate was created
 - `provider_type` (String) Provider type of the certificate
+- `status` (String) Status of the certificate
 
 
