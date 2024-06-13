@@ -47,7 +47,7 @@ type clusterResourceModel struct {
 	OrgId             types.String          `tfsdk:"org_id"`
 	Name              types.String          `tfsdk:"name"`
 	ServiceType       types.String          `tfsdk:"service_type"`
-	Provider          types.String          `tfsdk:"cloud_provider"`
+	Provider          types.String          `tfsdk:"provider_type"`
 	InstanceSize      types.String          `tfsdk:"instance_size"`
 	Region            types.String          `tfsdk:"region"`
 	Tags              types.Set             `tfsdk:"tags"`
@@ -140,16 +140,16 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"service_type": schema.StringAttribute{
-				MarkdownDescription: fmt.Sprintf("Type of TDH Cluster to be created. Supported values: %s .\n Default is `RABBITMQ`.", supportedServiceTypesMarkdown()),
+				MarkdownDescription: fmt.Sprintf("Type of TDH Cluster to be created. Supported values: %s .\n Default is `POSTGRES`.", supportedServiceTypesMarkdown()),
 				Optional:            true,
 				Computed:            true,
-				Default:             stringdefault.StaticString(service_type.RABBITMQ),
+				Default:             stringdefault.StaticString(service_type.POSTGRES),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"cloud_provider": schema.StringAttribute{
-				MarkdownDescription: "Short-code of provider to use for data-plane. Ex: `aws`, `gcp` .",
+			"provider_type": schema.StringAttribute{
+				MarkdownDescription: "Short-code of provider to use for data-plane. Ex: `tkgs`, `tkgm` . Complete list can be seen using datasource `tdh_provider_types`.",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -164,7 +164,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"region": schema.StringAttribute{
-				MarkdownDescription: "Region of data plane. Ex: `eu-west-2`, `us-east-2` etc.",
+				MarkdownDescription: "Region of data plane. Supported values can be seen using datasource `tdh_regions`.",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -200,12 +200,8 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				Computed:    true,
 			},
 			"data_plane_id": schema.StringAttribute{
-				Description: "ID of the data-plane where the cluster is running. It's a required field when we create a cluster which is self-hosted via BYO Cloud",
-				Computed:    true,
-				Optional:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				Description: "ID of the data-plane where the cluster is running.",
+				Required:    true,
 			},
 			"last_updated": schema.StringAttribute{
 				Description: "Time when the cluster was last modified.",
@@ -234,7 +230,6 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			},
 			"metadata": schema.SingleNestedAttribute{
 				Description: "Additional info of the cluster.",
-
 				CustomType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"cluster_name":   types.StringType,
@@ -496,7 +491,7 @@ func (r *clusterResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	// Detect version change
-	if plan.Upgrade.TargetVersion != state.Version {
+	if plan.Upgrade != nil && plan.Upgrade.TargetVersion != state.Version {
 		tflog.Info(ctx, "Version change detected", map[string]interface{}{
 			"old_version": state.Version.ValueString(),
 			"new_version": plan.Upgrade.TargetVersion.ValueString(),

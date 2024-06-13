@@ -25,7 +25,7 @@ var (
 
 type regionsDataSourceModel struct {
 	Cpu                types.String   `tfsdk:"cpu"`
-	Provider           types.String   `tfsdk:"cloud_provider"`
+	Provider           types.String   `tfsdk:"provider_type"`
 	Memory             types.String   `tfsdk:"memory"`
 	Storage            types.String   `tfsdk:"storage"`
 	NodeCount          types.String   `tfsdk:"node_count"`
@@ -60,7 +60,7 @@ func (d *regionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 			"## Note:\n" +
 			"- At a time, either `instance_size` or all of (`cpu`, `memory`, `storage`, `node_count`) can be passed.",
 		Attributes: map[string]schema.Attribute{
-			"cloud_provider": schema.StringAttribute{
+			"provider_type": schema.StringAttribute{
 				MarkdownDescription: "Shortname of cloud provider platform where data-plane lives. Ex: `aws`, `gcp` .",
 				Required:            true,
 			},
