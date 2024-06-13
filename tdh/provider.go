@@ -303,6 +303,7 @@ func (p *tdhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewTshirtSizeDatasource,
 		NewCertificatesDatasource,
 		NewObjectStorageDatasource,
+		NewTasksDataSource,
 	}
 }
 

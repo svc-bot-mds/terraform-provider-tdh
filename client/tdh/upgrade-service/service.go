@@ -6,13 +6,6 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/core"
 )
 
-var (
-	defaultPage = &model.PageQuery{
-		Index: 0,
-		Size:  100,
-	}
-)
-
 const (
 	EndPoint = "upgradeservice"
 )
