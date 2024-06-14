@@ -12,3 +12,10 @@ type EligibleSharedDataPlaneQuery struct {
 	InfraResourceType string `schema:"infraResourceType"`
 	model.PageQuery
 }
+
+type EligibleDedicatedDataPlaneQuery struct {
+	Provider          string `schema:"provider"`
+	InfraResourceType string `schema:"infraResourceType"`
+	OrgId             string `schema:"orgId"`
+	model.PageQuery
+}

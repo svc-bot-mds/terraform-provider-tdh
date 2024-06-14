@@ -13,18 +13,19 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &eligibleSharedDataplanesDatasource{}
-	_ datasource.DataSourceWithConfigure = &eligibleSharedDataplanesDatasource{}
+	_ datasource.DataSource              = &eligibleDedicatedDataplanesDatasource{}
+	_ datasource.DataSourceWithConfigure = &eligibleDedicatedDataplanesDatasource{}
 )
 
 // EligibleDataplanesDatasourceModel maps the data source schema data.
-type EligibleSharedDataplanesDatasourceModel struct {
-	Id             types.String           `tfsdk:"id"`
-	Provider       types.String           `tfsdk:"provider_name"`
-	DataplaneModel []SharedDataplaneModel `tfsdk:"dataplanes"`
+type EligibleDedicatedDataplanesDatasourceModel struct {
+	Id             types.String     `tfsdk:"id"`
+	Provider       types.String     `tfsdk:"provider_name"`
+	OrgId          types.String     `tfsdk:"org_id"`
+	DataplaneModel []DataplaneModel `tfsdk:"dataplanes"`
 }
 
-type SharedDataplaneModel struct {
+type DataplaneModel struct {
 	ID                  types.String `tfsdk:"id"`
 	DataplaneName       types.String `tfsdk:"dataplane_name"`
 	StoragePolicies     types.Set    `tfsdk:"storage_policies"`
@@ -32,24 +33,24 @@ type SharedDataplaneModel struct {
 }
 
 // NewDataplaneDatasource is a helper function to simplify the provider implementation.
-func NewEligibleSharedDataplanesDatasource() datasource.DataSource {
-	return &eligibleSharedDataplanesDatasource{}
+func NewEligibleDedicatedDataplanesDatasource() datasource.DataSource {
+	return &eligibleDedicatedDataplanesDatasource{}
 }
 
-// eligibleSharedDataplanesDatasource is the data source implementation.
-type eligibleSharedDataplanesDatasource struct {
+// eligibleDedicatedDataplanesDatasource is the data source implementation.
+type eligibleDedicatedDataplanesDatasource struct {
 	client *tdh.Client
 }
 
 // Metadata returns the data source type name.
-func (d *eligibleSharedDataplanesDatasource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_eligible_shared_dataplanes"
+func (d *eligibleDedicatedDataplanesDatasource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_eligible_dedicated_dataplanes"
 }
 
 // Schema defines the schema for the data source.
-func (d *eligibleSharedDataplanesDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *eligibleDedicatedDataplanesDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Used to fetch all Shared Dataplanes by passing the Provider input .The response will have Storage Policies which can be used while creating cluster",
+		Description: "Used to fetch all Dedicated Dataplanes by passing the Provider  and OrgId input .The response will have Storage Policies which can be used while creating cluster",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
@@ -58,6 +59,10 @@ func (d *eligibleSharedDataplanesDatasource) Schema(_ context.Context, _ datasou
 
 			"provider_name": schema.StringAttribute{
 				Description: "Provider Name",
+				Required:    true,
+			},
+			"org_id": schema.StringAttribute{
+				Description: "Org Id",
 				Required:    true,
 			},
 			"dataplanes": schema.ListNestedAttribute{
@@ -90,21 +95,22 @@ func (d *eligibleSharedDataplanesDatasource) Schema(_ context.Context, _ datasou
 }
 
 // Read refreshes the Terraform state with the latest data.
-func (d *eligibleSharedDataplanesDatasource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state EligibleSharedDataplanesDatasourceModel
-	var dataplaneList []SharedDataplaneModel
+func (d *eligibleDedicatedDataplanesDatasource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state EligibleDedicatedDataplanesDatasourceModel
+	var dedicatedDataplaneList []DataplaneModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 
-	query := &infra_connector.EligibleSharedDataPlaneQuery{
-		InfraResourceType: "SHARED",
+	query := &infra_connector.EligibleDedicatedDataPlaneQuery{
+		InfraResourceType: "DEDICATED",
 		Provider:          state.Provider.ValueString(),
+		OrgId:             state.OrgId.ValueString(),
 	}
 
-	dataplanes, err := d.client.InfraConnector.GetEligibleSharedDataPlanes(query)
+	dataplanes, err := d.client.InfraConnector.GetEligibleDedicatedDataPlanes(query)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read TDH Eligible Shared Dataplanes for "+state.Provider.ValueString(),
+			"Unable to Read TDH Eligible Dedicated Dataplanes for "+state.Provider.ValueString(),
 			err.Error(),
 		)
 		return
@@ -113,7 +119,7 @@ func (d *eligibleSharedDataplanesDatasource) Read(ctx context.Context, req datas
 	if dataplanes.Page.TotalPages > 1 {
 		for i := 1; i <= dataplanes.Page.TotalPages; i++ {
 			query.PageQuery.Index = i - 1
-			totalCloudAccounts, err := d.client.InfraConnector.GetEligibleSharedDataPlanes(query)
+			totalCloudAccounts, err := d.client.InfraConnector.GetEligibleDedicatedDataPlanes(query)
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Unable to Read TDH Eligible Shared Dataplanes for "+state.Provider.ValueString(),
@@ -127,12 +133,12 @@ func (d *eligibleSharedDataplanesDatasource) Read(ctx context.Context, req datas
 				if err {
 					return
 				}
-				dataplaneList = append(dataplaneList, dataplane)
+				dedicatedDataplaneList = append(dedicatedDataplaneList, dataplane)
 			}
 		}
 
-		tflog.Debug(ctx, "dp dto", map[string]interface{}{"dto": dataplaneList})
-		state.DataplaneModel = append(state.DataplaneModel, dataplaneList...)
+		tflog.Debug(ctx, "dp dto", map[string]interface{}{"dto": dedicatedDataplaneList})
+		state.DataplaneModel = append(state.DataplaneModel, dedicatedDataplaneList...)
 	} else {
 		for _, dpDto := range *dataplanes.Get() {
 			tflog.Info(ctx, "Converting dataplane dto")
@@ -153,22 +159,22 @@ func (d *eligibleSharedDataplanesDatasource) Read(ctx context.Context, req datas
 	}
 }
 
-func (d *eligibleSharedDataplanesDatasource) convertToTfModel(ctx context.Context, dpDto model.EligibleSharedDataPlane, resp *datasource.ReadResponse) (SharedDataplaneModel, bool) {
-	dataplane := SharedDataplaneModel{
+func (d *eligibleDedicatedDataplanesDatasource) convertToTfModel(ctx context.Context, dpDto model.EligibleSharedDataPlane, resp *datasource.ReadResponse) (DataplaneModel, bool) {
+	dataplane := DataplaneModel{
 		ID:                  types.StringValue(dpDto.Id),
 		DataplaneName:       types.StringValue(dpDto.DataplaneName),
 		BackupStoragePolicy: types.StringValue(dpDto.BackupStoragePolicy),
 	}
 	list, diags := types.SetValueFrom(ctx, types.StringType, dpDto.StoragePolicies)
 	if resp.Diagnostics.Append(diags...); resp.Diagnostics.HasError() {
-		return SharedDataplaneModel{}, true
+		return DataplaneModel{}, true
 	}
 	dataplane.StoragePolicies = list
 	return dataplane, false
 }
 
 // Configure adds the provider configured client to the data source.
-func (d *eligibleSharedDataplanesDatasource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+func (d *eligibleDedicatedDataplanesDatasource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

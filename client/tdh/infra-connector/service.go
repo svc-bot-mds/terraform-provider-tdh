@@ -219,6 +219,22 @@ func (s *Service) GetEligibleSharedDataPlanes(query *EligibleSharedDataPlaneQuer
 	return response, nil
 }
 
+func (s *Service) GetEligibleDedicatedDataPlanes(query *EligibleDedicatedDataPlaneQuery) (model.Paged[model.EligibleSharedDataPlane], error) {
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, K8sCluster, Eligible)
+	var response model.Paged[model.EligibleSharedDataPlane]
+
+	if query.Size == 0 {
+		query.Size = 500
+	}
+
+	_, err := s.Api.Get(&urlPath, query, &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, nil
+}
+
 func (s *Service) GetDataPlaneById(id string) (model.DataPlane, error) {
 	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, K8sCluster, id)
 	var response model.DataPlane
