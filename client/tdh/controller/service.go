@@ -46,7 +46,6 @@ func (s *Service) GetClusters(query *ClustersQuery) (model.Paged[model.Cluster],
 	return response, nil
 }
 
-// https://tdh-cp-vh.tdh.kr.com/api/controller/backup?serviceType=POSTGRES&page=0&size=2000
 // GetBackups - Returns all the Backups
 func (s *Service) GetBackups(query BackupQuery) (model.Paged[model.ClusterBackup], error) {
 
