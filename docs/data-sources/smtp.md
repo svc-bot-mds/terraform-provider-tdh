@@ -3,12 +3,12 @@
 page_title: "tdh_smtp Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch all roles applicable for services on TDH.
+  Used to fetch SMTP details.
 ---
 
 # tdh_smtp (Data Source)
 
-Used to fetch all roles applicable for services on TDH.
+Used to fetch SMTP details.
 
 
 

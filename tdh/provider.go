@@ -322,6 +322,7 @@ func (p *tdhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewDataPlaneResource,
 		NewCloudAccountResource,
 		SRE.NewCertificateResource,
+		SRE.NewSmtpResource,
 		NewObjectStorageResource,
 	}
 }

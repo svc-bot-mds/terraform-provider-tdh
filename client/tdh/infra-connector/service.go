@@ -300,7 +300,7 @@ func (s *Service) UpdateCertificate(id string, requestBody *CertificateUpdateReq
 func (s *Service) GetCertificate(id string) (model.Certificate, error) {
 	var response model.Certificate
 
-	reqUrl := fmt.Sprintf("%s/%s/%s", s.Endpoint, Certificate, id)
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, Certificate, id)
 
 	_, err := s.Api.Get(&reqUrl, nil, &response)
 	if err != nil {
@@ -311,7 +311,7 @@ func (s *Service) GetCertificate(id string) (model.Certificate, error) {
 
 // DeleteCertificate - Submits a request to delete certificate
 func (s *Service) DeleteCertificate(id string) error {
-	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Certificate, id)
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, Certificate, id)
 
 	_, err := s.Api.Delete(&urlPath, nil, nil)
 	if err != nil {
