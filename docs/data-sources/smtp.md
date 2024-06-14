@@ -3,19 +3,12 @@
 page_title: "tdh_smtp Data Source - tdh"
 subcategory: ""
 description: |-
-
   Used to fetch SMTP details.
-=======
-  Used to fetch SMTP details  on TDH.
 ---
 
 # tdh_smtp (Data Source)
 
-
 Used to fetch SMTP details.
-=======
-Used to fetch SMTP details  on TDH.
-
 
 
 
