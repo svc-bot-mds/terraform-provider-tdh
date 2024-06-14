@@ -29,8 +29,10 @@ Used to fetch all Helm Releases for the Dataplane.
 
 Read-Only:
 
+
 - `is_available` (Boolean) Denotes if the Kubernetes Cluster is enabled/not . Use the Kubernetes Cluster with the flag set to true while onboarding the dataplane for non control plane on data plane
 - `is_cp_present` (Boolean) Denotes if Control Plane is available . Use the Kubernetes Cluster with the flag set to true while Onboard Data Plane on TDH Control Plan
+
 - `name` (String) Name of the Kubernetes Cluster
 
 
