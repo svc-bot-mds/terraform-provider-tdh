@@ -1,3 +1,9 @@
+
+// to get the Storage Policies and Eligible Dataplane for the given Provider
+data "tdh_eligible_shared_dataplanes" "all"{
+  provider_name= "tkgs"
+}
+
 resource "tdh_cluster" "example" {
   name               = "test-terraform"
   cloud_provider     = "aws"

@@ -18,4 +18,5 @@ const (
 	Count            = "count"
 	Clusters         = "clusters"
 	DataplaneOnboard = "dataplane-onboard"
+	Eligible         = "eligible"
 )

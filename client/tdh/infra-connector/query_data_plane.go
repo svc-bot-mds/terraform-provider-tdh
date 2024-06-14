@@ -6,3 +6,9 @@ type DataPlaneQuery struct {
 	Name string `schema:"dataplaneName,omitempty"`
 	model.PageQuery
 }
+
+type EligibleSharedDataPlaneQuery struct {
+	Provider          string `schema:"provider"`
+	InfraResourceType string `schema:"infraResourceType"`
+	model.PageQuery
+}
