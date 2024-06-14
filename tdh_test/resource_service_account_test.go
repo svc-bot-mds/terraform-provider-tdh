@@ -27,7 +27,7 @@ func TestAccServiceAccountResource(t *testing.T) {
 										resource "tdh_service_account" "svc_account" {
   											name = "test-svc-tf-create-sa"
   											tags = ["create-svc-acct","from-tf"]
-  											policy_ids =  [for policy in data.tdh_policies.policies.policies: policy.id if contains(local.policies, policy.name) ]
+  											policy_ids =  [for policy in data.tdh_policies.policies.list: policy.id if contains(local.policies, policy.name) ]
 
   											// non editable fields
   											lifecycle {
@@ -51,7 +51,7 @@ data "tdh_service_accounts" "service_accounts" {
 										resource "tdh_service_account" "svc_account" {
   											name = "test-svc-tf-create-sa"
   											tags = ["update-svc-acct"]
-  											policy_ids =  [for policy in data.tdh_policies.policies.policies: policy.id if contains(local.policies, policy.name) ]
+  											policy_ids =  [for policy in data.tdh_policies.policies.list: policy.id if contains(local.policies, policy.name) ]
 
   											// non editable fields
   											lifecycle {

@@ -25,7 +25,7 @@ resource "tdh_cluster" "example" {
   tags               = ["tdh-tf", "example"]
   dedicated          = false
   shared             = false
-  
+
   data_plane_id = "dataplane id"
   // non editable fields
   lifecycle {

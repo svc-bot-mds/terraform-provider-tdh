@@ -2,11 +2,13 @@ package tdh
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/policy_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	customer_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
@@ -19,9 +21,11 @@ var (
 
 // instanceTypesDataSourceModel maps the data source schema data.
 type mdsPoliciesDatasourceModel struct {
-	Policies []mdsPoliciesModel `tfsdk:"policies"`
-	Id       types.String       `tfsdk:"id"`
-	Names    types.List         `tfsdk:"names"`
+	List         []mdsPoliciesModel `tfsdk:"list"`
+	Id           types.String       `tfsdk:"id"`
+	Names        types.List         `tfsdk:"names"`
+	Type         types.String       `tfsdk:"type"`
+	IdentityType types.String       `tfsdk:"identity_type"`
 }
 
 // instanceTypesModel maps coffees schema data.
@@ -55,11 +59,31 @@ func (d *mdsPoliciesDatasource) Schema(_ context.Context, _ datasource.SchemaReq
 				MarkdownDescription: "The testing framework requires an id attribute to be present in every data source and resource.",
 			},
 			"names": schema.ListAttribute{
-				MarkdownDescription: "Names to search policies by. Ex: `[\"read-only-rmq\"]` .",
+				MarkdownDescription: "Names to search policies by. Ex: `[\"read-only-postgres\"]` .",
 				ElementType:         types.StringType,
 				Optional:            true,
 			},
-			"policies": schema.ListNestedAttribute{
+			"type": schema.StringAttribute{
+				MarkdownDescription: "Type of policies to list. Ex: `POSTGRES`, `MYSQL` etc.",
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("POSTGRES", "MYSQL", "RABBITMQ", "REDIS"),
+					stringvalidator.ConflictsWith(path.Expressions{
+						path.MatchRoot("identity_type"),
+					}...),
+				},
+			},
+			"identity_type": schema.StringAttribute{
+				MarkdownDescription: "Type of identity, to list policies supported only for that type.",
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("USER_ACCOUNT", "LOCAL_USER_ACCOUNT"),
+					stringvalidator.ConflictsWith(path.Expressions{
+						path.MatchRoot("identity_type"),
+					}...),
+				},
+			},
+			"list": schema.ListNestedAttribute{
 				Description: "List of fetched policies.",
 				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
@@ -86,12 +110,18 @@ func (d *mdsPoliciesDatasource) Read(ctx context.Context, req datasource.ReadReq
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 
-	query := &customer_metadata.PoliciesQuery{
-		//TODO take policy type as input for type of service
-		Type: policy_type.RABBITMQ,
+	query := &customer_metadata.PoliciesQuery{}
+	if !state.Type.IsNull() {
+		query.Type = state.Type.ValueString()
 	}
+	if !state.IdentityType.IsNull() {
+		query.IdentityType = state.IdentityType.ValueString()
+	}
+	tflog.Info(ctx, "policies-query", map[string]interface{}{
+		"query": query,
+	})
 
-	nwPolicies, err := d.client.CustomerMetadata.GetPolicies(query)
+	response, err := d.client.CustomerMetadata.GetPolicies(query)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read TDH Policies",
@@ -100,8 +130,8 @@ func (d *mdsPoliciesDatasource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	if nwPolicies.Page.TotalPages > 1 {
-		for i := 1; i <= nwPolicies.Page.TotalPages; i++ {
+	if response.Page.TotalPages > 1 {
+		for i := 1; i <= response.Page.TotalPages; i++ {
 			query.PageQuery.Index = i - 1
 			totalPolicies, err := d.client.CustomerMetadata.GetPolicies(query)
 			if err != nil {
@@ -121,16 +151,16 @@ func (d *mdsPoliciesDatasource) Read(ctx context.Context, req datasource.ReadReq
 			}
 		}
 
-		tflog.Debug(ctx, "rabbitmq dto", map[string]interface{}{"dto": policies})
-		state.Policies = append(state.Policies, policies...)
+		tflog.Debug(ctx, "READING dto", map[string]interface{}{"dto": policies})
+		state.List = append(state.List, policies...)
 	} else {
-		for _, mdsPolicyDTO := range *nwPolicies.Get() {
+		for _, mdsPolicyDTO := range *response.Get() {
 			policy := mdsPoliciesModel{
 				ID:   types.StringValue(mdsPolicyDTO.ID),
 				Name: types.StringValue(mdsPolicyDTO.Name),
 			}
-			tflog.Debug(ctx, "rabbitmq dto", map[string]interface{}{"dto": policy})
-			state.Policies = append(state.Policies, policy)
+			tflog.Debug(ctx, "READING dto", map[string]interface{}{"dto": policy})
+			state.List = append(state.List, policy)
 		}
 	}
 

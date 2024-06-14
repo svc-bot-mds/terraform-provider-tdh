@@ -103,6 +103,7 @@ func (s *Service) GetSmtpDetails() (model.Smtp, error) {
 	return response, nil
 }
 
+
 func (s *Service) CreateSmtpDetails(requestBody SmtpRequest) (model.Smtp, error) {
 	var response model.Smtp
 
@@ -114,6 +115,7 @@ func (s *Service) CreateSmtpDetails(requestBody SmtpRequest) (model.Smtp, error)
 	}
 	return response, nil
 }
+
 
 func (s *Service) UpdateSmtpDetails(requestBody SmtpRequest) (model.Smtp, error) {
 	var response model.Smtp

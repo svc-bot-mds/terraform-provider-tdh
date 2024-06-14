@@ -292,3 +292,87 @@ func (s *Service) DeletePolicy(id string) error {
 
 	return nil
 }
+
+// GetLocalUsers - Return list of Local Users
+func (s *Service) GetLocalUsers(query *LocalUsersQuery) (model.Paged[model.LocalUser], error) {
+	var response model.Paged[model.LocalUser]
+	if query == nil {
+		return response, fmt.Errorf("query cannot be nil")
+	}
+
+	reqUrl := fmt.Sprintf("%s/%s", s.Endpoint, LocalUsers)
+
+	if query.Size == 0 {
+		query.Size = defaultPage.Size
+	}
+
+	_, err := s.Api.Get(&reqUrl, query, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+// CreateLocalUser - Submits a request to create local ser
+func (s *Service) CreateLocalUser(requestBody *CreateLocalUserRequest) (*[]model.TaskResponse, error) {
+	if requestBody == nil {
+		return nil, fmt.Errorf("requestBody cannot be nil")
+	}
+	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, LocalUsers)
+
+	var response []model.TaskResponse
+	_, err := s.Api.Post(&urlPath, requestBody, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+// UpdateLocalUser - Submits a request to update local user
+func (s *Service) UpdateLocalUser(id string, requestBody *LocalUserUpdateRequest) (*[]model.TaskResponse, error) {
+	if id == "" {
+		return nil, fmt.Errorf("user ID cannot be empty")
+	}
+	if requestBody == nil {
+		return nil, fmt.Errorf("requestBody cannot be nil")
+	}
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, LocalUsers, id)
+
+	var response []model.TaskResponse
+	_, err := s.Api.Patch(&urlPath, requestBody, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+// GetLocalUser - Returns the local user by ID
+func (s *Service) GetLocalUser(id string) (*model.LocalUser, error) {
+	if strings.TrimSpace(id) == "" {
+		return nil, fmt.Errorf("ID cannot be empty")
+	}
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, LocalUsers, id)
+	var response model.LocalUser
+
+	_, err := s.Api.Get(&urlPath, nil, &response)
+	if err != nil {
+		return &response, err
+	}
+
+	return &response, err
+}
+
+// DeleteLocalUser - Submits a request to delete local user
+func (s *Service) DeleteLocalUser(id string) (*[]model.TaskResponse, error) {
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, LocalUsers, id)
+
+	var response []model.TaskResponse
+	_, err := s.Api.Delete(&urlPath, nil, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
