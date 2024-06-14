@@ -36,10 +36,10 @@ type DataPlane struct {
 	OrgId                   string   `json:"orgId,omitempty"`
 }
 
-
 type HelmVersions struct {
-	Id   string `json:"id"`
-	Name string `json:"releaseName"`
+	Id        string `json:"id"`
+	Name      string `json:"releaseName"`
+	IsEnabled bool   `json:"isEnabled"`
 }
 
 type EligibleSharedDataPlane struct {
@@ -48,4 +48,9 @@ type EligibleSharedDataPlane struct {
 	DataplaneName       string   `json:"dataplaneName"`
 	StoragePolicies     []string `json:"storagePolicies"`
 	BackupStoragePolicy string   `json:"backupStoragePolicy"`
+}
+
+type TKC struct {
+	Name        string `json:"clusterName"`
+	IsAvailable bool   `json:"isAvailable"`
 }

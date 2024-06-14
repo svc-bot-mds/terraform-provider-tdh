@@ -306,6 +306,7 @@ func (p *tdhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		SRE.NewFleetHealthDatasource,
 		SRE.NewDataplaneDatasource,
 		SRE.NewDataplaneHelmReleaseDatasource,
+		SRE.NewDataplaneKubernetesClusterDatasource,
 		NewObjectStorageDatasource,
 		NewTasksDataSource,
 		NewLocalUsersDataSource,

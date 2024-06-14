@@ -22,8 +22,9 @@ type DataplaneHelmReleaseDataSourceModel struct {
 	HelmReleaseList []HelmReleaseList `tfsdk:"helm_release_list""`
 }
 type HelmReleaseList struct {
-	Id   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
+	Id        types.String `tfsdk:"id"`
+	Name      types.String `tfsdk:"name"`
+	IsEnabled types.Bool   `tfsdk:"is_enabled"`
 }
 
 // NewDnsDatasource is a helper function to simplify the provider implementation.
@@ -52,17 +53,21 @@ func (d *dataplaneHelmReleaseDatasource) Schema(_ context.Context, _ datasource.
 				MarkdownDescription: "The testing framework requires an id attribute to be present in every data source and resource",
 			},
 			"helm_release_list": schema.ListNestedAttribute{
-				Description: "List of Helm Releases / Dataplane Versions.",
+				Description: "List of Helm Releases / Dataplane Versions. Please use the list item which has 'isEnabled' flag set to true",
 				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
-							Description: "Id of the Helm Release",
+							Description: "Id of the Helm Release. It is used while onboarding dataplane",
 							Computed:    true,
 						},
 						"name": schema.StringAttribute{
 							Description: "Name of the Helm Release",
 							Computed:    true,
+						},
+						"is_enabled": schema.BoolAttribute{
+							Computed:    true,
+							Description: "Denotes if the helm release is enabled/not . Use the helm release with the flag set to true while onboarding the dataplane",
 						},
 					},
 				},
@@ -102,8 +107,9 @@ func (d *dataplaneHelmReleaseDatasource) Read(ctx context.Context, req datasourc
 
 			for _, helmDto := range *totalPolicies.Get() {
 				helmRelease := HelmReleaseList{
-					Name: types.StringValue(helmDto.Name),
-					Id:   types.StringValue(helmDto.Id),
+					Name:      types.StringValue(helmDto.Name),
+					Id:        types.StringValue(helmDto.Id),
+					IsEnabled: types.BoolValue(helmDto.IsEnabled),
 				}
 				helmReleaseList = append(helmReleaseList, helmRelease)
 			}

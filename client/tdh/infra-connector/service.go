@@ -457,3 +457,17 @@ func (s *Service) GetHelmRelease(query *DNSQuery) (model.Paged[model.HelmVersion
 	}
 	return response, nil
 }
+
+func (s *Service) GetTkcList(id string) ([]model.TKC, error) {
+	if strings.TrimSpace(id) == "" {
+		return nil, fmt.Errorf("ID cannot be empty")
+	}
+	var response []model.TKC
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, AccountMetadata, id)
+
+	_, err := s.Api.Get(&reqUrl, nil, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
