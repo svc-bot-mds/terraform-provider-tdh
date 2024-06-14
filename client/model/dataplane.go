@@ -36,15 +36,16 @@ type DataPlane struct {
 	OrgId                   string   `json:"orgId,omitempty"`
 }
 
+
+type HelmVersions struct {
+	Id   string `json:"id"`
+	Name string `json:"releaseName"`
+}
+
 type EligibleSharedDataPlane struct {
 	Id                  string   `json:"id"`
 	Provider            string   `json:"provider"`
 	DataplaneName       string   `json:"dataplaneName"`
 	StoragePolicies     []string `json:"storagePolicies"`
 	BackupStoragePolicy string   `json:"backupStoragePolicy"`
-}
-
-type HelmVersions struct {
-	Id   string `json:"id"`
-	Name string `json:"releaseName"`
 }
