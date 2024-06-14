@@ -308,6 +308,7 @@ func (p *tdhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewObjectStorageDatasource,
 		NewTasksDataSource,
 		NewLocalUsersDataSource,
+		NewBackupDataSource,
 	}
 }
 
@@ -325,7 +326,6 @@ func (p *tdhProvider) Resources(_ context.Context) []func() resource.Resource {
 		SRE.NewCertificateResource,
 		NewObjectStorageResource,
 		NewLocalUserResource,
-		NewBackupDataSource,
 	}
 }
 
