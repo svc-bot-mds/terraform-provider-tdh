@@ -83,7 +83,6 @@ func (s *Service) GetClusterRestores(query RestoreQuery) (model.Paged[model.Clus
 
 	return response, nil
 }
-
 // GetAllClusters - Returns list of all clusters
 func (s *Service) GetAllClusters(query *ClustersQuery) ([]model.Cluster, error) {
 	var clusters []model.Cluster

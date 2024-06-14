@@ -203,6 +203,34 @@ func (s *Service) GetDataPlanes(query *DataPlaneQuery) (model.Paged[model.DataPl
 	return response, nil
 }
 
+func (s *Service) GetEligibleSharedDataPlanes(query *EligibleSharedDataPlaneQuery) (model.Paged[model.EligibleSharedDataPlane], error) {
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, K8sCluster, Eligible)
+	var response model.Paged[model.EligibleSharedDataPlane]
+
+	query.Size = 500
+
+	_, err := s.Api.Get(&urlPath, query, &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, nil
+}
+
+func (s *Service) GetEligibleDedicatedDataPlanes(query *EligibleDedicatedDataPlaneQuery) (model.Paged[model.EligibleSharedDataPlane], error) {
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, K8sCluster, Eligible)
+	var response model.Paged[model.EligibleSharedDataPlane]
+
+	query.Size = 500
+
+	_, err := s.Api.Get(&urlPath, query, &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, nil
+}
+
 func (s *Service) GetDataPlaneById(id string) (model.DataPlane, error) {
 	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, K8sCluster, id)
 	var response model.DataPlane
@@ -300,7 +328,7 @@ func (s *Service) UpdateCertificate(id string, requestBody *CertificateUpdateReq
 func (s *Service) GetCertificate(id string) (model.Certificate, error) {
 	var response model.Certificate
 
-	reqUrl := fmt.Sprintf("%s/%s/%s", s.Endpoint, Certificate, id)
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, Certificate, id)
 
 	_, err := s.Api.Get(&reqUrl, nil, &response)
 	if err != nil {
@@ -311,7 +339,7 @@ func (s *Service) GetCertificate(id string) (model.Certificate, error) {
 
 // DeleteCertificate - Submits a request to delete certificate
 func (s *Service) DeleteCertificate(id string) error {
-	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Certificate, id)
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, Certificate, id)
 
 	_, err := s.Api.Delete(&urlPath, nil, nil)
 	if err != nil {
@@ -410,6 +438,32 @@ func (s *Service) GetDataplaneCounts() (model.DataplneCounts, error) {
 	var response model.DataplneCounts
 
 	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, FleetMangement, Dataplane, Count)
+
+	_, err := s.Api.Get(&reqUrl, nil, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetHelmRelease(query *DNSQuery) (model.Paged[model.HelmVersions], error) {
+	var response model.Paged[model.HelmVersions]
+	query.Size = 500
+	reqUrl := fmt.Sprintf("%s/%s/%s", s.Endpoint, HelmRelase, Release)
+
+	_, err := s.Api.Get(&reqUrl, query, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetTkcList(id string) ([]model.TKC, error) {
+	if strings.TrimSpace(id) == "" {
+		return nil, fmt.Errorf("ID cannot be empty")
+	}
+	var response []model.TKC
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, AccountMetadata, id)
 
 	_, err := s.Api.Get(&reqUrl, nil, &response)
 	if err != nil {

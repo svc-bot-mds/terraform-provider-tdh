@@ -305,11 +305,15 @@ func (p *tdhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		SRE.NewSmtpDatasource,
 		SRE.NewFleetHealthDatasource,
 		SRE.NewDataplaneDatasource,
+		SRE.NewDataplaneHelmReleaseDatasource,
+		SRE.NewDataplaneKubernetesClusterDatasource,
 		NewObjectStorageDatasource,
 		NewTasksDataSource,
 		NewLocalUsersDataSource,
 		NewBackupDataSource,
 		NewRestoreDataSource,
+		NewEligibleSharedDataplanesDatasource,
+		NewEligibleDedicatedDataplanesDatasource,
 	}
 }
 
@@ -325,6 +329,7 @@ func (p *tdhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewDataPlaneResource,
 		NewCloudAccountResource,
 		SRE.NewCertificateResource,
+		SRE.NewSmtpResource,
 		NewObjectStorageResource,
 		NewLocalUserResource,
 	}

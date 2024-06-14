@@ -1,3 +1,9 @@
+
+// to get the Storage Policies and Eligible Dataplane for the given Provider
+data "tdh_eligible_shared_dataplanes" "all"{
+  provider_name= "tkgs"
+}
+
 resource "tdh_cluster" "example" {
   name               = "test-terraform"
   cloud_provider     = "aws"
@@ -9,7 +15,6 @@ resource "tdh_cluster" "example" {
   dedicated          = false
   shared             = false
 
-  // if cluster getting self hosted via byoc
   data_plane_id = "dataplane id"
   // non editable fields
   lifecycle {

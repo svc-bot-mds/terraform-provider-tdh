@@ -18,4 +18,8 @@ const (
 	Count            = "count"
 	Clusters         = "clusters"
 	DataplaneOnboard = "dataplane-onboard"
+	Eligible         = "eligible"
+	HelmRelase       = "dataplane-helm-release"
+	Release          = "release"
+	AccountMetadata  = "account-metadata"
 )

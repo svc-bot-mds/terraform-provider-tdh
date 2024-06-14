@@ -103,6 +103,20 @@ func (s *Service) GetSmtpDetails() (model.Smtp, error) {
 	return response, nil
 }
 
+
+func (s *Service) CreateSmtpDetails(requestBody SmtpRequest) (model.Smtp, error) {
+	var response model.Smtp
+
+	reqUrl := fmt.Sprintf("%s/%s", s.Endpoint, SMTP)
+
+	_, err := s.Api.Post(&reqUrl, requestBody, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+
 func (s *Service) UpdateSmtpDetails(requestBody SmtpRequest) (model.Smtp, error) {
 	var response model.Smtp
 
