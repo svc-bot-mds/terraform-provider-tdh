@@ -53,4 +53,5 @@ type EligibleSharedDataPlane struct {
 type TKC struct {
 	Name        string `json:"clusterName"`
 	IsAvailable bool   `json:"isAvailable"`
+	IsCpPresent bool   `json:"isCPPresent"`
 }

@@ -24,6 +24,7 @@ type DataplaneKubernetesClusterDatasourceModel struct {
 type TkcList struct {
 	Name        types.String `tfsdk:"name"`
 	IsAvailable types.Bool   `tfsdk:"is_available"`
+	IsCpPresent types.Bool   `tfsdk:"is_cp_present"`
 }
 
 // NewDnsDatasource is a helper function to simplify the provider implementation.
@@ -66,7 +67,11 @@ func (d *dataplaneKubernetesClusterDatasource) Schema(_ context.Context, _ datas
 						},
 						"is_available": schema.BoolAttribute{
 							Computed:    true,
-							Description: "Denotes if the Kubernetes Cluster is enabled/not . Use the Kubernetes Cluster with the flag set to true while onboarding the dataplane",
+							Description: "Denotes if the Kubernetes Cluster is enabled/not . Use the Kubernetes Cluster with the flag set to true while onboarding the dataplane for non control plane on data plane",
+						},
+						"is_cp_present": schema.BoolAttribute{
+							Computed:    true,
+							Description: "Denotes if Control Plane is available . Use the Kubernetes Cluster with the flag set to true while Onboard Data Plane on TDH Control Plan",
 						},
 					},
 				},
@@ -95,6 +100,7 @@ func (d *dataplaneKubernetesClusterDatasource) Read(ctx context.Context, req dat
 		tkc := TkcList{
 			Name:        types.StringValue(tkcs.Name),
 			IsAvailable: types.BoolValue(tkcs.IsAvailable),
+			IsCpPresent: types.BoolValue(tkcs.IsCpPresent),
 		}
 		tkcLists = append(tkcLists, tkc)
 	}
