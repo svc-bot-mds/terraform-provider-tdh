@@ -64,7 +64,7 @@ func (d restoreDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
-							Description: "Backup ID",
+							Description: "Restore ID",
 							Optional:    true,
 						},
 						"service_type": schema.StringAttribute{
