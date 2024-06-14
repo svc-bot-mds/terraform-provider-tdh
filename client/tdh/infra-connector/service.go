@@ -207,9 +207,7 @@ func (s *Service) GetEligibleSharedDataPlanes(query *EligibleSharedDataPlaneQuer
 	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, K8sCluster, Eligible)
 	var response model.Paged[model.EligibleSharedDataPlane]
 
-	if query.Size == 0 {
-		query.Size = 500
-	}
+	query.Size = 500
 
 	_, err := s.Api.Get(&urlPath, query, &response)
 	if err != nil {
@@ -223,9 +221,7 @@ func (s *Service) GetEligibleDedicatedDataPlanes(query *EligibleDedicatedDataPla
 	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, K8sCluster, Eligible)
 	var response model.Paged[model.EligibleSharedDataPlane]
 
-	if query.Size == 0 {
-		query.Size = 500
-	}
+	query.Size = 500
 
 	_, err := s.Api.Get(&urlPath, query, &response)
 	if err != nil {
@@ -442,6 +438,32 @@ func (s *Service) GetDataplaneCounts() (model.DataplneCounts, error) {
 	var response model.DataplneCounts
 
 	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, FleetMangement, Dataplane, Count)
+
+	_, err := s.Api.Get(&reqUrl, nil, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetHelmRelease(query *DNSQuery) (model.Paged[model.HelmVersions], error) {
+	var response model.Paged[model.HelmVersions]
+	query.Size = 500
+	reqUrl := fmt.Sprintf("%s/%s/%s", s.Endpoint, HelmRelase, Release)
+
+	_, err := s.Api.Get(&reqUrl, query, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetTkcList(id string) ([]model.TKC, error) {
+	if strings.TrimSpace(id) == "" {
+		return nil, fmt.Errorf("ID cannot be empty")
+	}
+	var response []model.TKC
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, AccountMetadata, id)
 
 	_, err := s.Api.Get(&reqUrl, nil, &response)
 	if err != nil {
