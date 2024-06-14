@@ -25,12 +25,12 @@ output "policies_data" {
 resource "tdh_service_account" "test" {
   name       = "test-svc-tf-testing-131"
   tags       = ["update-svc-acct", "from-tf"]
-  policy_ids = [for policy in data.tdh_policies.all.policies : policy.id if contains(local.policies, policy.name)]
+  policy_ids = [for policy in data.tdh_policies.all.list : policy.id if contains(local.policies, policy.name)]
 
   //Oauth app details
   oauth_app = {
     description = " description1"
-    ttl_spec    = {
+    ttl_spec = {
       ttl       = "1"
       time_unit = "HOURS"
     }

@@ -22,15 +22,17 @@ data "tdh_policies" "all" {
 
 ### Optional
 
-- `names` (List of String) Names to search policies by. Ex: `["read-only-rmq"]` .
+- `identity_type` (String) Type of identity, to list policies supported only for that type.
+- `names` (List of String) Names to search policies by. Ex: `["read-only-postgres"]` .
+- `type` (String) Type of policies to list. Ex: `POSTGRES`, `MYSQL` etc.
 
 ### Read-Only
 
 - `id` (String) The testing framework requires an id attribute to be present in every data source and resource.
-- `policies` (Attributes List) List of fetched policies. (see [below for nested schema](#nestedatt--policies))
+- `list` (Attributes List) List of fetched policies. (see [below for nested schema](#nestedatt--list))
 
-<a id="nestedatt--policies"></a>
-### Nested Schema for `policies`
+<a id="nestedatt--list"></a>
+### Nested Schema for `list`
 
 Read-Only:
 

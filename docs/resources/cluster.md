@@ -25,7 +25,8 @@ resource "tdh_cluster" "example" {
   tags               = ["tdh-tf", "example"]
   dedicated          = false
   shared             = false
-  
+
+  // if cluster getting self hosted via byoc
   data_plane_id = "dataplane id"
   // non editable fields
   lifecycle {

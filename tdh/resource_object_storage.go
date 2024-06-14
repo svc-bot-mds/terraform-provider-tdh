@@ -230,6 +230,11 @@ func (r *objectStorageResource) Delete(ctx context.Context, request resource.Del
 	// Submit request to delete TDH certificate
 	err := r.client.InfraConnector.DeleteObjectStorage(state.ID.ValueString())
 	if err != nil {
+		apiErr := core.ApiError{}
+		errors.As(err, &apiErr)
+		if apiErr.StatusCode == 404 {
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Deleting object store",
 			"Could not delete object store by ID "+state.ID.ValueString()+": "+err.Error(),
@@ -281,6 +286,10 @@ func (r *objectStorageResource) Read(ctx context.Context, req resource.ReadReque
 
 func (r *objectStorageResource) saveFromResponse(state *ObjectStorageResourceModel, response *model.ObjectStorage) int8 {
 	state.ID = types.StringValue(response.Id)
+	state.Name = types.StringValue(response.Name)
+	state.Endpoint = types.StringValue(response.Endpoint)
+	state.BucketName = types.StringValue(response.BucketName)
+	state.Region = types.StringValue(response.BucketName)
 	return 0
 }
 
