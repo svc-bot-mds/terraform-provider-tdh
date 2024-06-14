@@ -325,6 +325,7 @@ func (p *tdhProvider) Resources(_ context.Context) []func() resource.Resource {
 		SRE.NewCertificateResource,
 		NewObjectStorageResource,
 		NewLocalUserResource,
+		NewBackupDataSource,
 	}
 }
 
