@@ -56,7 +56,7 @@ func (d restoreDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "ID of the task.",
+				MarkdownDescription: "Restore of the ID",
 			},
 			"list": schema.ListNestedAttribute{
 				Description: "List of restores.",
