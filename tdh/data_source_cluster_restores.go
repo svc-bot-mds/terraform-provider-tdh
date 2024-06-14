@@ -45,41 +45,6 @@ type restoreResponseModel struct {
 	TargetInstanceName types.String `tfsdk:"target_instance_name"`
 }
 
-//// localUsersDataSourceModel maps the datasource schema
-//type localUsersDataSourceModel struct {
-//	Id       types.String     `tfsdk:"id"`
-//	Username types.String     `tfsdk:"username"`
-//	List     []localUserModel `tfsdk:"list"`
-//}
-//
-//type localUserModel struct {
-//	Id        types.String `tfsdk:"id"`
-//	Username  types.String `tfsdk:"username"`
-//	PolicyIds types.Set    `tfsdk:"policy_ids"`
-//}
-//type restoreResourceModel struct {
-//	Id                 types.String `tfsdk:"id"`
-//	Name               types.String `tfsdk:"name"`
-//	DataPlaneId        types.String `tfsdk:"dataplane_id"`
-//	ServiceType        types.String `tfsdk:"service_type"`
-//	BackupId           types.String `tfsdk:"backup_id"`
-//	BackupName         types.String `tfsdk:"backup_name"`
-//	TargetInstance     types.String `tfsdk:"target_instance"`
-//	TargetInstanceName types.String `tfsdk:"target_instance_name"`
-//}
-//
-//type restoreResponseModel struct {
-//	Id                 types.String           `tfsdk:"id"`
-//	Name               types.String           `tfsdk:"name"`
-//	DataPlaneId        types.String           `tfsdk:"dataplane_id"`
-//	ServiceType        types.String           `tfsdk:"service_type"`
-//	BackupId           types.String           `tfsdk:"backup_id"`
-//	BackupName         types.String           `tfsdk:"backup_name"`
-//	TargetInstance     types.String           `tfsdk:"target_instance"`
-//	TargetInstanceName types.String           `tfsdk:"target_instance_name"`
-//	RestoreList        []restoreResourceModel `tfsdk:"restore_list"`
-//}
-
 // restoreResourceMode maps the resource schema data.
 func (d restoreDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_restores"
