@@ -35,3 +35,11 @@ type DataPlane struct {
 	DataPlaneOnControlPlane bool     `json:"dataPlaneOnControlPlane"`
 	OrgId                   string   `json:"orgId,omitempty"`
 }
+
+type EligibleSharedDataPlane struct {
+	Id                  string   `json:"id"`
+	Provider            string   `json:"provider"`
+	DataplaneName       string   `json:"dataplaneName"`
+	StoragePolicies     []string `json:"storagePolicies"`
+	BackupStoragePolicy string   `json:"backupStoragePolicy"`
+}

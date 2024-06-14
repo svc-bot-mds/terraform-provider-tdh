@@ -48,7 +48,7 @@ func (d *smtpDatasource) Metadata(_ context.Context, req datasource.MetadataRequ
 // Schema defines the schema for the data source.
 func (d *smtpDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Used to fetch all roles applicable for services on TDH.",
+		Description: "Used to fetch SMTP details.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
