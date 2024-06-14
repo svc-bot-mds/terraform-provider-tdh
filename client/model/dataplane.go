@@ -43,3 +43,8 @@ type EligibleSharedDataPlane struct {
 	StoragePolicies     []string `json:"storagePolicies"`
 	BackupStoragePolicy string   `json:"backupStoragePolicy"`
 }
+
+type HelmVersions struct {
+	Id   string `json:"id"`
+	Name string `json:"releaseName"`
+}
