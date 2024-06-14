@@ -1,6 +1,6 @@
 package model
 
-type BackupResourceModel struct {
+type ClusterBackup struct {
 	Id                string `json:"id"`
 	OrgId             string `json:"orgId"`
 	Name              string `json:"name"`

@@ -2,8 +2,10 @@ package tdh
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/service_type"
@@ -57,12 +59,6 @@ type backupResponseModel struct {
 	ServiceType types.String          `tfsdk:"service_type"`
 }
 
-type mdsBackupResponse struct {
-	Embedded struct {
-		MDSBackupDTOs []backupResourceModel `json:"mdsBackupDTOes"`
-	} `json:"_embedded"`
-}
-
 func (d backupDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_backup"
 }
@@ -78,6 +74,9 @@ func (d backupDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 			"service_type": schema.StringAttribute{
 				Description: "Service Type of the cluster.",
 				Required:    true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("POSTGRES", "MYSQL", "RABBITMQ", "REDIS"),
+				},
 			},
 			"backup_list": schema.ListNestedAttribute{
 				Description: "Backup List",
@@ -86,7 +85,7 @@ func (d backupDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							Description: "ID of the Backup.",
-							Optional:    true,
+							Computed:    true,
 						},
 						"name": schema.StringAttribute{
 							Description: "Name of the Backup.",
@@ -160,10 +159,11 @@ func (d backupDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	var backupList []backupResourceModel
 	//tflog.Debug(ctx, "rabbitmq dto", map[string]interface{}{"dto": clusterList})
 	tflog.Debug(ctx, "Service type list :", map[string]interface{}{"dto": state.ServiceType})
+	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 	query := controller.BackupQuery{
 		ServiceType: state.ServiceType.ValueString(),
 	}
-	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
+
 	if err := service_type.ValidateRoleType(state.ServiceType.ValueString()); err != nil {
 		resp.Diagnostics.AddError(
 			"invalid type",
@@ -174,7 +174,7 @@ func (d backupDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	backups, err := d.client.Controller.GetBackups(query)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read TDH Service Types",
+			"Unable to Read Service Backups",
 			err.Error(),
 		)
 		return
@@ -186,7 +186,7 @@ func (d backupDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 			totalClusters, err := d.client.Controller.GetBackups(query)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					"Unable to Read TDH Clusters",
+					"Unable to Read Service Backups",
 					err.Error(),
 				)
 				return
@@ -218,35 +218,34 @@ func (d backupDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 			}
 		}
 
-		tflog.Debug(ctx, "rabbitmq dto", map[string]interface{}{"dto": backupList})
+		tflog.Debug(ctx, "READING dto", map[string]interface{}{"dto": backupList})
 		state.BackupList = append(state.BackupList, backupList...)
 	} else {
-		for _, mdsClusterDto := range *backups.Get() {
+		for _, mdsClusterDTO := range *backups.Get() {
 			cluster := backupResourceModel{
-				ID:   types.StringValue(mdsClusterDto.Id),
-				Name: types.StringValue(mdsClusterDto.Name),
+				ID:   types.StringValue(mdsClusterDTO.Id),
+				Name: types.StringValue(mdsClusterDTO.Name),
 
-				ClusterId:         types.StringValue(mdsClusterDto.ClusterId),
-				ClusterName:       types.StringValue(mdsClusterDto.ClusterName),
-				ClusterVersion:    types.StringValue(mdsClusterDto.ClusterVersion),
-				ServiceType:       types.StringValue(mdsClusterDto.ServiceType),
-				Size:              types.StringValue(mdsClusterDto.Size),
-				BackupTriggerType: types.StringValue(mdsClusterDto.BackupTriggerType),
-				Provider:          types.StringValue(mdsClusterDto.Provider),
-				Region:            types.StringValue(mdsClusterDto.Region),
-				DataPlaneId:       types.StringValue(mdsClusterDto.DataPlaneId),
+				ClusterId:         types.StringValue(mdsClusterDTO.ClusterId),
+				ClusterName:       types.StringValue(mdsClusterDTO.ClusterName),
+				ClusterVersion:    types.StringValue(mdsClusterDTO.ClusterVersion),
+				ServiceType:       types.StringValue(mdsClusterDTO.ServiceType),
+				Size:              types.StringValue(mdsClusterDTO.Size),
+				BackupTriggerType: types.StringValue(mdsClusterDTO.BackupTriggerType),
+				Provider:          types.StringValue(mdsClusterDTO.Provider),
+				Region:            types.StringValue(mdsClusterDTO.Region),
+				DataPlaneId:       types.StringValue(mdsClusterDTO.DataPlaneId),
 			}
 			//backupList = append(backupList, cluster)
 			metadata := BackupMetadata{
-				ClusterName:    types.StringValue(mdsClusterDto.Metadata.ClusterName),
-				ClusterSize:    types.StringValue(mdsClusterDto.Metadata.ClusterSize),
-				BackupLocation: types.StringValue(mdsClusterDto.Metadata.BackupLocation),
+				ClusterName:    types.StringValue(mdsClusterDTO.Metadata.ClusterName),
+				ClusterSize:    types.StringValue(mdsClusterDTO.Metadata.ClusterSize),
+				BackupLocation: types.StringValue(mdsClusterDTO.Metadata.BackupLocation),
 			}
 			cluster.Metadata = metadata
 
 			tflog.Debug(ctx, "mdsClusterDto dto", map[string]interface{}{"dto": cluster})
 
-			tflog.Debug(ctx, "mdsClusterDto dto", map[string]interface{}{"dto": mdsClusterDto})
 			state.BackupList = append(state.BackupList, cluster)
 
 		}

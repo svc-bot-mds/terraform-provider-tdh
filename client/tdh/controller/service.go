@@ -48,10 +48,10 @@ func (s *Service) GetClusters(query *ClustersQuery) (model.Paged[model.Cluster],
 
 // https://tdh-cp-vh.tdh.kr.com/api/controller/backup?serviceType=POSTGRES&page=0&size=2000
 // GetBackups - Returns all the Backups
-func (s *Service) GetBackups(query BackupQuery) (model.Paged[model.BackupResourceModel], error) {
+func (s *Service) GetBackups(query BackupQuery) (model.Paged[model.ClusterBackup], error) {
 
 	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Backup)
-	var response model.Paged[model.BackupResourceModel]
+	var response model.Paged[model.ClusterBackup]
 
 	if query.Size == 0 {
 		query.Size = defaultPage.Size
