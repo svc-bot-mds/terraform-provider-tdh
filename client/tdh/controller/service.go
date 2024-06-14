@@ -65,6 +65,25 @@ func (s *Service) GetBackups(query BackupQuery) (model.Paged[model.ClusterBackup
 	return response, nil
 }
 
+// https://tdh-cp-vh.tdh.kr.com/api/controller/restore?size=10&sort=timeStarted,DESC&serviceType=POSTGRES&observe=response
+// GetRestore - Returns all the Restore
+func (s *Service) GetClusterRestores(query RestoreQuery) (model.Paged[model.ClusterRestore], error) {
+
+	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Restore)
+	var response model.Paged[model.ClusterRestore]
+
+	if query.Size == 0 {
+		query.Size = defaultPage.Size
+	}
+
+	_, err := s.Api.Get(&urlPath, query, &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, nil
+}
+
 // GetAllClusters - Returns list of all clusters
 func (s *Service) GetAllClusters(query *ClustersQuery) ([]model.Cluster, error) {
 	var clusters []model.Cluster

@@ -16,4 +16,5 @@ const (
 	ResourceByService = "resource-by-service"
 	Mdsfleets         = "mdsfleets"
 	Backup            = "backup"
+	Restore           = "restore"
 )
