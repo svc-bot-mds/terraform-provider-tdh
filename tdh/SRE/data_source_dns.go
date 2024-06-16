@@ -18,8 +18,8 @@ var (
 
 // DnsDataSourceModel maps the data source schema data.
 type DnsDataSourceModel struct {
-	Id      types.String `tfsdk:"id"`
-	DNSList []DNSModel   `tfsdk:"dns_list""`
+	Id   types.String `tfsdk:"id"`
+	List []DNSModel   `tfsdk:"list"`
 }
 type DNSModel struct {
 	Id       types.String  `tfsdk:"id"`
@@ -56,19 +56,19 @@ func (d *dnsDatasource) Metadata(_ context.Context, req datasource.MetadataReque
 // Schema defines the schema for the data source.
 func (d *dnsDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Used to fetch all roles applicable for services on TDH.",
+		Description: "Used to fetch DNS configurations available on TDH.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "The testing framework requires an id attribute to be present in every data source and resource",
 			},
-			"dns_list": schema.ListNestedAttribute{
+			"list": schema.ListNestedAttribute{
 				Description: "List of DNS Config.",
 				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
-							Description: "Id of the DNS config",
+							Description: "ID of the DNS config",
 							Computed:    true,
 						},
 						"name": schema.StringAttribute{
@@ -119,7 +119,7 @@ func (d *dnsDatasource) Read(ctx context.Context, req datasource.ReadRequest, re
 	var state DnsDataSourceModel
 	var dnsList []DNSModel
 	var serverlist []ServerModel
-	tflog.Info(ctx, "INIT -- READ service roles")
+	tflog.Info(ctx, "INIT__READ DNS config")
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 
@@ -127,7 +127,7 @@ func (d *dnsDatasource) Read(ctx context.Context, req datasource.ReadRequest, re
 	dnsResponse, err := d.client.InfraConnector.GetDnsconfig(query)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read TDH Dns Config List",
+			"Unable to Read TDH DNS Config List",
 			err.Error(),
 		)
 		return
@@ -138,7 +138,7 @@ func (d *dnsDatasource) Read(ctx context.Context, req datasource.ReadRequest, re
 			totalPolicies, err := d.client.InfraConnector.GetDnsconfig(query)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					"Unable to Read TDH Dns Config",
+					"Unable to Read TDH DNS Config List",
 					err.Error(),
 				)
 				return
@@ -166,7 +166,7 @@ func (d *dnsDatasource) Read(ctx context.Context, req datasource.ReadRequest, re
 			}
 		}
 
-		state.DNSList = append(state.DNSList, dnsList...)
+		state.List = append(state.List, dnsList...)
 	} else {
 		for _, dnsDto := range *dnsResponse.Get() {
 			dns := DNSModel{
@@ -188,7 +188,7 @@ func (d *dnsDatasource) Read(ctx context.Context, req datasource.ReadRequest, re
 			dns.Servers = append(dns.Servers, serverlist...)
 			dnsList = append(dnsList, dns)
 		}
-		state.DNSList = append(state.DNSList, dnsList...)
+		state.List = append(state.List, dnsList...)
 	}
 	state.Id = types.StringValue(common.DataSource + common.ServiceRolesId)
 	// Set state

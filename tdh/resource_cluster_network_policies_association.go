@@ -3,17 +3,21 @@ package tdh
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/policy_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
 	customer_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
+	"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -63,7 +67,7 @@ func (r *clusterNetworkPoliciesAssociationResource) Schema(ctx context.Context, 
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents the association between a service instance/cluster and `NETWORK` type policies.",
+		MarkdownDescription: "Represents the association between a service instance/cluster and network policies.\nNOTE: Make sure to first import the existing associations that may have been created during cluster creation, since this is an overwrite operation.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "ID of the cluster.",
@@ -77,6 +81,9 @@ func (r *clusterNetworkPoliciesAssociationResource) Schema(ctx context.Context, 
 				MarkdownDescription: "IDs of the network policies to associate with the cluster.",
 				Required:            true,
 				ElementType:         types.StringType,
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+				},
 			},
 		},
 	}
@@ -97,10 +104,20 @@ func (r *clusterNetworkPoliciesAssociationResource) Create(ctx context.Context, 
 		NetworkPolicyIds: plan.PolicyIds,
 	}
 	//plan.PolicyIds.ElementsAs(ctx, &updateRequest.NetworkPolicyIds, true)
-	if _, err := r.client.Controller.UpdateClusterNetworkPolicies(plan.ID.ValueString(), &updateRequest); err != nil {
+	response, err := r.client.Controller.UpdateClusterNetworkPolicies(plan.ID.ValueString(), &updateRequest)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Creating cluster network policies association",
 			"Could not create association, unexpected error: "+err.Error(),
+		)
+		return
+	}
+	// this operation usually happens instantly
+	time.Sleep(2 * time.Second)
+	err = utils.WaitForTask(r.client, response.TaskId)
+	if err != nil {
+		resp.Diagnostics.AddError("Creating cluster network policies association",
+			"Task responsible for this operation failed, error: "+err.Error(),
 		)
 		return
 	}
@@ -165,18 +182,27 @@ func (r *clusterNetworkPoliciesAssociationResource) Update(ctx context.Context, 
 	updateRequest := controller.ClusterNetworkPoliciesUpdateRequest{
 		NetworkPolicyIds: plan.PolicyIds,
 	}
-	if _, err := r.client.Controller.UpdateClusterNetworkPolicies(plan.ID.ValueString(), &updateRequest); err != nil {
+	response, err := r.client.Controller.UpdateClusterNetworkPolicies(plan.ID.ValueString(), &updateRequest)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Updating cluster network policies association",
 			"Could not update association, unexpected error: "+err.Error(),
 		)
 		return
 	}
+	// this operation usually happens instantly
+	time.Sleep(2 * time.Second)
+	err = utils.WaitForTask(r.client, response.TaskId)
+	if err != nil {
+		resp.Diagnostics.AddError("Updating cluster network policies association",
+			"Task responsible for this operation failed, error: "+err.Error(),
+		)
+		return
+	}
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+	if resp.Diagnostics.Append(diags...); resp.Diagnostics.HasError() {
 		return
 	}
 	tflog.Info(ctx, "END__Update")
@@ -184,25 +210,11 @@ func (r *clusterNetworkPoliciesAssociationResource) Update(ctx context.Context, 
 
 func (r *clusterNetworkPoliciesAssociationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	tflog.Info(ctx, "INIT__Delete")
-	// Retrieve values from plan
-	var plan clusterNetworkPoliciesAssociationResourceModel
-	diags := req.State.Get(ctx, &plan)
-	if resp.Diagnostics.Append(diags...); resp.Diagnostics.HasError() {
-		return
-	}
-
-	updateRequest := controller.ClusterNetworkPoliciesUpdateRequest{
-		NetworkPolicyIds: []string{},
-	}
-	if _, err := r.client.Controller.UpdateClusterNetworkPolicies(plan.ID.ValueString(), &updateRequest); err != nil {
-		resp.Diagnostics.AddError(
-			"Deleting cluster network policies association",
-			"Could not delete association, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	tflog.Info(ctx, "END__Delete")
+	resp.Diagnostics.AddError(
+		"Operation not valid",
+		"Cluster must have at least one network policy attached. If you wish to clean it from state, please use \"state rm\" command on this resource.",
+	)
+	return
 }
 
 func (r *clusterNetworkPoliciesAssociationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

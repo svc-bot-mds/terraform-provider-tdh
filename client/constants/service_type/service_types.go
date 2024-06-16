@@ -1,6 +1,9 @@
 package service_type
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 const (
 	RABBITMQ = "RABBITMQ"
@@ -23,10 +26,7 @@ func ValidateRoleType(stateType string) error {
 	case MYSQL, RABBITMQ, POSTGRES, REDIS:
 		return nil
 	default:
-		return fmt.Errorf("invalid type: supported types are [%s, %s, %s, %s]",
-			MYSQL,
-			RABBITMQ,
-			POSTGRES,
-			REDIS)
+		return fmt.Errorf("invalid type: supported types are [%s]",
+			strings.Join(GetAll(), ", "))
 	}
 }

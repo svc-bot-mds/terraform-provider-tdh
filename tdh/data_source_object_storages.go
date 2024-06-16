@@ -93,7 +93,7 @@ func (d *objectStorageDatasource) Read(ctx context.Context, req datasource.ReadR
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 
-	query := &infra_connector.ObjectStorageQuery{}
+	query := &infra_connector.ObjectStoragesQuery{}
 
 	response, err := d.client.InfraConnector.GetObjectStorages(query)
 	if err != nil {

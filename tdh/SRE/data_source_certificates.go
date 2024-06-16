@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	infra_connector "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
@@ -19,8 +20,8 @@ var (
 
 // certificatesDatasourceModel maps the data source schema data.
 type certificatesDatasourceModel struct {
-	Id           types.String        `tfsdk:"id"`
-	Certificates []certificatesModel `tfsdk:"certificates"`
+	Id   types.String        `tfsdk:"id"`
+	List []certificatesModel `tfsdk:"list"`
 }
 
 type certificatesModel struct {
@@ -31,7 +32,7 @@ type certificatesModel struct {
 	ExpiryTime     types.String `tfsdk:"expiry_time"`
 	Status         types.String `tfsdk:"status"`
 	Organization   types.String `tfsdk:"organization"`
-	DataplaneCount types.Int64  `tfsdk:"dataplane_count"`
+	DataPlaneCount types.Int64  `tfsdk:"data_plane_count"`
 	CreatedBy      types.String `tfsdk:"created_by"`
 }
 
@@ -87,8 +88,8 @@ func (d *certificatesDatasource) Schema(_ context.Context, _ datasource.SchemaRe
 							Description: "Status of the certificate",
 							Computed:    true,
 						},
-						"dataplane_count": schema.Int64Attribute{
-							Description: "Number of dataplane using the given certificate",
+						"data_plane_count": schema.Int64Attribute{
+							Description: "Number of data plane using this certificate",
 							Computed:    true,
 						},
 						"organization": schema.StringAttribute{
@@ -96,7 +97,7 @@ func (d *certificatesDatasource) Schema(_ context.Context, _ datasource.SchemaRe
 							Computed:    true,
 						},
 						"created_by": schema.StringAttribute{
-							Description: "Certifacte Created By ",
+							Description: "Name of the identity which this certificate was created by.",
 							Computed:    true,
 						},
 					},
@@ -113,7 +114,7 @@ func (d *certificatesDatasource) Read(ctx context.Context, req datasource.ReadRe
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 
-	query := &infra_connector.CertificateQuery{}
+	query := &infra_connector.CertificatesQuery{}
 
 	certificates, err := d.client.InfraConnector.GetCertificates(query)
 	if err != nil {
@@ -127,7 +128,7 @@ func (d *certificatesDatasource) Read(ctx context.Context, req datasource.ReadRe
 	if certificates.Page.TotalPages > 1 {
 		for i := 1; i <= certificates.Page.TotalPages; i++ {
 			query.PageQuery.Index = i - 1
-			totalCertificates, err := d.client.InfraConnector.GetCertificates(query)
+			_, err := d.client.InfraConnector.GetCertificates(query)
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Unable to Read certificates",
@@ -135,57 +136,14 @@ func (d *certificatesDatasource) Read(ctx context.Context, req datasource.ReadRe
 				)
 				return
 			}
-
-			for _, certificateDto := range *totalCertificates.Get() {
-				certificate := certificatesModel{
-					ID:           types.StringValue(certificateDto.Id),
-					Name:         types.StringValue(certificateDto.Name),
-					DomainName:   types.StringValue(certificateDto.DomainName),
-					ProviderType: types.StringValue(certificateDto.Provider),
-					ExpiryTime:   types.StringValue(certificateDto.ExpiryTime),
-					Status:       types.StringValue(certificateDto.Status),
-					Organization: types.StringValue(certificateDto.OrgId),
-				}
-				tflog.Info(ctx, "reflect map0", map[string]interface{}{"dto": reflect.ValueOf(certificateDto.Deployemnts)})
-				if certificateDto.Deployemnts == nil {
-					certificate.DataplaneCount = types.Int64Value(0)
-					tflog.Info(ctx, "reflect map", map[string]interface{}{"dto": certificate.DataplaneCount})
-					return
-				} else {
-					keys := reflect.ValueOf(certificateDto.Deployemnts).Len()
-					certificate.DataplaneCount = types.Int64Value(int64(keys))
-					tflog.Info(ctx, "reflect map1", map[string]interface{}{"dto": certificate.DataplaneCount})
-				}
-				certificateList = append(certificateList, certificate)
-			}
+			certificateList = d.convertToTfModels(&ctx, certificates.Get())
 		}
-
-		tflog.Debug(ctx, "certificates dto", map[string]interface{}{"dto": certificateList})
-		state.Certificates = append(state.Certificates, certificateList...)
+		tflog.Debug(ctx, "all pages certificates dto", map[string]interface{}{"dto": certificateList})
 	} else {
-		for _, certificateDto := range *certificates.Get() {
-			tflog.Info(ctx, "Converting certificate Dto1", map[string]interface{}{"dto": certificateDto})
-			certificate := certificatesModel{
-				ID:           types.StringValue(certificateDto.Id),
-				Name:         types.StringValue(certificateDto.Name),
-				DomainName:   types.StringValue(certificateDto.DomainName),
-				ProviderType: types.StringValue(certificateDto.Provider),
-				ExpiryTime:   types.StringValue(certificateDto.ExpiryTime),
-				Status:       types.StringValue(certificateDto.Status),
-				Organization: types.StringValue(certificateDto.OrgId),
-			}
-			tflog.Info(ctx, "converted certificate Dto", map[string]interface{}{"dto": certificate})
-
-			if certificateDto.Deployemnts == nil {
-				certificate.DataplaneCount = types.Int64Value(0)
-				return
-			} else {
-				keys := reflect.ValueOf(certificateDto.Deployemnts).Len()
-				certificate.DataplaneCount = types.Int64Value(int64(keys))
-			}
-			state.Certificates = append(state.Certificates, certificate)
-		}
+		tflog.Debug(ctx, "single page certificates dto", map[string]interface{}{"dto": certificateList})
+		certificateList = d.convertToTfModels(&ctx, certificates.Get())
 	}
+	state.List = append(state.List, certificateList...)
 	state.Id = types.StringValue(common.DataSource + common.CertificateId)
 
 	tflog.Info(ctx, "final", map[string]interface{}{"dto": state})
@@ -205,4 +163,32 @@ func (d *certificatesDatasource) Configure(_ context.Context, req datasource.Con
 	}
 
 	d.client = req.ProviderData.(*tdh.Client)
+}
+
+func (d *certificatesDatasource) convertToTfModels(ctx *context.Context, certificates *[]model.Certificate) []certificatesModel {
+	tflog.Debug(*ctx, "converting to tfModels")
+	var certificateList []certificatesModel
+	for _, certificateDto := range *certificates {
+		tflog.Info(*ctx, "Converting certificate Dto1", map[string]interface{}{"dto": certificateDto})
+		certificate := certificatesModel{
+			ID:           types.StringValue(certificateDto.Id),
+			Name:         types.StringValue(certificateDto.Name),
+			DomainName:   types.StringValue(certificateDto.DomainName),
+			ProviderType: types.StringValue(certificateDto.Provider),
+			ExpiryTime:   types.StringValue(certificateDto.ExpiryTime),
+			Status:       types.StringValue(certificateDto.Status),
+			Organization: types.StringValue(certificateDto.OrgId),
+		}
+		tflog.Info(*ctx, "converted certificate Dto", map[string]interface{}{"dto": certificate})
+
+		if certificateDto.Deployemnts == nil {
+			certificate.DataPlaneCount = types.Int64Value(0)
+		} else {
+			keys := reflect.ValueOf(certificateDto.Deployemnts).Len()
+			certificate.DataPlaneCount = types.Int64Value(int64(keys))
+		}
+		certificateList = append(certificateList, certificate)
+	}
+	tflog.Debug(*ctx, "converted to tfModels")
+	return certificateList
 }

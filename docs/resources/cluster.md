@@ -46,7 +46,7 @@ resource "tdh_cluster" "example" {
 
 - `cluster_metadata` (Attributes) Additional info for the cluster. (see [below for nested schema](#nestedatt--cluster_metadata))
 - `data_plane_id` (String) ID of the data-plane where the cluster is running.
-- `instance_size` (String) Size of instance. Supported values are: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`.
+- `instance_size` (String) Size of instance. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`.
 Please make use of datasource `tdh_network_ports` to decide on a size based on resources it requires.
 - `name` (String) Name of the cluster.
 - `network_policy_ids` (Set of String) IDs of network policies to attach to the cluster.
@@ -117,6 +117,6 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-# Cluster can be imported by specifying the alphanumeric identifier.
-terraform import tdh_cluster.example s546dg29fh2ksh3dfr
+# Cluster can be imported by specifying the UUID.
+terraform import tdh_cluster.example d3c49288-7b17-4e78-a6af-257b49e34e53
 ```

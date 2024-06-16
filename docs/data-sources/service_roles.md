@@ -23,15 +23,15 @@ data "tdh_service_roles" "rmq"{
 
 ### Required
 
-- `type` (String) Type of the service on TDH. Supported values: `RABBITMQ`.
+- `type` (String) Type of the service on TDH.
 
 ### Read-Only
 
 - `id` (String) The testing framework requires an id attribute to be present in every data source and resource
-- `roles` (Attributes List) List of service roles. (see [below for nested schema](#nestedatt--roles))
+- `list` (Attributes List) List of service roles. (see [below for nested schema](#nestedatt--list))
 
-<a id="nestedatt--roles"></a>
-### Nested Schema for `roles`
+<a id="nestedatt--list"></a>
+### Nested Schema for `list`
 
 Read-Only:
 

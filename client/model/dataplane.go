@@ -42,10 +42,10 @@ type HelmVersions struct {
 	IsEnabled bool   `json:"isEnabled"`
 }
 
-type EligibleSharedDataPlane struct {
+type EligibleDataPlane struct {
 	Id                  string   `json:"id"`
 	Provider            string   `json:"provider"`
-	DataplaneName       string   `json:"dataplaneName"`
+	DataPlaneName       string   `json:"dataplaneName"`
 	StoragePolicies     []string `json:"storagePolicies"`
 	BackupStoragePolicy string   `json:"backupStoragePolicy"`
 }

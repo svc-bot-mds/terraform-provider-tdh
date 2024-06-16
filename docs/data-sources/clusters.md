@@ -13,8 +13,8 @@ Used to fetch all clusters of a service type available on TDH.
 ## Example Usage
 
 ```terraform
-data "tdh_clusters" "all_rmq" {
-  service_type = "RABBITMQ"
+data "tdh_clusters" "all_pg" {
+  service_type = "POSTGRES"
 }
 ```
 
