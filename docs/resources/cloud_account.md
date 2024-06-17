@@ -17,12 +17,12 @@ variable "tkgs_cred" {
   description = "TKGs CRED JSON"
   type        = string
   default     = <<EOF
-{
+  {
     "userName": "test",
     "password": "REPLACE",
     "supervisorManagementIP": "SOME_IP",
     "vsphereNamespace": "NAMESPACE"
-}
+  }
 EOF
 }
 

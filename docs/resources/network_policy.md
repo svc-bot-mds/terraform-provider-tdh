@@ -22,7 +22,7 @@ output "network_ports" {
 }
 
 resource "tdh_network_policy" "pg" {
-  name         = "tf-pg-nw-policy"
+  name = "tf-pg-nw-policy"
   network_spec = {
     cidr             = "0.0.0.0/32",
     network_port_ids = [for port in data.tdh_network_ports.pg.list : port.id]
