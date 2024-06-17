@@ -1,2 +1,2 @@
-# Cluster can be imported by specifying the UUID.
-terraform import tdh_smtp.custom d3c49288-7b17-4e78-a6af-257b49e34e53
+# SMTP can be imported by specifying any valid string to work as ID, currently there is no unique ID is assigned so any string will do.
+terraform import tdh_smtp.custom my_smtp

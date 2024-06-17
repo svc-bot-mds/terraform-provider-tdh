@@ -15,10 +15,10 @@ Represents a TDH Data Plane.
 ```terraform
 resource "tdh_data_plane" "example" {
   name                    = "name"
-  account_id              = "account_id" # this ID can be fetched from the datasource "tdh_cloud_accounts"
+  account_id              = "account_id"       # this ID can be fetched from the datasource "tdh_cloud_accounts"
   k8s_cluster_name        = "k8s_cluster_name" # use datasource "tdh_k8s_clusters" to get the list of available K8s clusters available from an account
   storage_classes         = ["tdh-k8s-storage-policy", "default"]
-  backup_storage_class    = "backup_storage_class" # name of the storage class to use for backups
+  backup_storage_class    = "backup_storage_class"  # name of the storage class to use for backups
   data_plane_release_id   = "data_plane_release_id" # use datasource "tdh_data_plane_helm_releases" to select one of the IDs
   shared                  = true
   org_id                  = null # setting this to particular Org ID will make it available to only that Org

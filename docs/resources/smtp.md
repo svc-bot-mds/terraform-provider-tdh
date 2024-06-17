@@ -3,16 +3,17 @@
 page_title: "tdh_smtp Resource - tdh"
 subcategory: ""
 description: |-
-  Represents SMTP details. We can only edit the smtp details
+  Represents SMTP details. We can only edit the smtp details.
 ---
 
 # tdh_smtp (Resource)
 
-Represents SMTP details. We can only edit the smtp details
+Represents SMTP details. We can only edit the smtp details.
 
 ## Example Usage
 
 ```terraform
+# currently only one SMTP server is registered on TDH, so please first import the resource details.
 resource "tdh_smtp" "custom" {
   host      = "<<host>>"
   port      = "<<port>>"
@@ -29,19 +30,23 @@ resource "tdh_smtp" "custom" {
 
 ### Required
 
-- `auth` (String) Authentication enabled flag
+- `auth` (String) Whether authentication is enabled or not
 - `from` (String) SMTP - Email Address
 - `host` (String) SMTP - Host Name
-- `password` (String) SMTP- passowrd
-- `port` (String) SMTP - port details. Can be passed to import an existing smtp details from TDH to terraform state during teh update.
-- `tls` (String) TLS Enabled
-- `user_name` (String) SMTP- User name
+- `password` (String) SMTP - Password
+- `port` (String) SMTP - Port. Can be passed to import an existing smtp details from TDH to terraform state during the update.
+- `tls` (String) Whether TLS is enabled or not
+- `user_name` (String) SMTP - User name
+
+### Optional
+
+- `id` (String) ID for this SMTP
 
 ## Import
 
 Import is supported using the following syntax:
 
 ```shell
-# Cluster can be imported by specifying the UUID.
-terraform import tdh_smtp.custom d3c49288-7b17-4e78-a6af-257b49e34e53
+# SMTP can be imported by specifying any valid string to work as ID, currently there is no unique ID is assigned so any string will do.
+terraform import tdh_smtp.custom my_smtp
 ```
