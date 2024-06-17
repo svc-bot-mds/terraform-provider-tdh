@@ -100,7 +100,7 @@ func (r *cloudAccountResource) Schema(ctx context.Context, _ resource.SchemaRequ
 				ElementType: types.StringType,
 			},
 			"user_email": schema.StringAttribute{
-				Description: "Email of the TDH User",
+				Description: "Email of the TDH User.",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

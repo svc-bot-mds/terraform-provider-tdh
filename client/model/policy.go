@@ -4,6 +4,7 @@ package model
 type Policy struct {
 	ID              string             `json:"id"`
 	Name            string             `json:"name"`
+	Description     string             `json:"description"`
 	ServiceType     string             `json:"serviceType"`
 	ResourceIds     []string           `json:"resourceIds,omitempty"`
 	PermissionsSpec []*PermissionsSpec `json:"permissionsSpec,omitempty"`

@@ -22,9 +22,9 @@ data "tdh_policies" "all" {
 
 ### Optional
 
-- `identity_type` (String) Type of identity, to list policies supported only for that type.
+- `identity_type` (String) Type of identity, to list policies dedicated to that type. Supported values: `USER_ACCOUNT`, `LOCAL_USER_ACCOUNT`.
 - `names` (List of String) Names to search policies by. Ex: `["read-only-postgres"]` .
-- `type` (String) Type of policies to list. Ex: `POSTGRES`, `MYSQL` etc.
+- `type` (String) Type of policies to list. Supported values: `POSTGRES`, `MYSQL`, `RABBITMQ`, `REDIS`.
 
 ### Read-Only
 

@@ -13,32 +13,30 @@ Represents a policy on TDH.
 ## Example Usage
 
 ```terraform
-// example of a RABBITMQ policy
-resource "tdh_policy" "rabbitmq" {
-  name             = "test-tf"
-  service_type     = "RABBITMQ"
-  permission_specs = [
-    {
-      permissions = ["read"],
-      role        = "read",
-      resource    = "cluster:example-cluster-name"
-    },
-    {
-      "permissions" = ["write"],
-      "role"        = "write",
-      "resource"    = "cluster:example-cluster-name/queue:my-queue"
-    }
-  ]
+data "tdh_service_roles" "pg" { # to view what all role can be used
+  type = "POSTGRES"
 }
 
-// example of a NETWORK policy
-resource "tdh_policy" "network" {
-  name         = "network-policy-from-tf"
-  service_type = "NETWORK"
-  network_spec = {
-    cidr             = "10.22.55.0/24",
-    network_port_ids = ["rmq-streams", "rmq-amqps"]
-  }
+data "tdh_cluster_metadata" "pg" {  # to view which database/schema/table to use in resource regex
+  id = "CLUSTER_ID"
+}
+
+resource "tdh_policy" "sample" {
+  name         = "tf-pg-policy"
+  description  = "to allow login and create DB"
+  service_type = "POSTGRES"
+  permission_specs = [
+    {
+      resource    = "cluster:${data.tdh_cluster_metadata.pg.name}"
+      role        = "login" # use any value from tdh_service_roles.all.list[*].name
+      permissions = ["login"]  # use the same value from tdh_service_roles.all.list[*].name
+    },
+    {
+      resource    = "cluster:${data.tdh_cluster_metadata.pg.name}/database:broadcom" # use any value from tdh_cluster_metadata.pg.databases[*].name
+      role        = "create" # this role is database specific; same can be known by the structure of permissionId of service role
+      permissions = ["create"]
+    },
+  ]
 }
 ```
 
@@ -48,8 +46,12 @@ resource "tdh_policy" "network" {
 ### Required
 
 - `name` (String) Name of the policy
-- `permission_specs` (Attributes List) Permissions to enforce on service resources. Only required for policies other than `NETWORK` type. (see [below for nested schema](#nestedatt--permission_specs))
-- `service_type` (String) Type of policy to manage. Supported values are: `RABBITMQ`, `NETWORK`.
+- `permission_specs` (Attributes Set) Permissions to enforce on service resources. Only required for policies other than `NETWORK` type. (see [below for nested schema](#nestedatt--permission_specs))
+- `service_type` (String) Type of TDH service to managed. Supported values: `POSTGRES`, `MYSQL`, `RABBITMQ`, `REDIS`.
+
+### Optional
+
+- `description` (String) Description of the policy
 
 ### Read-Only
 
@@ -61,15 +63,15 @@ resource "tdh_policy" "network" {
 
 Required:
 
-- `permissions` (Set of String) One or more of (monitoring,write,management,policymaker,read,configure). Please make use of datasource `tdh_service_roles` to get roles.
-- `resource` (String) The cluster/instance name. Please make use of datasource `tdh_clusters` to get resource.
-- `role` (String) One or more of (monitoring,write,management,policymaker,read,configure). Please make use of datasource `tdh_service_roles` to get roles.
+- `permissions` (Set of String) Name of the permission, usually same as role name. Please make use of datasource `tdh_service_roles` to get the relevant values.
+- `resource` (String) Name of the cluster/instance. Please make use of datasource `tdh_clusters` to get the names & . Format of this field is: `cluster:<NAME>[/database:<DB_NAME>[/schema:<SCHEMA>[/table:<TABLE>]]]`.
+- `role` (String) Name of the role, it will vary on service type. Please make use of datasource `tdh_service_roles` to get the relevant values by a service type, `POSTGRES` for example.
 
 ## Import
 
 Import is supported using the following syntax:
 
 ```shell
-# Policy can be imported by specifying the alphanumeric identifier.
-terraform import tdh_policy.rabbitmq s546dg29fh2ksh3dfr
+# Policy can be imported by specifying the UUID.
+terraform import tdh_policy.sample d3c49288-7b17-4e78-a6af-257b49e34e53
 ```

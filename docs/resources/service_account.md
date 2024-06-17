@@ -98,6 +98,6 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-# Service Account can be imported by specifying the alphanumeric identifier.
-terraform import tdh_service_account.example s546dg29fh2ksh3dfr
+# Service Account can be imported by specifying the UUID.
+terraform import tdh_service_account.example d3c49288-7b17-4e78-a6af-257b49e34e53
 ```

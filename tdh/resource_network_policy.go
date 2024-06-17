@@ -37,7 +37,7 @@ type networkPolicyResource struct {
 type networkPolicyResourceModel struct {
 	ID          types.String      `tfsdk:"id"`
 	Name        types.String      `tfsdk:"name"`
-	ServiceType types.String      `tfsdk:"service_type"`
+	Description types.String      `tfsdk:"description"`
 	NetworkSpec *NetworkSpecModel `tfsdk:"network_spec"`
 	ResourceIds types.Set         `tfsdk:"resource_ids"`
 }
@@ -83,13 +83,14 @@ func (r *networkPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"service_type": schema.StringAttribute{
-				MarkdownDescription: "Type of policy to manage. Supported values is:  `NETWORK`.",
-				Required:            true,
-			},
 			"name": schema.StringAttribute{
 				Description: "Name of the policy",
 				Required:    true,
+			},
+			"description": schema.StringAttribute{
+				Description: "Description of the policy",
+				Optional:    true,
+				Computed:    true,
 			},
 			"resource_ids": schema.SetAttribute{
 				Description: "IDs of service resources/instances being managed by the policy.",
@@ -139,6 +140,7 @@ func (r *networkPolicyResource) Create(ctx context.Context, req resource.CreateR
 	// Generate API request body from plan
 	policyRequest := customer_metadata.CreateUpdatePolicyRequest{
 		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 		ServiceType: policy_type.NETWORK,
 	}
 
@@ -207,6 +209,7 @@ func (r *networkPolicyResource) Update(ctx context.Context, req resource.UpdateR
 	// Generate API request body from plan
 	updateRequest := customer_metadata.CreateUpdatePolicyRequest{
 		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 		ServiceType: policy_type.NETWORK,
 	}
 
@@ -326,6 +329,7 @@ func saveFromNetworkPolicyResponse(ctx *context.Context, diagnostics *diag.Diagn
 
 	state.ID = types.StringValue(policy.ID)
 	state.Name = types.StringValue(policy.Name)
+	state.Description = types.StringValue(policy.Description)
 	resourceIds, diags := types.SetValueFrom(*ctx, types.StringType, policy.ResourceIds)
 	if diagnostics.Append(diags...); diagnostics.HasError() {
 		return 1

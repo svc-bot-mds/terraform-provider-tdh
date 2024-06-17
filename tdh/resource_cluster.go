@@ -156,7 +156,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"instance_size": schema.StringAttribute{
-				MarkdownDescription: "Size of instance. Supported values are: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`." +
+				MarkdownDescription: "Size of instance. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`." +
 					"\nPlease make use of datasource `tdh_network_ports` to decide on a size based on resources it requires.",
 				Required: true,
 				PlanModifiers: []planmodifier.String{

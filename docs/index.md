@@ -3,25 +3,32 @@
 page_title: "tdh Provider"
 subcategory: ""
 description: |-
-  Interact with VMware Managed Data Services
+  Interact with VMware Tanzu Data Hub
 ---
 
 # tdh Provider
 
-Interact with VMware Managed Data Services
+Interact with VMware Tanzu Data Hub
 
 ## Example Usage
 
 ```terraform
+terraform {
+  required_providers {
+    tdh = {
+      source = "svc-bot-mds/tdh"
+    }
+  }
+}
+
 provider "tdh" {
   host = "https://console.tdh.vmware.com"
 
-  // Get the authentication with "username and password"
-  type = "user_creds"
-
-  username = "< Username >"
-  password = "< Password >"
-  org_id   = "< ORG_ID >"
+  // Authentication using username and password
+  type     = "user_creds"
+  username = "TDH_USERNAME"
+  password = "TDH_PASSWORD"
+  org_id   = "TDH_ORG_ID"
 }
 ```
 
@@ -30,11 +37,10 @@ provider "tdh" {
 
 ### Required
 
-- `type` (String) OAuthType for the TDH API. It can be `api_token` or `client_credentials` or `user_creds`
+- `type` (String) OAuthType for the TDH API. It can be `user_creds` or `client_credentials`.
 
 ### Optional
 
-- `api_token` (String, Sensitive) (Required for `api_token`) API Token for TDH API. May also be provided via *TDH_API_TOKEN* environment variable.
 - `client_id` (String) (Required for `client_credentials`) Client Id for TDH API. May also be provided via *TDH_CLIENT_ID* environment variable.
 - `client_secret` (String, Sensitive) (Required for `client_credentials`) Client Secret for TDH API. May also be provided via *TDH_CLIENT_SECRET* environment variable.
 - `host` (String) URI for TDH API. May also be provided via *TDH_HOST* environment variable.

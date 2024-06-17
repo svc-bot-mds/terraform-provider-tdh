@@ -8,14 +8,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/policy_type"
-	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/service_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	customer_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
 	"sort"
 )
 
@@ -37,6 +38,7 @@ type policyResource struct {
 type policyResourceModel struct {
 	ID              types.String           `tfsdk:"id"`
 	Name            types.String           `tfsdk:"name"`
+	Description     types.String           `tfsdk:"description"`
 	ServiceType     types.String           `tfsdk:"service_type"`
 	PermissionSpecs []*PermissionSpecModel `tfsdk:"permission_specs"`
 	ResourceIds     types.Set              `tfsdk:"resource_ids"`
@@ -88,30 +90,41 @@ func (r *policyResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 				Description: "Name of the policy",
 				Required:    true,
 			},
+			"description": schema.StringAttribute{
+				Description: "Description of the policy",
+				Optional:    true,
+				Computed:    true,
+			},
 			"service_type": schema.StringAttribute{
-				MarkdownDescription: "Type of policy to manage. Supported values are: `RABBITMQ`, `NETWORK`.",
+				MarkdownDescription: fmt.Sprintf("Type of TDH service to managed. Supported values: %s.", supportedServiceTypesMarkdown()),
 				Required:            true,
+				Validators: []validator.String{
+					utils.ServiceTypeValidator,
+				},
 			},
 			"resource_ids": schema.SetAttribute{
 				Description: "IDs of service resources/instances being managed by the policy.",
 				Computed:    true,
 				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"permission_specs": schema.ListNestedAttribute{
+			"permission_specs": schema.SetNestedAttribute{
 				MarkdownDescription: "Permissions to enforce on service resources. Only required for policies other than `NETWORK` type.",
 				Required:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"role": schema.StringAttribute{
-							MarkdownDescription: "One or more of (monitoring,write,management,policymaker,read,configure). Please make use of datasource `tdh_service_roles` to get roles.",
+							MarkdownDescription: "Name of the role, it will vary on service type. Please make use of datasource `tdh_service_roles` to get the relevant values by a service type, `POSTGRES` for example.",
 							Required:            true,
 						},
 						"resource": schema.StringAttribute{
-							MarkdownDescription: "The cluster/instance name. Please make use of datasource `tdh_clusters` to get resource.",
+							MarkdownDescription: "Name of the cluster/instance. Please make use of datasource `tdh_clusters` to get the names & . Format of this field is: `cluster:<NAME>[/database:<DB_NAME>[/schema:<SCHEMA>[/table:<TABLE>]]]`.",
 							Required:            true,
 						},
 						"permissions": schema.SetAttribute{
-							MarkdownDescription: "One or more of (monitoring,write,management,policymaker,read,configure). Please make use of datasource `tdh_service_roles` to get roles.",
+							MarkdownDescription: "Name of the permission, usually same as role name. Please make use of datasource `tdh_service_roles` to get the relevant values.",
 							Required:            true,
 							ElementType:         types.StringType,
 						},
@@ -140,6 +153,7 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 	// Generate API request body from plan
 	policyRequest := customer_metadata.CreateUpdatePolicyRequest{
 		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 		ServiceType: plan.ServiceType.ValueString(),
 	}
 	for i, roleId := range plan.PermissionSpecs {
@@ -210,20 +224,19 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	// Generate API request body from plan
 	updateRequest := customer_metadata.CreateUpdatePolicyRequest{
 		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 		ServiceType: plan.ServiceType.ValueString(),
 	}
 	permissionSpecRequest := make([]customer_metadata.PermissionSpec, len(plan.PermissionSpecs))
 
-	if plan.ServiceType.ValueString() == policy_type.RABBITMQ {
-		for i, roleId := range plan.PermissionSpecs {
-			permissionSpecRequest[i] = customer_metadata.PermissionSpec{
-				Role:     roleId.Role.ValueString(),
-				Resource: roleId.Resource.ValueString(),
-			}
-			roleId.Permissions.ElementsAs(ctx, &permissionSpecRequest[i].Permissions, true)
+	for i, roleId := range plan.PermissionSpecs {
+		permissionSpecRequest[i] = customer_metadata.PermissionSpec{
+			Role:     roleId.Role.ValueString(),
+			Resource: roleId.Resource.ValueString(),
 		}
-		updateRequest.PermissionsSpec = permissionSpecRequest
+		roleId.Permissions.ElementsAs(ctx, &permissionSpecRequest[i].Permissions, true)
 	}
+	updateRequest.PermissionsSpec = permissionSpecRequest
 	tflog.Debug(ctx, "update policy request dto", map[string]interface{}{"dto": updateRequest})
 
 	// Update existing policy
@@ -248,6 +261,7 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
+	//resp.State.RemoveResource(ctx)
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -321,22 +335,22 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 func saveFromPolicyResponse(ctx *context.Context, diagnostics *diag.Diagnostics, state *policyResourceModel, policy *model.Policy) int8 {
 	tflog.Info(*ctx, "Saving response to resourceModel state/plan", map[string]interface{}{"policy": *policy})
-	if policy.ServiceType == service_type.RABBITMQ {
-		tfPermissionSpecModel, diags := convertFromPermissionSpecDto(ctx, policy.PermissionsSpec)
-		if diagnostics.Append(diags...); diagnostics.HasError() {
-			return 1
-		}
-
-		sort.Slice(tfPermissionSpecModel, func(i, j int) bool {
-			roleI := tfPermissionSpecModel[i].Role.ValueString()
-			roleJ := tfPermissionSpecModel[j].Role.ValueString()
-			return roleI < roleJ
-		})
-		state.PermissionSpecs = tfPermissionSpecModel
+	tfPermissionSpecModel, diags := convertFromPermissionSpecDto(ctx, policy.PermissionsSpec)
+	if diagnostics.Append(diags...); diagnostics.HasError() {
+		return 1
 	}
+
+	sort.Slice(tfPermissionSpecModel, func(i, j int) bool {
+		roleI := tfPermissionSpecModel[i].Role.ValueString()
+		roleJ := tfPermissionSpecModel[j].Role.ValueString()
+		return roleI < roleJ
+	})
+	state.PermissionSpecs = tfPermissionSpecModel
 
 	state.ID = types.StringValue(policy.ID)
 	state.Name = types.StringValue(policy.Name)
+	state.ServiceType = types.StringValue(policy.ServiceType)
+	state.Description = types.StringValue(policy.Description)
 	resourceIds, diags := types.SetValueFrom(*ctx, types.StringType, policy.ResourceIds)
 	if diagnostics.Append(diags...); diagnostics.HasError() {
 		return 1
@@ -353,7 +367,7 @@ func convertFromPermissionSpecDto(ctx *context.Context, roles []*model.Permissio
 			Role:     types.StringValue(permissionSpec.Role),
 			Resource: types.StringValue(permissionSpec.Resource),
 		}
-		permissions, _ := types.SetValueFrom(*ctx, types.StringType, permissionSpec.Permissions)
+		permissions, _ := types.SetValueFrom(*ctx, types.StringType, []string{permissionSpec.Permissions[0].Name})
 		tfPermissionSpecModels[i].Permissions = permissions
 	}
 	return tfPermissionSpecModels, nil
