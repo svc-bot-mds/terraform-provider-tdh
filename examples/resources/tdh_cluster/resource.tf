@@ -8,7 +8,7 @@ locals {
   provider_type       = "tkgs"                   # can be get using datasource "tdh_provider_types"
   instance_type       = "XX-SMALL"               # can be get using datasource "tdh_instance_types"
   version             = "postgres-13"            # TBD
-  storage_policy_name = "tdh-k8s-cluster-policy" # can be get using datasource
+  storage_policy_name = "tdh-k8s-cluster-policy" # can be get using the response from datasource "tdh_tdh_eligible_data_planes" . Use the field 'storage_policies'
 }
 data "tdh_regions" "shared" {
   instance_size = local.instance_type

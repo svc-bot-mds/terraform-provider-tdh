@@ -25,7 +25,7 @@ locals {
   provider_type       = "tkgs"                   # can be get using datasource "tdh_provider_types"
   instance_type       = "XX-SMALL"               # can be get using datasource "tdh_instance_types"
   version             = "postgres-13"            # TBD
-  storage_policy_name = "tdh-k8s-cluster-policy" # can be get using datasource
+  storage_policy_name = "tdh-k8s-cluster-policy" # can be get using the response from datasource "tdh_tdh_eligible_data_planes" . Use the field 'storage_policies'
 }
 data "tdh_regions" "shared" {
   instance_size = local.instance_type
@@ -55,7 +55,7 @@ resource "tdh_network_policy" "network" {
   name         = "tf-pg-nw-policy"
   service_type = "NETWORK"
   network_spec = {
-    cidr             = "0.0.0.0/32",
+    cidr = "0.0.0.0/32",
     network_port_ids = [
       for port in data.tdh_network_ports.all.network_ports : port.id if strcontains(port.id, "postgres")
     ]
@@ -67,13 +67,13 @@ resource "tdh_cluster" "test" {
   service_type        = "POSTGRES"
   provider_type       = "tkgs"
   instance_size       = "XX-SMALL"
-  region              = "REGION_NAME"  # can get using datasource "tdh_regions"
-  data_plane_id       = "DP_ID" # can get using datasource "tdh_eligible_data_planes"
+  region              = "REGION_NAME" # can get using datasource "tdh_regions"
+  data_plane_id       = "DP_ID"       # can get using datasource "tdh_eligible_data_planes"
   network_policy_ids  = [tdh_network_policy.network.id]
   tags                = ["tdh-tf", "new-tag"]
   version             = local.version
   storage_policy_name = "tdh-k8s-cluster-policy" # complete list can be get using datasource "tdh_eligible_data_planes"
-  cluster_metadata    = {
+  cluster_metadata = {
     username      = "test"
     password      = "Admin!23"
     database      = "test"

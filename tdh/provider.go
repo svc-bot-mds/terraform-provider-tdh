@@ -317,6 +317,7 @@ func (p *tdhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewLocalUsersDataSource,
 		NewBackupDataSource,
 		NewRestoreDataSource,
+		NewStorageClassDataSource,
 		NewEligibleDataPlanesDatasource,
 	}
 }
