@@ -15,4 +15,6 @@ const (
 	SRE_cluster       = "clusters"
 	ResourceByService = "resource-by-service"
 	Mdsfleets         = "mdsfleets"
+	Backup            = "backup"
+	Restore           = "restore"
 )

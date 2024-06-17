@@ -46,6 +46,41 @@ func (s *Service) GetClusters(query *ClustersQuery) (model.Paged[model.Cluster],
 	return response, nil
 }
 
+// GetBackups - Returns all the Backups
+func (s *Service) GetBackups(query BackupQuery) (model.Paged[model.ClusterBackup], error) {
+
+	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Backup)
+	var response model.Paged[model.ClusterBackup]
+
+	if query.Size == 0 {
+		query.Size = defaultPage.Size
+	}
+
+	_, err := s.Api.Get(&urlPath, query, &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, nil
+}
+
+// GetRestore - Returns all the Restore
+func (s *Service) GetClusterRestores(query RestoreQuery) (model.Paged[model.ClusterRestore], error) {
+
+	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Restore)
+	var response model.Paged[model.ClusterRestore]
+
+	if query.Size == 0 {
+		query.Size = defaultPage.Size
+	}
+
+	_, err := s.Api.Get(&urlPath, query, &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, nil
+}
 // GetAllClusters - Returns list of all clusters
 func (s *Service) GetAllClusters(query *ClustersQuery) ([]model.Cluster, error) {
 	var clusters []model.Cluster
