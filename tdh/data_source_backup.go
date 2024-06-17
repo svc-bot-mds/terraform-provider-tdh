@@ -171,7 +171,7 @@ func (d backupDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	backups, err := d.client.Controller.GetBackups(query)
+	backups, err := d.client.Controller.GetBackups(&query)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Service Backups",
@@ -183,7 +183,7 @@ func (d backupDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	if backups.Page.TotalPages > 1 {
 		for i := 1; i <= backups.Page.TotalPages; i++ {
 			query.PageQuery.Index = i - 1
-			totalClusters, err := d.client.Controller.GetBackups(query)
+			totalClusters, err := d.client.Controller.GetBackups(&query)
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Unable to Read Service Backups",

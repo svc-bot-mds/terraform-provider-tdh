@@ -47,7 +47,7 @@ func (s *Service) GetClusters(query *ClustersQuery) (model.Paged[model.Cluster],
 }
 
 // GetBackups - Returns all the Backups
-func (s *Service) GetBackups(query BackupQuery) (model.Paged[model.ClusterBackup], error) {
+func (s *Service) GetBackups(query *BackupQuery) (model.Paged[model.ClusterBackup], error) {
 
 	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Backup)
 	var response model.Paged[model.ClusterBackup]
@@ -251,4 +251,49 @@ func (s *Service) GetFleetDetails(query *FleetsQuery) (model.Paged[model.SreCust
 	}
 	return response, nil
 
+}
+
+// GetBackup - Returns the Backup by ID
+func (s *Service) GetBackup(id string) (*model.ClusterBackup, error) {
+	if strings.TrimSpace(id) == "" {
+		return nil, fmt.Errorf("ID cannot be empty")
+	}
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Backup, id)
+	var response model.ClusterBackup
+
+	_, err := s.Api.Get(&urlPath, nil, &response)
+	if err != nil {
+		return &response, err
+	}
+
+	return &response, err
+}
+
+// create cluster backup
+func (s *Service) CreateClusterBackup(requestBody *BackupCreateRequest) (*model.TaskResponse, error) {
+	if requestBody == nil {
+		return nil, fmt.Errorf("requestBody cannot be nil")
+	}
+	//var response model.CreateBackup
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Clusters, requestBody.ClusterId, Backup)
+
+	var response model.TaskResponse
+	_, err := s.Api.Post(&urlPath, requestBody, response)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, err
+}
+
+// Delete cluster backup
+func (s *Service) DeleteClusterBackup(id string) error {
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Backup, id)
+
+	_, err := s.Api.Delete(&urlPath, nil, nil)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
