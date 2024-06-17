@@ -27,12 +27,12 @@ func NewService(hostUrl *string, root *core.Root) *Service {
 	}
 }
 
-func (s *Service) GetNetworkPorts() ([]model.NetworkPorts, error) {
+func (s *Service) GetNetworkPorts(query *NetworkPortsQuery) ([]model.NetworkPorts, error) {
 	reqUrl := fmt.Sprintf("%s/%s/%s", s.Endpoint, MdsServices, NetworkPorts)
 
 	var response []model.NetworkPorts
 
-	_, err := s.Api.Get(&reqUrl, nil, &response)
+	_, err := s.Api.Get(&reqUrl, query, &response)
 	if err != nil {
 		return response, err
 	}

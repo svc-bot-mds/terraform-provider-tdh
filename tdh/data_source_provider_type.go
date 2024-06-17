@@ -71,7 +71,7 @@ func (d *providerTypesDataSource) Read(ctx context.Context, req datasource.ReadR
 	typesList, err := d.client.InfraConnector.GetProviderTypes()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read TDH Provider Types:",
+			"Unable to Read TDH Provider Types",
 			err.Error(),
 		)
 		return

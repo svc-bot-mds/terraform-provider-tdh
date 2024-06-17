@@ -76,7 +76,7 @@ func (s *Service) GetCloudAccount(id string) (*model.CloudAccount, error) {
 	return &response, err
 }
 
-func (s *Service) GetCertificates(query *CertificateQuery) (model.Paged[model.Certificate], error) {
+func (s *Service) GetCertificates(query *CertificatesQuery) (model.Paged[model.Certificate], error) {
 	var response model.Paged[model.Certificate]
 	if query == nil {
 		return response, fmt.Errorf("query cannot be nil")
@@ -187,7 +187,7 @@ func (s *Service) UpdateDataPlane(id string, requestBody *DataPlaneUpdateRequest
 	return err
 }
 
-func (s *Service) GetDataPlanes(query *DataPlaneQuery) (model.Paged[model.DataPlane], error) {
+func (s *Service) GetDataPlanes(query *DataPlanesQuery) (model.Paged[model.DataPlane], error) {
 	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Internal, K8sCluster)
 	var response model.Paged[model.DataPlane]
 
@@ -203,23 +203,9 @@ func (s *Service) GetDataPlanes(query *DataPlaneQuery) (model.Paged[model.DataPl
 	return response, nil
 }
 
-func (s *Service) GetEligibleSharedDataPlanes(query *EligibleSharedDataPlaneQuery) (model.Paged[model.EligibleSharedDataPlane], error) {
+func (s *Service) GetEligibleDataPlanes(query *EligibleDataPlanesQuery) (model.Paged[model.EligibleDataPlane], error) {
 	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, K8sCluster, Eligible)
-	var response model.Paged[model.EligibleSharedDataPlane]
-
-	query.Size = 500
-
-	_, err := s.Api.Get(&urlPath, query, &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, nil
-}
-
-func (s *Service) GetEligibleDedicatedDataPlanes(query *EligibleDedicatedDataPlaneQuery) (model.Paged[model.EligibleSharedDataPlane], error) {
-	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, K8sCluster, Eligible)
-	var response model.Paged[model.EligibleSharedDataPlane]
+	var response model.Paged[model.EligibleDataPlane]
 
 	query.Size = 500
 
@@ -244,15 +230,16 @@ func (s *Service) GetDataPlaneById(id string) (model.DataPlane, error) {
 }
 
 // DeleteDataPlane - Submits a request to delete dataplane
-func (s *Service) DeleteDataPlane(id string) error {
+func (s *Service) DeleteDataPlane(id string) (*model.TaskResponse, error) {
 	urlPath := fmt.Sprintf("%s/%s/%s/%s/%s", s.Endpoint, Internal, K8sCluster, DataplaneOnboard, id)
+	var response model.TaskResponse
 
-	_, err := s.Api.Delete(&urlPath, nil, nil)
+	_, err := s.Api.Delete(&urlPath, nil, &response)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &response, nil
 }
 
 func (s *Service) CreateCloudAccount(requestBody *CloudAccountCreateRequest) (*model.CloudAccount, error) {
@@ -349,7 +336,7 @@ func (s *Service) DeleteCertificate(id string) error {
 	return err
 }
 
-func (s *Service) GetObjectStorages(query *ObjectStorageQuery) (model.Paged[model.ObjectStorage], error) {
+func (s *Service) GetObjectStorages(query *ObjectStoragesQuery) (model.Paged[model.ObjectStorage], error) {
 	var response model.Paged[model.ObjectStorage]
 	if query == nil {
 		return response, fmt.Errorf("query cannot be nil")
@@ -458,7 +445,7 @@ func (s *Service) GetHelmRelease(query *DNSQuery) (model.Paged[model.HelmVersion
 	return response, nil
 }
 
-func (s *Service) GetTkcList(id string) ([]model.TKC, error) {
+func (s *Service) GetAccountClusters(id string) ([]model.TKC, error) {
 	if strings.TrimSpace(id) == "" {
 		return nil, fmt.Errorf("ID cannot be empty")
 	}
@@ -466,6 +453,23 @@ func (s *Service) GetTkcList(id string) ([]model.TKC, error) {
 	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, AccountMetadata, id)
 
 	_, err := s.Api.Get(&reqUrl, nil, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetK8sClusterStorageClasses(query *StorageClassesQuery) ([]model.StorageClass, error) {
+	if strings.TrimSpace(query.AccountId) == "" {
+		return nil, fmt.Errorf("ID cannot be empty")
+	}
+	if strings.TrimSpace(query.ClusterName) == "" {
+		return nil, fmt.Errorf("k8sClusterName cannot be empty")
+	}
+	var response []model.StorageClass
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, AccountMetadata, StorageClass)
+
+	_, err := s.Api.Get(&reqUrl, query, &response)
 	if err != nil {
 		return response, err
 	}

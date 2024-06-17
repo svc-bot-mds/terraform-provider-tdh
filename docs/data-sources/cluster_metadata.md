@@ -14,7 +14,7 @@ Used to fetch metadata of a cluster by ID.
 
 ```terraform
 data "tdh_cluster_metadata" "example" {
-  id = "cluster_id_34bch3"
+  id = "CLUSTER_ID"
 }
 ```
 
@@ -25,16 +25,21 @@ data "tdh_cluster_metadata" "example" {
 
 - `id` (String) ID of the cluster.
 
-### Read-Only
+### Optional
 
 - `bindings` (Attributes List) List of the Bindings. Specific to `RABBITMQ` service. (see [below for nested schema](#nestedatt--bindings))
+- `databases` (Attributes List) List of the Databases. Specific to `POSTGRES` & `MYSQL` service. (see [below for nested schema](#nestedatt--databases))
 - `exchanges` (Attributes List) List of the Exchanges. Specific to `RABBITMQ` service. (see [below for nested schema](#nestedatt--exchanges))
+- `queues` (Attributes List) List of the Queues. Specific to `RABBITMQ` service. (see [below for nested schema](#nestedatt--queues))
+- `vhosts` (Attributes List) List of the vHosts. Specific to `RABBITMQ` service. (see [below for nested schema](#nestedatt--vhosts))
+
+### Read-Only
+
+- `extensions` (Attributes List) List of the extensions in cluster. Specific to `POSTGRES` service. (see [below for nested schema](#nestedatt--extensions))
 - `name` (String) Name of the cluster.
 - `provider_name` (String) Name of the data-plane's cloud provider where cluster is deployed.
-- `queues` (Attributes List) List of the Queues. Specific to `RABBITMQ` service. (see [below for nested schema](#nestedatt--queues))
 - `service_type` (String) Type of the service of the cluster.
 - `status` (String) Status of the cluster.
-- `vhosts` (Attributes List) List of the vHosts. Specific to `RABBITMQ` service. (see [below for nested schema](#nestedatt--vhosts))
 
 <a id="nestedatt--bindings"></a>
 ### Nested Schema for `bindings`
@@ -46,6 +51,59 @@ Read-Only:
 - `routing_key` (String) Routing key.
 - `source` (String) Source exchange.
 - `vhost` (String) vHost name.
+
+
+<a id="nestedatt--databases"></a>
+### Nested Schema for `databases`
+
+Optional:
+
+- `owner` (String) Name of the database owner.
+- `routines` (List of String) List of the routines in the database. Specific to `MYSQL` service.
+- `schemas` (Attributes List) List of the schemas in the database. Specific to `POSTGRES` service. (see [below for nested schema](#nestedatt--databases--schemas))
+- `tables` (Attributes List) List of the tables in the database. Specific to `MYSQL` service. (see [below for nested schema](#nestedatt--databases--tables))
+
+Read-Only:
+
+- `name` (String) Name of the database.
+
+<a id="nestedatt--databases--schemas"></a>
+### Nested Schema for `databases.schemas`
+
+Optional:
+
+- `owner` (String) Name of the schema owner.
+- `tables` (Attributes List) List of the tables in the schema. (see [below for nested schema](#nestedatt--databases--schemas--tables))
+
+Read-Only:
+
+- `name` (String) Name of the schema.
+
+<a id="nestedatt--databases--schemas--tables"></a>
+### Nested Schema for `databases.schemas.tables`
+
+Optional:
+
+- `type` (String) Type of the table.
+
+Read-Only:
+
+- `name` (String) Name of the table.
+
+
+
+<a id="nestedatt--databases--tables"></a>
+### Nested Schema for `databases.tables`
+
+Optional:
+
+- `columns` (List of String) List of the columns in the table.
+- `type` (String) Type of the table.
+
+Read-Only:
+
+- `name` (String) Name of the table.
+
 
 
 <a id="nestedatt--exchanges"></a>
@@ -72,5 +130,14 @@ Read-Only:
 Read-Only:
 
 - `name` (String) Name of the vHost.
+
+
+<a id="nestedatt--extensions"></a>
+### Nested Schema for `extensions`
+
+Read-Only:
+
+- `name` (String) Name of the extension.
+- `version` (String) Version of the extension.
 
 

@@ -1,9 +1,15 @@
+// network port IDs can be referred using this datasource
+data "tdh_network_ports" "pg" {
+  service_type = "POSTGRES"
+}
+output "network_ports" {
+  value = data.tdh_network_ports.pg
+}
 
-// example of a NETWORK policy
-resource "tdh_network_policy" "network" {
-  name         = "network-policy-from-tf"
+resource "tdh_network_policy" "pg" {
+  name = "tf-pg-nw-policy"
   network_spec = {
-    cidr             = "10.22.55.0/24",
-    network_port_ids = ["rmq-streams", "rmq-amqps"]
+    cidr             = "0.0.0.0/32",
+    network_port_ids = [for port in data.tdh_network_ports.pg.list : port.id]
   }
 }

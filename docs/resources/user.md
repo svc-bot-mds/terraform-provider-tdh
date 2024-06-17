@@ -17,7 +17,7 @@ resource "tdh_user" "example" {
   email      = "developer11@vmware.com"
   tags       = ["new-user", "viewer"]
   role_ids   = ["tdh:viewer"]
-  policy_ids = ["asdhh4bsd83bfd"]
+  policy_ids = ["f3c49288-7b17-4e78-a6af-257b49e35e53"]
 
   // non editable fields
   lifecycle {
@@ -69,6 +69,6 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-# User can be imported by specifying the alphanumeric identifier.
-terraform import tdh_user.example s546dg29fh2ksh3dfr
+# User can be imported by specifying the UUID.
+terraform import tdh_user.example d3c49288-7b17-4e78-a6af-257b49e34e53
 ```

@@ -13,12 +13,19 @@ Represents a policy on TDH.
 ## Example Usage
 
 ```terraform
-// example of a NETWORK policy
-resource "tdh_network_policy" "network" {
-  name         = "network-policy-from-tf"
+// network port IDs can be referred using this datasource
+data "tdh_network_ports" "pg" {
+  service_type = "POSTGRES"
+}
+output "network_ports" {
+  value = data.tdh_network_ports.pg
+}
+
+resource "tdh_network_policy" "pg" {
+  name         = "tf-pg-nw-policy"
   network_spec = {
-    cidr             = "10.22.55.0/24",
-    network_port_ids = ["rmq-streams", "rmq-amqps"]
+    cidr             = "0.0.0.0/32",
+    network_port_ids = [for port in data.tdh_network_ports.pg.list : port.id]
   }
 }
 ```
@@ -30,7 +37,10 @@ resource "tdh_network_policy" "network" {
 
 - `name` (String) Name of the policy
 - `network_spec` (Attributes) Network config to allow access to service resource. (see [below for nested schema](#nestedatt--network_spec))
-- `service_type` (String) Type of policy to manage. Supported values is:  `NETWORK`.
+
+### Optional
+
+- `description` (String) Description of the policy
 
 ### Read-Only
 
@@ -50,6 +60,6 @@ Required:
 Import is supported using the following syntax:
 
 ```shell
-# Policy can be imported by specifying the alphanumeric identifier.
-terraform import tdh_policy.network s546dg29fh2ksh3dfr
+# Network policy can be imported by specifying the UUID.
+terraform import tdh_network_policy.pg d3c49288-7b17-4e78-a6af-257b49e34e53
 ```

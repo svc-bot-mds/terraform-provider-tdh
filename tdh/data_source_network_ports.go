@@ -2,10 +2,12 @@ package tdh
 
 import (
 	"context"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
+	service_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/service-metadata"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
 )
 
@@ -16,8 +18,9 @@ var (
 
 // networkPortsDatasource maps the datasource schema
 type networkPortsDataSourceModel struct {
-	NetworkPorts []networkPortsModel `tfsdk:"network_ports"`
-	Id           types.String        `tfsdk:"id"`
+	List        []networkPortsModel `tfsdk:"list"`
+	Id          types.String        `tfsdk:"id"`
+	ServiceType types.String        `tfsdk:"service_type"`
 }
 
 type networkPortsModel struct {
@@ -49,7 +52,11 @@ func (d *networkPortsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				Computed:            true,
 				MarkdownDescription: "The testing framework requires an id attribute to be present in every data source and resource.",
 			},
-			"network_ports": schema.ListNestedAttribute{
+			"service_type": schema.StringAttribute{
+				MarkdownDescription: fmt.Sprintf("Type of the service to filter ports by. Supported values: %s .", supportedServiceTypesMarkdown()),
+				Optional:            true,
+			},
+			"list": schema.ListNestedAttribute{
 				Description: "List of network ports.",
 				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
@@ -83,10 +90,15 @@ func (d *networkPortsDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
-	networkPorts, err := d.client.ServiceMetadata.GetNetworkPorts()
+	var query *service_metadata.NetworkPortsQuery
+	if !state.ServiceType.IsNull() {
+		query = &service_metadata.NetworkPortsQuery{Type: state.ServiceType.ValueString()}
+	}
+
+	networkPorts, err := d.client.ServiceMetadata.GetNetworkPorts(query)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read TDH InstanceTypes",
+			"Unable to Read TDH Service Network ports",
 			err.Error(),
 		)
 		return
@@ -101,7 +113,7 @@ func (d *networkPortsDataSource) Read(ctx context.Context, req datasource.ReadRe
 			Port:        types.Int64Value(networkPort.Port),
 		}
 
-		state.NetworkPorts = append(state.NetworkPorts, networkPortsState)
+		state.List = append(state.List, networkPortsState)
 	}
 
 	state.Id = types.StringValue(common.DataSource + common.NetworkPortsId)

@@ -22,4 +22,5 @@ const (
 	HelmRelase       = "dataplane-helm-release"
 	Release          = "release"
 	AccountMetadata  = "account-metadata"
+	StorageClass     = "storage-class"
 )

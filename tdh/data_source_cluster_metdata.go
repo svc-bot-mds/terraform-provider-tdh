@@ -5,6 +5,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 )
 
@@ -19,32 +21,59 @@ type clusterMetadataDataSourceModel struct {
 	Name         types.String     `tfsdk:"name"`
 	ServiceType  types.String     `tfsdk:"service_type"`
 	Status       types.String     `tfsdk:"status"`
-	Vhosts       []VHostsModel    `tfsdk:"vhosts"`
-	Queues       []QueuesModel    `tfsdk:"queues"`
-	Exchanges    []ExchangesModel `tfsdk:"exchanges"`
-	Bindings     []BindingsModel  `tfsdk:"bindings"`
+	Vhosts       []vHostModel     `tfsdk:"vhosts"`
+	Queues       []queueModel     `tfsdk:"queues"`
+	Exchanges    []exchangeModel  `tfsdk:"exchanges"`
+	Bindings     []bindingModel   `tfsdk:"bindings"`
+	Databases    []databaseModel  `tfsdk:"databases"`
+	Extensions   []extensionModel `tfsdk:"extensions"`
 }
 
-type VHostsModel struct {
+type vHostModel struct {
 	Name types.String `tfsdk:"name"`
 }
 
-type QueuesModel struct {
+type queueModel struct {
 	Name  types.String `tfsdk:"name"`
 	VHost types.String `tfsdk:"vhost"`
 }
 
-type ExchangesModel struct {
+type exchangeModel struct {
 	Name  types.String `tfsdk:"name"`
 	VHost types.String `tfsdk:"vhost"`
 }
 
-type BindingsModel struct {
+type bindingModel struct {
 	Source          types.String `tfsdk:"source"`
 	VHost           types.String `tfsdk:"vhost"`
 	RoutingKey      types.String `tfsdk:"routing_key"`
 	Destination     types.String `tfsdk:"destination"`
 	DestinationType types.String `tfsdk:"destination_type"`
+}
+
+type databaseModel struct {
+	Name     types.String  `tfsdk:"name"`
+	Owner    types.String  `tfsdk:"owner"`
+	Schemas  []schemaModel `tfsdk:"schemas"`
+	Tables   []tableModel  `tfsdk:"tables"`
+	Routines []string      `tfsdk:"routines"`
+}
+
+type schemaModel struct {
+	Name   types.String `tfsdk:"name"`
+	Owner  types.String `tfsdk:"owner"`
+	Tables []tableModel `tfsdk:"tables"`
+}
+
+type tableModel struct {
+	Name    types.String `tfsdk:"name"`
+	Type    types.String `tfsdk:"type"`
+	Columns []string     `tfsdk:"columns"`
+}
+
+type extensionModel struct {
+	Name    types.String `tfsdk:"name"`
+	Version types.String `tfsdk:"version"`
 }
 
 func NewClusterMetadataDataSource() datasource.DataSource {
@@ -86,8 +115,9 @@ func (d *clusterMetadataDataSource) Schema(_ context.Context, _ datasource.Schem
 				Computed:    true,
 			},
 			"vhosts": schema.ListNestedAttribute{
-				Description: "List of the vHosts. Specific to `RABBITMQ` service.",
-				Computed:    true,
+				MarkdownDescription: "List of the vHosts. Specific to `RABBITMQ` service.",
+				Computed:            true,
+				Optional:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
@@ -98,8 +128,9 @@ func (d *clusterMetadataDataSource) Schema(_ context.Context, _ datasource.Schem
 				},
 			},
 			"queues": schema.ListNestedAttribute{
-				Description: "List of the Queues. Specific to `RABBITMQ` service.",
-				Computed:    true,
+				MarkdownDescription: "List of the Queues. Specific to `RABBITMQ` service.",
+				Computed:            true,
+				Optional:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
@@ -114,8 +145,9 @@ func (d *clusterMetadataDataSource) Schema(_ context.Context, _ datasource.Schem
 				},
 			},
 			"exchanges": schema.ListNestedAttribute{
-				Description: "List of the Exchanges. Specific to `RABBITMQ` service.",
-				Computed:    true,
+				MarkdownDescription: "List of the Exchanges. Specific to `RABBITMQ` service.",
+				Computed:            true,
+				Optional:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
@@ -130,8 +162,9 @@ func (d *clusterMetadataDataSource) Schema(_ context.Context, _ datasource.Schem
 				},
 			},
 			"bindings": schema.ListNestedAttribute{
-				Description: "List of the Bindings. Specific to `RABBITMQ` service.",
-				Computed:    true,
+				MarkdownDescription: "List of the Bindings. Specific to `RABBITMQ` service.",
+				Computed:            true,
+				Optional:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"source": schema.StringAttribute{
@@ -157,17 +190,118 @@ func (d *clusterMetadataDataSource) Schema(_ context.Context, _ datasource.Schem
 					},
 				},
 			},
+			"databases": schema.ListNestedAttribute{
+				MarkdownDescription: "List of the Databases. Specific to `POSTGRES` & `MYSQL` service.",
+				Computed:            true,
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Description: "Name of the database.",
+							Computed:    true,
+						},
+						"owner": schema.StringAttribute{
+							Description: "Name of the database owner.",
+							Computed:    true,
+							Optional:    true,
+						},
+						"schemas": schema.ListNestedAttribute{
+							MarkdownDescription: "List of the schemas in the database. Specific to `POSTGRES` service.",
+							Computed:            true,
+							Optional:            true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"name": schema.StringAttribute{
+										Description: "Name of the schema.",
+										Computed:    true,
+									},
+									"owner": schema.StringAttribute{
+										Description: "Name of the schema owner.",
+										Computed:    true,
+										Optional:    true,
+									},
+									"tables": schema.ListNestedAttribute{
+										Description: "List of the tables in the schema.",
+										Computed:    true,
+										Optional:    true,
+										NestedObject: schema.NestedAttributeObject{
+											Attributes: map[string]schema.Attribute{
+												"name": schema.StringAttribute{
+													Description: "Name of the table.",
+													Computed:    true,
+												},
+												"type": schema.StringAttribute{
+													Description: "Type of the table.",
+													Computed:    true,
+													Optional:    true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"tables": schema.ListNestedAttribute{
+							MarkdownDescription: "List of the tables in the database. Specific to `MYSQL` service.",
+							Computed:            true,
+							Optional:            true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"name": schema.StringAttribute{
+										Description: "Name of the table.",
+										Computed:    true,
+									},
+									"type": schema.StringAttribute{
+										Description: "Type of the table.",
+										Computed:    true,
+										Optional:    true,
+									},
+									"columns": schema.ListAttribute{
+										Description: "List of the columns in the table.",
+										Computed:    true,
+										Optional:    true,
+										ElementType: types.StringType,
+									},
+								},
+							},
+						},
+						"routines": schema.ListAttribute{
+							MarkdownDescription: "List of the routines in the database. Specific to `MYSQL` service.",
+							Computed:            true,
+							Optional:            true,
+							ElementType:         types.StringType,
+						},
+					},
+				},
+			},
+			"extensions": schema.ListNestedAttribute{
+				MarkdownDescription: "List of the extensions in cluster. Specific to `POSTGRES` service.",
+				Computed:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Description: "Name of the extension.",
+							Computed:    true,
+						},
+						"version": schema.StringAttribute{
+							Description: "Version of the extension.",
+							Computed:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
 // Read refreshes the Terraform state with the latest data.
 func (d *clusterMetadataDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state clusterMetadataDataSourceModel
+	tflog.Info(ctx, "INIT__Read")
+	var stateModel clusterMetadataDataSourceModel
 
 	// Read Terraform configuration data into the model
-	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
-	clusterMetadata, err := d.client.Controller.GetClusterMetaData(state.Id.ValueString())
+	resp.Diagnostics.Append(req.Config.Get(ctx, &stateModel)...)
+	clusterMetadata, err := d.client.Controller.GetClusterMetaData(stateModel.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read TDH Cluster Metadata",
@@ -175,9 +309,10 @@ func (d *clusterMetadataDataSource) Read(ctx context.Context, req datasource.Rea
 		)
 		return
 	}
+	tflog.Info(ctx, "fetched metadata", map[string]interface{}{"metadata": &clusterMetadata})
 
 	// Map cluster metadata body to model
-	metadataDetails := clusterMetadataDataSourceModel{
+	stateModel = clusterMetadataDataSourceModel{
 		Id:           types.StringValue(clusterMetadata.Id),
 		Name:         types.StringValue(clusterMetadata.Name),
 		ProviderName: types.StringValue(clusterMetadata.Provider),
@@ -185,51 +320,16 @@ func (d *clusterMetadataDataSource) Read(ctx context.Context, req datasource.Rea
 		Status:       types.StringValue(clusterMetadata.Status),
 	}
 
-	if len(clusterMetadata.VHosts) > 0 {
-		// Map response body to model
-		for _, vhost := range clusterMetadata.VHosts {
-			vhosts := VHostsModel{
-				Name: types.StringValue(vhost.Name),
-			}
-			metadataDetails.Vhosts = append(state.Vhosts, vhosts)
-		}
-	}
-	if len(clusterMetadata.Bindings) > 0 {
-		for _, binding := range clusterMetadata.Bindings {
-			bindings := BindingsModel{
-				Source:          types.StringValue(binding.Source),
-				DestinationType: types.StringValue(binding.DestinationType),
-				Destination:     types.StringValue(binding.Destination),
-				VHost:           types.StringValue(binding.VHost),
-				RoutingKey:      types.StringValue(binding.RoutingKey),
-			}
-			metadataDetails.Bindings = append(state.Bindings, bindings)
-		}
-	}
-	if len(clusterMetadata.Queues) > 0 {
-		for _, queue := range clusterMetadata.Queues {
-			queues := QueuesModel{
-				Name:  types.StringValue(queue.Name),
-				VHost: types.StringValue(queue.VHost),
-			}
-			metadataDetails.Queues = append(state.Queues, queues)
-		}
-	}
-	if len(clusterMetadata.Exchanges) > 0 {
-		for _, exchange := range clusterMetadata.Exchanges {
-			exchanges := ExchangesModel{
-				Name:  types.StringValue(exchange.Name),
-				VHost: types.StringValue(exchange.VHost),
-			}
-			metadataDetails.Exchanges = append(state.Exchanges, exchanges)
-		}
-	}
+	d.populateForRabbitmq(&ctx, &stateModel, clusterMetadata)
+	d.populateForPostgres(&ctx, &stateModel, clusterMetadata)
+	d.populateForMysql(&ctx, &stateModel, clusterMetadata)
 
-	state = metadataDetails
+	tflog.Debug(ctx, "before setting state", map[string]interface{}{
+		"state": stateModel,
+	})
 	// Set state
-	diags := resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+	diags := resp.State.Set(ctx, &stateModel)
+	if resp.Diagnostics.Append(diags...); resp.Diagnostics.HasError() {
 		return
 	}
 }
@@ -241,4 +341,132 @@ func (d *clusterMetadataDataSource) Configure(_ context.Context, req datasource.
 	}
 
 	d.client = req.ProviderData.(*tdh.Client)
+}
+
+func (d *clusterMetadataDataSource) populateForRabbitmq(ctx *context.Context, state *clusterMetadataDataSourceModel, response *model.ClusterMetaData) {
+	tflog.Debug(*ctx, "populating vHosts")
+	if len(response.VHosts) > 0 {
+		vhosts := make([]vHostModel, 0)
+		// Map response body to model
+		for _, vhost := range response.VHosts {
+			vhost := vHostModel{
+				Name: types.StringValue(vhost.Name),
+			}
+			vhosts = append(vhosts, vhost)
+		}
+		state.Vhosts = vhosts
+	}
+	tflog.Debug(*ctx, "populating bindings")
+	if len(response.Bindings) > 0 {
+		bindings := make([]bindingModel, 0)
+		for _, binding := range response.Bindings {
+			binding := bindingModel{
+				Source:          types.StringValue(binding.Source),
+				DestinationType: types.StringValue(binding.DestinationType),
+				Destination:     types.StringValue(binding.Destination),
+				VHost:           types.StringValue(binding.VHost),
+				RoutingKey:      types.StringValue(binding.RoutingKey),
+			}
+			bindings = append(bindings, binding)
+		}
+		state.Bindings = bindings
+	}
+	tflog.Debug(*ctx, "populating queues")
+	if len(response.Queues) > 0 {
+		queues := make([]queueModel, 0)
+		for _, queue := range response.Queues {
+			queue := queueModel{
+				Name:  types.StringValue(queue.Name),
+				VHost: types.StringValue(queue.VHost),
+			}
+			queues = append(queues, queue)
+		}
+		state.Queues = queues
+	}
+	tflog.Debug(*ctx, "populating exchanges")
+	if len(response.Exchanges) > 0 {
+		exchanges := make([]exchangeModel, 0)
+		for _, exchange := range response.Exchanges {
+			exchange := exchangeModel{
+				Name:  types.StringValue(exchange.Name),
+				VHost: types.StringValue(exchange.VHost),
+			}
+			exchanges = append(exchanges, exchange)
+		}
+		state.Exchanges = exchanges
+	}
+	tflog.Debug(*ctx, "populated rabbitmq metadata")
+}
+
+func (d *clusterMetadataDataSource) populateForPostgres(ctx *context.Context, state *clusterMetadataDataSourceModel, response *model.ClusterMetaData) {
+	tflog.Debug(*ctx, "populating databases")
+	if len(response.Databases) > 0 {
+		dbModels := make([]databaseModel, 0)
+		for _, databaseDto := range response.Databases {
+			databaseModel := databaseModel{
+				Name:  types.StringValue(databaseDto.Name),
+				Owner: types.StringValue(databaseDto.Owner),
+			}
+			schemaModels := make([]schemaModel, 0)
+			for _, schemaDto := range databaseDto.Schemas {
+				schemaModel := schemaModel{
+					Name:  types.StringValue(schemaDto.Name),
+					Owner: types.StringValue(schemaDto.Owner),
+				}
+				tableModels := make([]tableModel, 0)
+				for _, tableDto := range schemaDto.Tables {
+					tableModel := tableModel{
+						Name: types.StringValue(tableDto.Name),
+						Type: types.StringValue(tableDto.Type),
+					}
+					tableModels = append(tableModels, tableModel)
+				}
+				schemaModel.Tables = tableModels
+				schemaModels = append(schemaModels, schemaModel)
+			}
+			databaseModel.Schemas = schemaModels
+			dbModels = append(dbModels, databaseModel)
+		}
+		state.Databases = dbModels
+	}
+	tflog.Debug(*ctx, "populating extensionsData")
+	if len(response.PostgresExtensionData) > 0 {
+		list := make([]extensionModel, 0)
+		for _, extension := range response.PostgresExtensionData {
+			exchange := extensionModel{
+				Name:    types.StringValue(extension.Name),
+				Version: types.StringValue(extension.Version),
+			}
+			list = append(list, exchange)
+		}
+		state.Extensions = list
+	}
+	tflog.Debug(*ctx, "populated postgres metadata")
+}
+
+func (d *clusterMetadataDataSource) populateForMysql(ctx *context.Context, state *clusterMetadataDataSourceModel, response *model.ClusterMetaData) {
+	tflog.Debug(*ctx, "populating databases")
+	if len(response.Databases) > 0 {
+		dbModels := make([]databaseModel, 0)
+		for _, databaseDto := range response.Databases {
+			databaseModel := databaseModel{
+				Name:     types.StringValue(databaseDto.Name),
+				Owner:    types.StringValue(databaseDto.Owner),
+				Routines: databaseDto.Routines,
+			}
+			tableModels := make([]tableModel, 0)
+			for _, tableDto := range databaseDto.Tables {
+				tableModel := tableModel{
+					Name:    types.StringValue(tableDto.Name),
+					Type:    types.StringValue(tableDto.Type),
+					Columns: tableDto.Columns,
+				}
+				tableModels = append(tableModels, tableModel)
+			}
+			databaseModel.Tables = tableModels
+			dbModels = append(dbModels, databaseModel)
+		}
+		state.Databases = dbModels
+	}
+	tflog.Debug(*ctx, "populated mysql metadata")
 }

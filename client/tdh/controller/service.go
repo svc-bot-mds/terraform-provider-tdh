@@ -81,6 +81,7 @@ func (s *Service) GetClusterRestores(query RestoreQuery) (model.Paged[model.Clus
 
 	return response, nil
 }
+
 // GetAllClusters - Returns list of all clusters
 func (s *Service) GetAllClusters(query *ClustersQuery) ([]model.Cluster, error) {
 	var clusters []model.Cluster
@@ -151,7 +152,7 @@ func (s *Service) UpdateCluster(id string, requestBody *ClusterUpdateRequest) (*
 }
 
 // UpdateClusterNetworkPolicies - Submits a request to update cluster network policies
-func (s *Service) UpdateClusterNetworkPolicies(id string, requestBody *ClusterNetworkPoliciesUpdateRequest) ([]byte, error) {
+func (s *Service) UpdateClusterNetworkPolicies(id string, requestBody *ClusterNetworkPoliciesUpdateRequest) (*model.TaskResponse, error) {
 	if id == "" {
 		return nil, fmt.Errorf("cluster ID cannot be empty")
 	}
@@ -159,13 +160,14 @@ func (s *Service) UpdateClusterNetworkPolicies(id string, requestBody *ClusterNe
 		return nil, fmt.Errorf("requestBody cannot be nil")
 	}
 	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Clusters, id, NetworkPolicy)
+	var response model.TaskResponse
 
-	bodyBytes, err := s.Api.Patch(&urlPath, requestBody, nil)
+	_, err := s.Api.Patch(&urlPath, requestBody, &response)
 	if err != nil {
 		return nil, err
 	}
 
-	return bodyBytes, nil
+	return &response, nil
 }
 
 // DeleteCluster - Submits a request to delete cluster

@@ -2,16 +2,16 @@ package tdh
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	customer_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
 )
 
 var (
@@ -64,23 +64,17 @@ func (d *mdsPoliciesDatasource) Schema(_ context.Context, _ datasource.SchemaReq
 				Optional:            true,
 			},
 			"type": schema.StringAttribute{
-				MarkdownDescription: "Type of policies to list. Ex: `POSTGRES`, `MYSQL` etc.",
+				MarkdownDescription: fmt.Sprintf("Type of policies to list. Supported values: %s.", supportedServiceTypesMarkdown()),
 				Optional:            true,
 				Validators: []validator.String{
-					stringvalidator.OneOf("POSTGRES", "MYSQL", "RABBITMQ", "REDIS"),
-					stringvalidator.ConflictsWith(path.Expressions{
-						path.MatchRoot("identity_type"),
-					}...),
+					utils.ServiceTypeValidator,
 				},
 			},
 			"identity_type": schema.StringAttribute{
-				MarkdownDescription: "Type of identity, to list policies supported only for that type.",
+				MarkdownDescription: fmt.Sprintf("Type of identity, to list policies dedicated to that type. Supported values: %s.", supportedIdentityTypesMarkdown()),
 				Optional:            true,
 				Validators: []validator.String{
-					stringvalidator.OneOf("USER_ACCOUNT", "LOCAL_USER_ACCOUNT"),
-					stringvalidator.ConflictsWith(path.Expressions{
-						path.MatchRoot("identity_type"),
-					}...),
+					utils.IdentityTypeValidator,
 				},
 			},
 			"list": schema.ListNestedAttribute{

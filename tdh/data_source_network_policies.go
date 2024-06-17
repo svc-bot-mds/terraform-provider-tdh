@@ -2,11 +2,15 @@ package tdh
 
 import (
 	"context"
+	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/policy_type"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	customer_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
@@ -19,15 +23,19 @@ var (
 
 // instanceTypesDataSourceModel maps the data source schema data.
 type networkPoliciesDataSourceModel struct {
-	Policies []networkPoliciesModel `tfsdk:"policies"`
-	Names    []string               `tfsdk:"names"`
-	Id       types.String           `tfsdk:"id"`
+	List        []networkPolicyModel `tfsdk:"list"`
+	Names       []string             `tfsdk:"names"`
+	ServiceType types.String         `tfsdk:"service_type"`
+	Id          types.String         `tfsdk:"id"`
 }
 
 // instanceTypesModel maps coffees schema data.
-type networkPoliciesModel struct {
-	ID   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
+type networkPolicyModel struct {
+	ID          types.String      `tfsdk:"id"`
+	Name        types.String      `tfsdk:"name"`
+	Description types.String      `tfsdk:"description"`
+	NetworkSpec *NetworkSpecModel `tfsdk:"network_spec"`
+	ResourceIds types.Set         `tfsdk:"resource_ids"`
 }
 
 // NewNetworkPoliciesDataSource is a helper function to simplify the provider implementation.
@@ -48,10 +56,10 @@ func (d *networkPoliciesDatasource) Metadata(_ context.Context, req datasource.M
 // Schema defines the schema for the data source.
 func (d *networkPoliciesDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Used to fetch all `NETWORK` type policies on TDH.",
+		MarkdownDescription: "Used to fetch all network policies on TDH.",
 		Attributes: map[string]schema.Attribute{
 			"names": schema.SetAttribute{
-				MarkdownDescription: "Names to search policies by. Ex: `[\"allow-all\"]` .",
+				MarkdownDescription: "Names to search policies by. Ex: `[\"allow-all\"]`.",
 				Optional:            true,
 				ElementType:         types.StringType,
 			},
@@ -59,7 +67,11 @@ func (d *networkPoliciesDatasource) Schema(_ context.Context, _ datasource.Schem
 				Computed:            true,
 				MarkdownDescription: "The testing framework requires an id attribute to be present in every data source and resource.",
 			},
-			"policies": schema.ListNestedAttribute{
+			"service_type": schema.StringAttribute{
+				MarkdownDescription: fmt.Sprintf("Filter network policies based on type of service ports they are allowing. Supported values: %s .", supportedServiceTypesMarkdown()),
+				Optional:            true,
+			},
+			"list": schema.ListNestedAttribute{
 				Description: "List of fetched policies.",
 				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
@@ -72,6 +84,39 @@ func (d *networkPoliciesDatasource) Schema(_ context.Context, _ datasource.Schem
 							Description: "Name of the policy.",
 							Computed:    true,
 						},
+						"description": schema.StringAttribute{
+							Description: "Description of the policy",
+							Optional:    true,
+							Computed:    true,
+						},
+						"resource_ids": schema.SetAttribute{
+							Description: "IDs of service resources/instances being managed by the policy.",
+							Computed:    true,
+							ElementType: types.StringType,
+						},
+						"network_spec": schema.SingleNestedAttribute{
+							MarkdownDescription: "Network config allowing access to service resource.",
+							Required:            true,
+							CustomType: types.ObjectType{
+								AttrTypes: map[string]attr.Type{
+									"cidr": types.StringType,
+									"network_port_ids": types.SetType{
+										ElemType: types.StringType,
+									},
+								},
+							},
+							Attributes: map[string]schema.Attribute{
+								"cidr": schema.StringAttribute{
+									MarkdownDescription: "CIDR value to allow access from.",
+									Required:            true,
+								},
+								"network_port_ids": schema.SetAttribute{
+									MarkdownDescription: "IDs of network ports open up for access.",
+									Required:            true,
+									ElementType:         types.StringType,
+								},
+							},
+						},
 					},
 				},
 			},
@@ -82,13 +127,18 @@ func (d *networkPoliciesDatasource) Schema(_ context.Context, _ datasource.Schem
 // Read refreshes the Terraform state with the latest data.
 func (d *networkPoliciesDatasource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state networkPoliciesDataSourceModel
-	var networkPolicyList []networkPoliciesModel
+	var networkPolicyList []networkPolicyModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 
 	query := &customer_metadata.PoliciesQuery{
-		Type:  policy_type.NETWORK,
-		Names: state.Names,
+		Type: policy_type.NETWORK,
+	}
+	if len(state.Names) > 0 {
+		query.Names = state.Names
+	}
+	if !state.ServiceType.IsNull() {
+		query.ServiceType = state.ServiceType.ValueString()
 	}
 	//state.Names.ElementsAs(ctx, query.Names, true)
 	nwPolicies, err := d.client.CustomerMetadata.GetPolicies(query)
@@ -103,7 +153,7 @@ func (d *networkPoliciesDatasource) Read(ctx context.Context, req datasource.Rea
 	if nwPolicies.Page.TotalPages > 1 {
 		for i := 1; i <= nwPolicies.Page.TotalPages; i++ {
 			query.PageQuery.Index = i - 1
-			totalPolicies, err := d.client.CustomerMetadata.GetPolicies(query)
+			pageResponse, err := d.client.CustomerMetadata.GetPolicies(query)
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Unable to Read TDH Policies",
@@ -111,28 +161,17 @@ func (d *networkPoliciesDatasource) Read(ctx context.Context, req datasource.Rea
 				)
 				return
 			}
-
-			for _, mdsPolicyDTO := range *totalPolicies.Get() {
-				policy := networkPoliciesModel{
-					ID:   types.StringValue(mdsPolicyDTO.ID),
-					Name: types.StringValue(mdsPolicyDTO.Name),
-				}
-				networkPolicyList = append(networkPolicyList, policy)
+			if networkPolicyList = append(networkPolicyList, d.convertToTfModels(&ctx, &resp.Diagnostics, pageResponse.Get())...); resp.Diagnostics.HasError() {
+				return
 			}
 		}
-
-		tflog.Debug(ctx, "rabbitmq dto", map[string]interface{}{"dto": networkPolicyList})
-		state.Policies = append(state.Policies, networkPolicyList...)
 	} else {
-		for _, mdsPolicyDTO := range *nwPolicies.Get() {
-			networkPolicy := networkPoliciesModel{
-				ID:   types.StringValue(mdsPolicyDTO.ID),
-				Name: types.StringValue(mdsPolicyDTO.Name),
-			}
-			tflog.Debug(ctx, "nwPolicy dto", map[string]interface{}{"dto": networkPolicy})
-			state.Policies = append(state.Policies, networkPolicy)
+		if networkPolicyList = d.convertToTfModels(&ctx, &resp.Diagnostics, nwPolicies.Get()); resp.Diagnostics.HasError() {
+			return
 		}
 	}
+	tflog.Debug(ctx, "network policy list", map[string]interface{}{"dto": networkPolicyList})
+	state.List = append(state.List, networkPolicyList...)
 
 	state.Id = types.StringValue(common.DataSource + common.NetworkPoliciesId)
 	// Set state
@@ -150,4 +189,36 @@ func (d *networkPoliciesDatasource) Configure(_ context.Context, req datasource.
 	}
 
 	d.client = req.ProviderData.(*tdh.Client)
+}
+
+func (d *networkPoliciesDatasource) convertToTfModels(ctx *context.Context, diag *diag.Diagnostics, nwPolicies *[]model.Policy) []networkPolicyModel {
+	tflog.Debug(*ctx, "converting to tfModels")
+	var networkPolicyList []networkPolicyModel
+	for _, dto := range *nwPolicies {
+		tfModel := networkPolicyModel{
+			ID:          types.StringValue(dto.ID),
+			Name:        types.StringValue(dto.Name),
+			Description: types.StringValue(dto.Description),
+		}
+		tfNetworkSpecModels := make([]*NetworkSpecModel, len(dto.NetworkSpec))
+		for i, networkSpec := range dto.NetworkSpec {
+			tfNetworkSpecModels[i] = &NetworkSpecModel{
+				Cidr: types.StringValue(networkSpec.CIDR),
+			}
+			networkPortIds, _ := types.SetValueFrom(*ctx, types.StringType, networkSpec.NetworkPortIds)
+			tfNetworkSpecModels[i].NetworkPortIds = networkPortIds
+		}
+		tfModel.NetworkSpec = tfNetworkSpecModels[0]
+
+		resourceIds, diags := types.SetValueFrom(*ctx, types.StringType, dto.ResourceIds)
+		if diag.Append(diags...); diag.HasError() {
+			return networkPolicyList
+		}
+		tfModel.ResourceIds = resourceIds
+
+		tflog.Debug(*ctx, "network policy", map[string]interface{}{"tfModel": tfModel})
+		networkPolicyList = append(networkPolicyList, tfModel)
+	}
+	tflog.Debug(*ctx, "converted to tfModels")
+	return networkPolicyList
 }

@@ -1,3 +1,3 @@
-data "tdh_clusters" "all_rmq" {
-  service_type = "RABBITMQ"
+data "tdh_clusters" "all_pg" {
+  service_type = "POSTGRES"
 }
