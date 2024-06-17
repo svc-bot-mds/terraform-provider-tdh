@@ -1,4 +1,4 @@
-package SRE
+package tdh
 
 import (
 	"context"
@@ -20,10 +20,10 @@ var (
 // dataPlaneDatasourceModel maps the data source schema data.
 type dataPlaneDatasourceModel struct {
 	Id   types.String     `tfsdk:"id"`
-	List []dataPlaneModel `tfsdk:"list"`
+	List []DataPlaneModel `tfsdk:"list"`
 }
 
-type dataPlaneModel struct {
+type DataPlaneModel struct {
 	ID                      types.String     `tfsdk:"id"`
 	Provider                types.String     `tfsdk:"provider"`
 	Region                  types.String     `tfsdk:"region"`
@@ -201,7 +201,7 @@ func (d *dataPlaneDatasource) Schema(_ context.Context, _ datasource.SchemaReque
 // Read refreshes the Terraform state with the latest data.
 func (d *dataPlaneDatasource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state dataPlaneDatasourceModel
-	var dataPlaneList []dataPlaneModel
+	var dataPlaneList []DataPlaneModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 
@@ -259,8 +259,8 @@ func (d *dataPlaneDatasource) Read(ctx context.Context, req datasource.ReadReque
 	}
 }
 
-func (d *dataPlaneDatasource) convertToTfModel(ctx context.Context, dpDto model.DataPlane, resp *datasource.ReadResponse) (*dataPlaneModel, bool) {
-	dataPlane := dataPlaneModel{
+func (d *dataPlaneDatasource) convertToTfModel(ctx context.Context, dpDto model.DataPlane, resp *datasource.ReadResponse) (*DataPlaneModel, bool) {
+	dataPlane := DataPlaneModel{
 		ID:                      types.StringValue(dpDto.Id),
 		Name:                    types.StringValue(dpDto.Name),
 		Provider:                types.StringValue(dpDto.Provider),

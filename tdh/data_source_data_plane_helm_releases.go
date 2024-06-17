@@ -1,4 +1,4 @@
-package SRE
+package tdh
 
 import (
 	"context"
@@ -22,9 +22,10 @@ type dataPlaneHelmReleasesDataSourceModel struct {
 	List []helmReleaseModel `tfsdk:"list"`
 }
 type helmReleaseModel struct {
-	Id      types.String `tfsdk:"id"`
-	Name    types.String `tfsdk:"name"`
-	Enabled types.Bool   `tfsdk:"enabled"`
+	Id       types.String `tfsdk:"id"`
+	Name     types.String `tfsdk:"name"`
+	Enabled  types.Bool   `tfsdk:"enabled"`
+	Services types.Set    `tfsdk:"services"`
 }
 
 // NewDataPlaneHelmReleaseDatasource is a helper function to simplify the provider implementation.
@@ -69,6 +70,11 @@ func (d *dataPlaneHelmReleaseDatasource) Schema(_ context.Context, _ datasource.
 							Computed:    true,
 							Description: "Denotes if the helm release is enabled/not. Use the helm release with the flag set to true while onboarding the data plane.",
 						},
+						"services": schema.SetAttribute{
+							Computed:    true,
+							Description: "Services available for the Helm Release",
+							ElementType: types.StringType,
+						},
 					},
 				},
 			},
@@ -111,18 +117,27 @@ func (d *dataPlaneHelmReleaseDatasource) Read(ctx context.Context, req datasourc
 					Id:      types.StringValue(helmDto.Id),
 					Enabled: types.BoolValue(helmDto.IsEnabled),
 				}
+				services, diags := types.SetValueFrom(ctx, types.StringType, helmDto.Services)
+				resp.Diagnostics.Append(diags...)
+				helmRelease.Services = services
 				helmReleaseList = append(helmReleaseList, helmRelease)
 			}
+
 		}
 
 		state.List = append(state.List, helmReleaseList...)
 	} else {
 		for _, helmDto := range *helmVersions.Get() {
-			dns := helmReleaseModel{
-				Name: types.StringValue(helmDto.Name),
-				Id:   types.StringValue(helmDto.Id),
+			helmRelease := helmReleaseModel{
+				Name:    types.StringValue(helmDto.Name),
+				Id:      types.StringValue(helmDto.Id),
+				Enabled: types.BoolValue(helmDto.IsEnabled),
 			}
-			helmReleaseList = append(helmReleaseList, dns)
+
+			services, diags := types.SetValueFrom(ctx, types.StringType, helmDto.Services)
+			resp.Diagnostics.Append(diags...)
+			helmRelease.Services = services
+			helmReleaseList = append(helmReleaseList, helmRelease)
 		}
 		state.List = append(state.List, helmReleaseList...)
 	}

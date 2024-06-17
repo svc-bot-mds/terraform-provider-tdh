@@ -13,10 +13,10 @@ Used to fetch all Helm Releases for the data plane.
 ## Example Usage
 
 ```terraform
-data "tdh_data_plane_helm_release" "all" {
+data "tdh_data_plane_helm_releases" "all" {
 }
 output "resp" {
-  value = data.tdh_data_plane_helm_release.all
+  value = data.tdh_data_plane_helm_releases.all
 }
 ```
 
@@ -36,5 +36,6 @@ Read-Only:
 - `enabled` (Boolean) Denotes if the helm release is enabled/not. Use the helm release with the flag set to true while onboarding the data plane.
 - `id` (String) ID of the Helm Release. Can be used while onboarding data plane.
 - `name` (String) Name of the Helm Release.
+- `services` (Set of String) Services available for the Helm Release
 
 

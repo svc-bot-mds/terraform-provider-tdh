@@ -11,7 +11,6 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/service_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
-	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/SRE"
 	"os"
 	"strings"
 
@@ -306,18 +305,19 @@ func (p *tdhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewServiceRolesDatasource,
 		NewCloudAccountsDatasource,
 		NewProviderTypesDataSource,
-		SRE.NewCertificatesDatasource,
-		SRE.NewDnsDatasource,
-		SRE.NewSmtpDatasource,
-		SRE.NewFleetHealthDatasource,
-		SRE.NewDataPlaneDatasource,
-		SRE.NewDataPlaneHelmReleaseDatasource,
-		SRE.NewK8sClustersDatasource,
+		NewCertificatesDatasource,
+		NewDnsDatasource,
+		NewSmtpDatasource,
+		NewFleetHealthDatasource,
+		NewDataPlaneDatasource,
+		NewDataPlaneHelmReleaseDatasource,
+		NewK8sClustersDatasource,
 		NewObjectStorageDatasource,
 		NewTasksDataSource,
 		NewLocalUsersDataSource,
 		NewBackupDataSource,
 		NewRestoreDataSource,
+		NewStorageClassDataSource,
 		NewEligibleDataPlanesDatasource,
 	}
 }
@@ -333,8 +333,8 @@ func (p *tdhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewNetworkPolicyResource,
 		NewDataPlaneResource,
 		NewCloudAccountResource,
-		SRE.NewCertificateResource,
-		SRE.NewSmtpResource,
+		NewCertificateResource,
+		NewSmtpResource,
 		NewObjectStorageResource,
 		NewLocalUserResource,
 	}
