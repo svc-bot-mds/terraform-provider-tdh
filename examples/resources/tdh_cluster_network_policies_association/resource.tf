@@ -14,5 +14,5 @@ resource "tdh_cluster_network_policies_association" "pg" {
   policy_ids = [
     "EXISTING_POLICY_ID",
     "ANOTHER_POLICY_ID",
-  ]
+  ] # use datasource "tdh_network_policies" to see what all policies are available
 }
