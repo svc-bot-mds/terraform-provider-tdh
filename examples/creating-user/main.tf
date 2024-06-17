@@ -35,7 +35,7 @@ resource "tdh_user" "temp" {
   email      = "developer11@vmware.com"
   tags       = ["new-user-tf", "update-tf-user"]
   role_ids   = [for role in data.tdh_roles.all.roles : role.role_id if contains(local.service_roles, role.name)]
-  policy_ids = [for policy in data.tdh_policies.all.policies : policy.id if contains(local.policies, policy.name)]
+  policy_ids = [for policy in data.tdh_policies.all.list : policy.id if contains(local.policies, policy.name)]
 
   // non editable fields
   lifecycle {

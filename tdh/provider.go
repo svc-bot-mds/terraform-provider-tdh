@@ -3,7 +3,10 @@ package tdh
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/identity_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/oauth_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/service_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
@@ -34,9 +37,9 @@ type tdhProvider struct{}
 
 // tdhProviderModel maps provider schema data to a Go type.
 type tdhProviderModel struct {
-	Host         types.String `tfsdk:"host"`
-	Type         types.String `tfsdk:"type"`
-	ApiToken     types.String `tfsdk:"api_token"`
+	Host types.String `tfsdk:"host"`
+	Type types.String `tfsdk:"type"`
+	//ApiToken     types.String `tfsdk:"api_token"`
 	ClientId     types.String `tfsdk:"client_id"`
 	ClientSecret types.String `tfsdk:"client_secret"`
 	OrgId        types.String `tfsdk:"org_id"`
@@ -52,27 +55,30 @@ func (p *tdhProvider) Metadata(_ context.Context, _ provider.MetadataRequest, re
 // Schema defines the provider-level schema for configuration data.
 func (p *tdhProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Interact with VMware Managed Data Services",
+		Description: "Interact with VMware Tanzu Data Hub",
 		Attributes: map[string]schema.Attribute{
 			"host": schema.StringAttribute{
 				MarkdownDescription: "URI for TDH API. May also be provided via *TDH_HOST* environment variable.",
 				Optional:            true,
 			},
 			"type": schema.StringAttribute{
-				MarkdownDescription: "OAuthType for the TDH API. It can be `api_token` or `client_credentials` or `user_creds`",
+				MarkdownDescription: "OAuthType for the TDH API. It can be `user_creds` or `client_credentials`.",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("user_creds", "client_credentials"),
+				},
 			},
-			"api_token": schema.StringAttribute{
-				MarkdownDescription: "(Required for `api_token`) API Token for TDH API. May also be provided via *TDH_API_TOKEN* environment variable.",
+			//"api_token": schema.StringAttribute{
+			//	MarkdownDescription: "(Required for `api_token`) API Token for TDH API. May also be provided via *TDH_API_TOKEN* environment variable.",
+			//	Optional:            true,
+			//	Sensitive:           true,
+			//},
+			"username": schema.StringAttribute{
+				MarkdownDescription: "(Required for `user_creds`) Username for TDH API.",
 				Optional:            true,
-				Sensitive:           true,
 			},
-			"client_id": schema.StringAttribute{
-				MarkdownDescription: "(Required for `client_credentials`) Client Id for TDH API. May also be provided via *TDH_CLIENT_ID* environment variable.",
-				Optional:            true,
-			},
-			"client_secret": schema.StringAttribute{
-				MarkdownDescription: "(Required for `client_credentials`) Client Secret for TDH API. May also be provided via *TDH_CLIENT_SECRET* environment variable.",
+			"password": schema.StringAttribute{
+				MarkdownDescription: "(Required for `user_creds`) Password for TDH API.",
 				Optional:            true,
 				Sensitive:           true,
 			},
@@ -80,12 +86,12 @@ func (p *tdhProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 				MarkdownDescription: "(Required for `client_credentials`) Organization Id for TDH API. May also be provided via *TDH_ORG_ID* environment variable.",
 				Optional:            true,
 			},
-			"username": schema.StringAttribute{
-				MarkdownDescription: "(Required for `user_creds`) Username for TDH API.",
+			"client_id": schema.StringAttribute{
+				MarkdownDescription: "(Required for `client_credentials`) Client Id for TDH API. May also be provided via *TDH_CLIENT_ID* environment variable.",
 				Optional:            true,
 			},
-			"password": schema.StringAttribute{
-				MarkdownDescription: "(Required for `user_creds`) Password for TDH API.",
+			"client_secret": schema.StringAttribute{
+				MarkdownDescription: "(Required for `client_credentials`) Client Secret for TDH API. May also be provided via *TDH_CLIENT_SECRET* environment variable.",
 				Optional:            true,
 				Sensitive:           true,
 			},
@@ -121,11 +127,11 @@ func (p *tdhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	if !config.Host.IsNull() {
 		host = config.Host.ValueString()
 	}
-	if config.Type.ValueString() == oauth_type.ApiToken {
-		if !config.ApiToken.IsNull() {
-			apiToken = config.ApiToken.ValueString()
-		}
-	}
+	//if config.Type.ValueString() == oauth_type.ApiToken {
+	//	if !config.ApiToken.IsNull() {
+	//		apiToken = config.ApiToken.ValueString()
+	//	}
+	//}
 	if config.Type.ValueString() == oauth_type.ClientCredentials {
 		if !config.ClientId.IsNull() {
 			clientId = config.ClientId.ValueString()
@@ -299,10 +305,19 @@ func (p *tdhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewServiceRolesDatasource,
 		NewCloudAccountsDatasource,
 		NewProviderTypesDataSource,
-		NewCloudProviderRegionsDataSource,
-		NewTshirtSizeDatasource,
 		NewCertificatesDatasource,
+		NewDnsDatasource,
+		NewSmtpDatasource,
+		NewFleetHealthDatasource,
+		NewDataPlaneDatasource,
+		NewDataPlaneHelmReleaseDatasource,
+		NewK8sClustersDatasource,
 		NewObjectStorageDatasource,
+		NewTasksDataSource,
+		NewLocalUsersDataSource,
+		NewBackupDataSource,
+		NewRestoreDataSource,
+		NewEligibleDataPlanesDatasource,
 	}
 }
 
@@ -315,16 +330,28 @@ func (p *tdhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewServiceAccountResource,
 		NewPolicyResource,
 		NewNetworkPolicyResource,
-		NewByocDataPlaneResourceResource,
+		NewDataPlaneResource,
 		NewCloudAccountResource,
 		NewCertificateResource,
+		NewSmtpResource,
 		NewObjectStorageResource,
+		NewLocalUserResource,
 	}
 }
 
 func supportedServiceTypesMarkdown() string {
 	var sb strings.Builder
 	serviceTypes := service_type.GetAll()
+	sb.WriteString(fmt.Sprintf("`%s`", serviceTypes[0]))
+	for _, serviceType := range serviceTypes[1:] {
+		sb.WriteString(fmt.Sprintf(", `%s`", serviceType))
+	}
+	return sb.String()
+}
+
+func supportedIdentityTypesMarkdown() string {
+	var sb strings.Builder
+	serviceTypes := identity_type.GetAll()
 	sb.WriteString(fmt.Sprintf("`%s`", serviceTypes[0]))
 	for _, serviceType := range serviceTypes[1:] {
 		sb.WriteString(fmt.Sprintf(", `%s`", serviceType))

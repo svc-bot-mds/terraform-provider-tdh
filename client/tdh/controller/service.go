@@ -46,6 +46,42 @@ func (s *Service) GetClusters(query *ClustersQuery) (model.Paged[model.Cluster],
 	return response, nil
 }
 
+// GetBackups - Returns all the Backups
+func (s *Service) GetBackups(query BackupQuery) (model.Paged[model.ClusterBackup], error) {
+
+	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Backup)
+	var response model.Paged[model.ClusterBackup]
+
+	if query.Size == 0 {
+		query.Size = defaultPage.Size
+	}
+
+	_, err := s.Api.Get(&urlPath, query, &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, nil
+}
+
+// GetRestore - Returns all the Restore
+func (s *Service) GetClusterRestores(query RestoreQuery) (model.Paged[model.ClusterRestore], error) {
+
+	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Restore)
+	var response model.Paged[model.ClusterRestore]
+
+	if query.Size == 0 {
+		query.Size = defaultPage.Size
+	}
+
+	_, err := s.Api.Get(&urlPath, query, &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, nil
+}
+
 // GetAllClusters - Returns list of all clusters
 func (s *Service) GetAllClusters(query *ClustersQuery) ([]model.Cluster, error) {
 	var clusters []model.Cluster
@@ -116,7 +152,7 @@ func (s *Service) UpdateCluster(id string, requestBody *ClusterUpdateRequest) (*
 }
 
 // UpdateClusterNetworkPolicies - Submits a request to update cluster network policies
-func (s *Service) UpdateClusterNetworkPolicies(id string, requestBody *ClusterNetworkPoliciesUpdateRequest) ([]byte, error) {
+func (s *Service) UpdateClusterNetworkPolicies(id string, requestBody *ClusterNetworkPoliciesUpdateRequest) (*model.TaskResponse, error) {
 	if id == "" {
 		return nil, fmt.Errorf("cluster ID cannot be empty")
 	}
@@ -124,13 +160,14 @@ func (s *Service) UpdateClusterNetworkPolicies(id string, requestBody *ClusterNe
 		return nil, fmt.Errorf("requestBody cannot be nil")
 	}
 	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Clusters, id, NetworkPolicy)
+	var response model.TaskResponse
 
-	bodyBytes, err := s.Api.Patch(&urlPath, requestBody, nil)
+	_, err := s.Api.Patch(&urlPath, requestBody, &response)
 	if err != nil {
 		return nil, err
 	}
 
-	return bodyBytes, nil
+	return &response, nil
 }
 
 // DeleteCluster - Submits a request to delete cluster
@@ -177,4 +214,41 @@ func (s *Service) GetClusterMetaData(id string) (*model.ClusterMetaData, error) 
 	}
 
 	return &response, err
+}
+
+func (s *Service) GetClusterCountByService() ([]model.ClusterCountByService, error) {
+	var response []model.ClusterCountByService
+
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, FleetManagement, SRE_cluster, Count)
+
+	_, err := s.Api.Get(&reqUrl, nil, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetResourceByService() ([]model.ResourceByService, error) {
+	var response []model.ResourceByService
+
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, FleetManagement, SRE_cluster, ResourceByService)
+
+	_, err := s.Api.Get(&reqUrl, nil, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetFleetDetails(query *FleetsQuery) (model.Paged[model.SreCustomerInfo], error) {
+	var response model.Paged[model.SreCustomerInfo]
+
+	reqUrl := fmt.Sprintf("%s/%s", s.Endpoint, Mdsfleets)
+
+	_, err := s.Api.Get(&reqUrl, query, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+
 }

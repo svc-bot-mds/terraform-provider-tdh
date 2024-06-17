@@ -76,13 +76,32 @@ func (s *Service) GetCloudAccount(id string) (*model.CloudAccount, error) {
 	return &response, err
 }
 
-func (s *Service) GetCertificates(query *CertificateQuery) (model.Paged[model.Certificate], error) {
+func (s *Service) GetCertificates(query *CertificatesQuery) (model.Paged[model.Certificate], error) {
 	var response model.Paged[model.Certificate]
 	if query == nil {
 		return response, fmt.Errorf("query cannot be nil")
 	}
 
 	reqUrl := fmt.Sprintf("%s/%s/%s", s.Endpoint, Internal, Certificate)
+
+	if query.Size == 0 {
+		query.Size = defaultPage.Size
+	}
+
+	_, err := s.Api.Get(&reqUrl, query, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetDnsconfig(query *DNSQuery) (model.Paged[model.Dns], error) {
+	var response model.Paged[model.Dns]
+	if query == nil {
+		return response, fmt.Errorf("query cannot be nil")
+	}
+
+	reqUrl := fmt.Sprintf("%s/%s", s.Endpoint, DNSConfig)
 
 	if query.Size == 0 {
 		query.Size = defaultPage.Size
@@ -144,7 +163,7 @@ func (s *Service) CreateDataPlane(requestBody *DataPlaneCreateRequest) (*model.T
 		return nil, fmt.Errorf("requestBody cannot be nil")
 	}
 	var response model.TaskResponse
-	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, K8sCluster)
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, K8sCluster, DataplaneOnboard)
 
 	_, err := s.Api.Post(&urlPath, requestBody, &response)
 	if err != nil {
@@ -154,8 +173,22 @@ func (s *Service) CreateDataPlane(requestBody *DataPlaneCreateRequest) (*model.T
 	return &response, err
 }
 
-func (s *Service) GetDataPlanes(query *DataPlaneQuery) (model.Paged[model.DataPlane], error) {
-	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, K8sCluster)
+func (s *Service) UpdateDataPlane(id string, requestBody *DataPlaneUpdateRequest) error {
+	if requestBody == nil {
+		return fmt.Errorf("requestBody cannot be nil")
+	}
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, K8sCluster, id)
+
+	_, err := s.Api.Patch(&urlPath, requestBody, nil)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func (s *Service) GetDataPlanes(query *DataPlanesQuery) (model.Paged[model.DataPlane], error) {
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Internal, K8sCluster)
 	var response model.Paged[model.DataPlane]
 
 	if query.Size == 0 {
@@ -170,8 +203,22 @@ func (s *Service) GetDataPlanes(query *DataPlaneQuery) (model.Paged[model.DataPl
 	return response, nil
 }
 
+func (s *Service) GetEligibleDataPlanes(query *EligibleDataPlanesQuery) (model.Paged[model.EligibleDataPlane], error) {
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, K8sCluster, Eligible)
+	var response model.Paged[model.EligibleDataPlane]
+
+	query.Size = 500
+
+	_, err := s.Api.Get(&urlPath, query, &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, nil
+}
+
 func (s *Service) GetDataPlaneById(id string) (model.DataPlane, error) {
-	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, K8sCluster, id)
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, K8sCluster, id)
 	var response model.DataPlane
 
 	_, err := s.Api.Get(&urlPath, nil, &response)
@@ -183,15 +230,16 @@ func (s *Service) GetDataPlaneById(id string) (model.DataPlane, error) {
 }
 
 // DeleteDataPlane - Submits a request to delete dataplane
-func (s *Service) DeleteDataPlane(id string) error {
-	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, K8sCluster, id)
+func (s *Service) DeleteDataPlane(id string) (*model.TaskResponse, error) {
+	urlPath := fmt.Sprintf("%s/%s/%s/%s/%s", s.Endpoint, Internal, K8sCluster, DataplaneOnboard, id)
+	var response model.TaskResponse
 
-	_, err := s.Api.Delete(&urlPath, nil, nil)
+	_, err := s.Api.Delete(&urlPath, nil, &response)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &response, nil
 }
 
 func (s *Service) CreateCloudAccount(requestBody *CloudAccountCreateRequest) (*model.CloudAccount, error) {
@@ -239,7 +287,7 @@ func (s *Service) CreateCertificate(requestBody *CertificateCreateRequest) (*mod
 		return nil, fmt.Errorf("requestBody cannot be nil")
 	}
 	var response model.Certificate
-	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Certificate)
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Internal, Certificate)
 
 	_, err := s.Api.Post(&urlPath, requestBody, &response)
 	if err != nil {
@@ -267,7 +315,7 @@ func (s *Service) UpdateCertificate(id string, requestBody *CertificateUpdateReq
 func (s *Service) GetCertificate(id string) (model.Certificate, error) {
 	var response model.Certificate
 
-	reqUrl := fmt.Sprintf("%s/%s/%s", s.Endpoint, Certificate, id)
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, Certificate, id)
 
 	_, err := s.Api.Get(&reqUrl, nil, &response)
 	if err != nil {
@@ -278,7 +326,7 @@ func (s *Service) GetCertificate(id string) (model.Certificate, error) {
 
 // DeleteCertificate - Submits a request to delete certificate
 func (s *Service) DeleteCertificate(id string) error {
-	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Certificate, id)
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, Certificate, id)
 
 	_, err := s.Api.Delete(&urlPath, nil, nil)
 	if err != nil {
@@ -288,7 +336,7 @@ func (s *Service) DeleteCertificate(id string) error {
 	return err
 }
 
-func (s *Service) GetObjectStorages(query *ObjectStorageQuery) (model.Paged[model.ObjectStorage], error) {
+func (s *Service) GetObjectStorages(query *ObjectStoragesQuery) (model.Paged[model.ObjectStorage], error) {
 	var response model.Paged[model.ObjectStorage]
 	if query == nil {
 		return response, fmt.Errorf("query cannot be nil")
@@ -359,4 +407,71 @@ func (s *Service) DeleteObjectStorage(id string) error {
 	}
 
 	return err
+}
+
+func (s *Service) GetOrgHealthDetails() (model.OrgHealthDetails, error) {
+	var response model.OrgHealthDetails
+
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, FleetMangement, OrgHealth, Details)
+
+	_, err := s.Api.Get(&reqUrl, nil, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetDataplaneCounts() (model.DataplneCounts, error) {
+	var response model.DataplneCounts
+
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, FleetMangement, Dataplane, Count)
+
+	_, err := s.Api.Get(&reqUrl, nil, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetHelmRelease(query *DNSQuery) (model.Paged[model.HelmVersions], error) {
+	var response model.Paged[model.HelmVersions]
+	query.Size = 500
+	reqUrl := fmt.Sprintf("%s/%s/%s", s.Endpoint, HelmRelase, Release)
+
+	_, err := s.Api.Get(&reqUrl, query, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetAccountClusters(id string) ([]model.TKC, error) {
+	if strings.TrimSpace(id) == "" {
+		return nil, fmt.Errorf("ID cannot be empty")
+	}
+	var response []model.TKC
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, AccountMetadata, id)
+
+	_, err := s.Api.Get(&reqUrl, nil, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetK8sClusterStorageClasses(query *StorageClassesQuery) ([]model.StorageClass, error) {
+	if strings.TrimSpace(query.AccountId) == "" {
+		return nil, fmt.Errorf("ID cannot be empty")
+	}
+	if strings.TrimSpace(query.ClusterName) == "" {
+		return nil, fmt.Errorf("k8sClusterName cannot be empty")
+	}
+	var response []model.StorageClass
+	reqUrl := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, AccountMetadata, StorageClass)
+
+	_, err := s.Api.Get(&reqUrl, query, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
 }

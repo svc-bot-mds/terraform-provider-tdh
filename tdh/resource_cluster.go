@@ -47,7 +47,7 @@ type clusterResourceModel struct {
 	OrgId             types.String          `tfsdk:"org_id"`
 	Name              types.String          `tfsdk:"name"`
 	ServiceType       types.String          `tfsdk:"service_type"`
-	Provider          types.String          `tfsdk:"cloud_provider"`
+	Provider          types.String          `tfsdk:"provider_type"`
 	InstanceSize      types.String          `tfsdk:"instance_size"`
 	Region            types.String          `tfsdk:"region"`
 	Tags              types.Set             `tfsdk:"tags"`
@@ -68,11 +68,12 @@ type clusterResourceModel struct {
 
 // clusterMetadataModel maps order item data.
 type clusterMetadataModel struct {
-	Username    types.String `tfsdk:"username"`
-	Password    types.String `tfsdk:"password"`
-	Database    types.String `tfsdk:"database"`
-	RestoreFrom types.String `tfsdk:"restore_from"`
-	Extensions  types.Set    `tfsdk:"extensions"`
+	Username      types.String `tfsdk:"username"`
+	Password      types.String `tfsdk:"password"`
+	Database      types.String `tfsdk:"database"`
+	RestoreFrom   types.String `tfsdk:"restore_from"`
+	Extensions    types.Set    `tfsdk:"extensions"`
+	ObjectStoreId types.String `tfsdk:"object_storage_id"`
 }
 
 type MetadataModel struct {
@@ -113,7 +114,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`." +
+		MarkdownDescription: "Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`, `cluster_metadata`." +
 			"\nChanging only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: " +
 			"`tdh_cluster_network_policies_association`.",
 		Attributes: map[string]schema.Attribute{
@@ -139,23 +140,23 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"service_type": schema.StringAttribute{
-				MarkdownDescription: fmt.Sprintf("Type of TDH Cluster to be created. Supported values: %s .\n Default is `RABBITMQ`.", supportedServiceTypesMarkdown()),
+				MarkdownDescription: fmt.Sprintf("Type of TDH Cluster to be created. Supported values: %s .\n Default is `POSTGRES`.", supportedServiceTypesMarkdown()),
 				Optional:            true,
 				Computed:            true,
-				Default:             stringdefault.StaticString(service_type.RABBITMQ),
+				Default:             stringdefault.StaticString(service_type.POSTGRES),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"cloud_provider": schema.StringAttribute{
-				MarkdownDescription: "Short-code of provider to use for data-plane. Ex: `aws`, `gcp` .",
+			"provider_type": schema.StringAttribute{
+				MarkdownDescription: "Short-code of provider to use for data-plane. Ex: `tkgs`, `tkgm` . Complete list can be seen using datasource `tdh_provider_types`.",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"instance_size": schema.StringAttribute{
-				MarkdownDescription: "Size of instance. Supported values are: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`." +
+				MarkdownDescription: "Size of instance. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`." +
 					"\nPlease make use of datasource `tdh_network_ports` to decide on a size based on resources it requires.",
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -163,7 +164,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"region": schema.StringAttribute{
-				MarkdownDescription: "Region of data plane. Ex: `eu-west-2`, `us-east-2` etc.",
+				MarkdownDescription: "Region of data plane. Supported values can be seen using datasource `tdh_regions`.",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -199,12 +200,8 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				Computed:    true,
 			},
 			"data_plane_id": schema.StringAttribute{
-				Description: "ID of the data-plane where the cluster is running. It's a required field when we create a cluster which is self-hosted via BYO Cloud",
-				Computed:    true,
-				Optional:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				Description: "ID of the data-plane where the cluster is running.",
+				Required:    true,
 			},
 			"last_updated": schema.StringAttribute{
 				Description: "Time when the cluster was last modified.",
@@ -233,7 +230,6 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			},
 			"metadata": schema.SingleNestedAttribute{
 				Description: "Additional info of the cluster.",
-
 				CustomType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"cluster_name":   types.StringType,
@@ -242,6 +238,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 						"metrics_endpoints": types.SetType{
 							ElemType: types.StringType,
 						},
+						"object_storage_id": types.StringType,
 					},
 				},
 				PlanModifiers: []planmodifier.Object{
@@ -265,6 +262,14 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 						MarkdownDescription: "List of metrics endpoints exposed on the instance.",
 						Computed:            true,
 						ElementType:         types.StringType,
+					},
+					"object_storage_id": schema.StringAttribute{
+						MarkdownDescription: "ID of the object storage for backup operations.",
+						Computed:            true,
+						Optional:            true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
 					},
 				},
 			},
@@ -293,6 +298,10 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 						Description: "Set of extensions to be enabled on the cluster.",
 						Optional:    true,
 						ElementType: types.StringType,
+					},
+					"object_storage_id": schema.StringAttribute{
+						MarkdownDescription: "ID of the object storage for backup operations.",
+						Optional:            true,
 					},
 				},
 			},
@@ -345,9 +354,10 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 		Version:           plan.Version.ValueString(),
 		StoragePolicyName: plan.StoragePolicyName.ValueString(),
 		ClusterMetadata: controller.ClusterMetadata{
-			Username: plan.ClusterMetadata.Username.ValueString(),
-			Password: plan.ClusterMetadata.Password.ValueString(),
-			Database: plan.ClusterMetadata.Database.ValueString(),
+			Username:      plan.ClusterMetadata.Username.ValueString(),
+			Password:      plan.ClusterMetadata.Password.ValueString(),
+			Database:      plan.ClusterMetadata.Database.ValueString(),
+			ObjectStoreId: plan.ClusterMetadata.ObjectStoreId.ValueString(),
 		},
 	}
 
@@ -481,7 +491,7 @@ func (r *clusterResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	// Detect version change
-	if plan.Upgrade.TargetVersion != state.Version {
+	if plan.Upgrade != nil && plan.Upgrade.TargetVersion != state.Version {
 		tflog.Info(ctx, "Version change detected", map[string]interface{}{
 			"old_version": state.Version.ValueString(),
 			"new_version": plan.Upgrade.TargetVersion.ValueString(),
