@@ -37,9 +37,10 @@ type DataPlane struct {
 }
 
 type HelmVersions struct {
-	Id        string `json:"id"`
-	Name      string `json:"releaseName"`
-	IsEnabled bool   `json:"isEnabled"`
+	Id        string   `json:"id"`
+	Name      string   `json:"releaseName"`
+	IsEnabled bool     `json:"isEnabled"`
+	Services  []string `json:"bundledServices"`
 }
 
 type EligibleDataPlane struct {

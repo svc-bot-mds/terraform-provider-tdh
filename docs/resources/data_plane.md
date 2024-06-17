@@ -47,7 +47,7 @@ resource "tdh_data_plane" "example" {
   org_id                  = null # setting this to particular Org ID will make it available to only that Org
   tags                    = ["dev-dp"]
   auto_upgrade            = false
-  services                = [] # can be
+  services                = [] # can be fetched from the response of "tdh_data_plane_helm_releases" services field
   cp_bootstrapped_cluster = false
   configure_core_dns      = true
 
