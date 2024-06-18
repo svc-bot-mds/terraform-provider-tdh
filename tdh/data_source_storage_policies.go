@@ -36,34 +36,34 @@ type storageClassDataSource struct {
 
 // Metadata returns the data source type name.
 func (d *storageClassDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_storage_class"
+	resp.TypeName = req.ProviderTypeName + "_storage_policies"
 }
 
 // Schema defines the schema for the data source.
 func (d *storageClassDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Used to fetch Storage Classes available based on the cloud provider account and k8scluster",
+		Description: "Used to fetch Storage Classes available based on the cloud provider account and K8s Cluster name.",
 		Attributes: map[string]schema.Attribute{
 			"cloud_account_id": schema.StringAttribute{
 				Description: "ID of the Cloud Provider Account.",
 				Required:    true,
 			},
 			"k8s_cluster_name": schema.StringAttribute{
-				Description: "K8s Cluster Name",
+				Description: "K8s Cluster Name.",
 				Required:    true,
 			},
 			"list": schema.ListNestedAttribute{
-				MarkdownDescription: "List of the Storage Classes",
+				MarkdownDescription: "List of Storage Classes",
 				Computed:            true,
 				Optional:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
-							Description: "Name of the vHost.",
+							Description: "Name of the Storage class.",
 							Computed:    true,
 						},
 						"provisioner": schema.StringAttribute{
-							Description: "Provisioner of the Storage Class",
+							Description: "Provisioner name of the Storage Class.",
 							Computed:    true,
 						},
 					},

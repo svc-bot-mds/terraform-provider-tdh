@@ -63,7 +63,6 @@ type clusterResourceModel struct {
 	StoragePolicyName types.String          `tfsdk:"storage_policy_name"`
 	ClusterMetadata   *clusterMetadataModel `tfsdk:"cluster_metadata"`
 	Upgrade           *upgradeMetadata      `tfsdk:"upgrade"`
-	// TODO add upgrade related fields
 }
 
 // clusterMetadataModel maps order item data.
@@ -164,7 +163,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"region": schema.StringAttribute{
-				MarkdownDescription: "Region of data plane. Supported values can be seen using datasource `tdh_regions`.",
+				MarkdownDescription: "Region of data plane. Available values can be seen using datasource `tdh_regions`.",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -320,6 +319,15 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					},
 				},
 			},
+			"restore_from_backup": schema.StringAttribute{
+				MarkdownDescription: "ID of the Cluster Backup to restore.\n**NOTE**:\n" +
+					"1. Using this option will overwrite the existing attributes with that of cluster backup.\n" +
+					"2. Using this option makes only these fields mandatory: `name`, `storage_policy_name`, `network_policy_ids`.",
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 		},
 	}
 
@@ -337,6 +345,10 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 	tflog.Info(ctx, "INIT__Fetched plan")
 
 	if resp.Diagnostics.Append(diags...); resp.Diagnostics.HasError() {
+		return
+	}
+
+	if r.validateInputs(&ctx, &resp.Diagnostics, &plan); resp.Diagnostics.HasError() {
 		return
 	}
 	tflog.Info(ctx, "INIT__Creating req body")
@@ -418,7 +430,7 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 		}
 	}
 	tflog.Info(ctx, "INIT__Saving Response")
-	if saveFromResponse(&ctx, &resp.Diagnostics, &plan, createdCluster) != 0 {
+	if r.saveFromResponse(&ctx, &resp.Diagnostics, &plan, createdCluster) != 0 {
 		return
 	}
 
@@ -457,7 +469,7 @@ func (r *clusterResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	tflog.Debug(ctx, "INIT__Read converting response")
 	// Overwrite items with refreshed state
-	if saveFromResponse(&ctx, &resp.Diagnostics, &state, cluster) != 0 {
+	if r.saveFromResponse(&ctx, &resp.Diagnostics, &state, cluster) != 0 {
 		return
 	}
 
@@ -551,7 +563,7 @@ func (r *clusterResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	// Update resource state with updated items and timestamp
-	if saveFromResponse(&ctx, &resp.Diagnostics, &plan, cluster) != 0 {
+	if r.saveFromResponse(&ctx, &resp.Diagnostics, &plan, cluster) != 0 {
 		return
 	}
 
@@ -608,7 +620,7 @@ func (r *clusterResource) ImportState(ctx context.Context, req resource.ImportSt
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func saveFromResponse(ctx *context.Context, diagnostics *diag.Diagnostics, state *clusterResourceModel, cluster *model.Cluster) int8 {
+func (r *clusterResource) saveFromResponse(ctx *context.Context, diagnostics *diag.Diagnostics, state *clusterResourceModel, cluster *model.Cluster) int8 {
 	tflog.Info(*ctx, "Saving response to resourceModel state/plan")
 	state.ID = types.StringValue(cluster.ID)
 	state.Name = types.StringValue(cluster.Name)
@@ -636,4 +648,9 @@ func saveFromResponse(ctx *context.Context, diagnostics *diag.Diagnostics, state
 	}
 	state.Tags = list
 	return 0
+}
+
+func (r *clusterResource) validateInputs(ctx *context.Context, diags *diag.Diagnostics, tfPlan *clusterResourceModel) {
+	tflog.Info(*ctx, "validating inputs")
+
 }

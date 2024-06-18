@@ -3,8 +3,10 @@ package tdh
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
@@ -53,6 +55,9 @@ func (d *clustersDatasource) Schema(_ context.Context, _ datasource.SchemaReques
 			"service_type": schema.StringAttribute{
 				MarkdownDescription: fmt.Sprintf("Type of the service. Supported values: %s .", supportedServiceTypesMarkdown()),
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("POSTGRES", "MYSQL", "RABBITMQ", "REDIS"),
+				},
 			},
 			"id": schema.StringAttribute{
 				Computed:            true,
