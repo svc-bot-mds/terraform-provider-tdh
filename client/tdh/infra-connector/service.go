@@ -65,7 +65,7 @@ func (s *Service) GetCloudAccount(id string) (*model.CloudAccount, error) {
 	if strings.TrimSpace(id) == "" {
 		return nil, fmt.Errorf("ID cannot be empty")
 	}
-	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, CloudAccount, id)
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, CloudAccount, id)
 	var response model.CloudAccount
 
 	_, err := s.Api.Get(&urlPath, nil, &response)
@@ -260,7 +260,7 @@ func (s *Service) CreateCloudAccount(requestBody *CloudAccountCreateRequest) (*m
 // UpdateCloudAccount - To Update the cloud account
 func (s *Service) UpdateCloudAccount(id string, requestBody *CloudAccountUpdateRequest) error {
 
-	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, CloudAccount, id)
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, CloudAccount, id)
 	_, err := s.Api.Put(&urlPath, requestBody, nil)
 
 	if err != nil {
@@ -272,7 +272,7 @@ func (s *Service) UpdateCloudAccount(id string, requestBody *CloudAccountUpdateR
 
 // DeleteCloudAccount - Submits a request to delete cloud account
 func (s *Service) DeleteCloudAccount(id string) error {
-	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, CloudAccount, id)
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, CloudAccount, id)
 
 	_, err := s.Api.Delete(&urlPath, nil, nil)
 	if err != nil {

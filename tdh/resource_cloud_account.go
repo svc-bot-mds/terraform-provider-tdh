@@ -164,6 +164,7 @@ func (r *cloudAccountResource) Create(ctx context.Context, req resource.CreateRe
 		ProviderType: plan.ProviderType.ValueString(),
 		Credentials:  cred,
 		Shared:       plan.Shared.ValueBool(),
+		OrgId:        plan.OrgId.ValueString(),
 	}
 	plan.Tags.ElementsAs(ctx, &cloudAccountRequest.Tags, true)
 

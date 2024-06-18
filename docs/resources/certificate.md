@@ -27,15 +27,9 @@ EOF
 
 -----END PRIVATE KEY-----"
 EOF
-  certificate_key = <<EOF
-"-----BEGIN CERTIFICATE-----
-
------END CERTIFICATE-----"
-EOF
-
   // non editable fields during the update
   lifecycle {
-    ignore_changes = [name]
+    ignore_changes = [name,domain_name,provider_type,certificate_ca,certificate_key,certificate]
   }
 }
 ```

@@ -22,7 +22,7 @@ data "tdh_policies" "all" {
 
 output "values" { # view the output to decide on resource values
   value = {
-    roles = data.tdh_roles.all
+    roles    = data.tdh_roles.all
     policies = data.tdh_policies.all
   }
 }

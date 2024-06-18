@@ -22,9 +22,9 @@ data "tdh_instance_types" "pg" {
 }
 locals {
   service_type        = "POSTGRES"
-  provider_type       = "tkgs"                   # can be get using datasource "tdh_provider_types"
-  instance_type       = "XX-SMALL"               # can be get using datasource "tdh_instance_types"
-  version             = "postgres-13"            # complete list can be got using datasource "tdh_cluster_versions"
+  provider_type       = "tkgs"        # can be get using datasource "tdh_provider_types"
+  instance_type       = "XX-SMALL"    # can be get using datasource "tdh_instance_types"
+  version             = "postgres-13" # complete list can be got using datasource "tdh_cluster_versions"
   storage_policy_name = "tdh-k8s-cluster-policy"
   # can be got using datasource "tdh_tdh_eligible_data_planes", in the field 'list'
 }
@@ -60,7 +60,7 @@ resource "tdh_network_policy" "network" {
   name         = "tf-pg-nw-policy"
   service_type = "NETWORK"
   network_spec = {
-    cidr             = "0.0.0.0/32",
+    cidr = "0.0.0.0/32",
     network_port_ids = [
       for port in data.tdh_network_ports.all.list : port.id if strcontains(port.id, "postgres")
     ]
@@ -71,14 +71,14 @@ resource "tdh_cluster" "test" {
   name                = "tf-pg-cls"
   service_type        = local.service_type
   provider_type       = local.provider_type
-  instance_size       = "XX-SMALL" # complete list can be got using datasource "tdh_instance_types"
+  instance_size       = "XX-SMALL"    # complete list can be got using datasource "tdh_instance_types"
   region              = "REGION_NAME" # can get using datasource "tdh_regions"
   data_plane_id       = "DP_ID"       # can get using datasource "tdh_regions" based on instance size selected there
   network_policy_ids  = [tdh_network_policy.network.id]
   tags                = ["tdh-tf", "new-tag"]
   version             = local.version
   storage_policy_name = local.storage_policy_name # complete list can be got using datasource "tdh_eligible_data_planes"
-  cluster_metadata    = {
+  cluster_metadata = {
     username      = "test"
     password      = "Admin!23"
     database      = "test"

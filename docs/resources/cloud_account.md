@@ -43,7 +43,7 @@ resource "tdh_cloud_account" "example" {
 
   //non editable fields during the update
   lifecycle {
-    ignore_changes = [name]
+    ignore_changes = [name, provider_type,org_id, shared]
   }
 }
 ```

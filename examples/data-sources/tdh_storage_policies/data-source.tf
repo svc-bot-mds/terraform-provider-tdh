@@ -9,6 +9,6 @@ data "tdh_storage_policies" "all" {
   k8s_cluster_name = "k8s cluster name"                #can be fetched from the datasource 'tdh_k8s_clusters'
 }
 output "resp" {
-  value = data.tdh_storage_class.all
+  value = data.tdh_storage_policies.all
 }
 
