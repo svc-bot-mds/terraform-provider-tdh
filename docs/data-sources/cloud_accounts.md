@@ -22,14 +22,14 @@ data "tdh_cloud_accounts" "all" {
 
 ### Optional
 
-- `cloud_accounts` (Attributes List) (see [below for nested schema](#nestedatt--cloud_accounts))
+- `list` (Attributes List) (see [below for nested schema](#nestedatt--list))
 
 ### Read-Only
 
 - `id` (String) The testing framework requires an id attribute to be present in every data source and resource
 
-<a id="nestedatt--cloud_accounts"></a>
-### Nested Schema for `cloud_accounts`
+<a id="nestedatt--list"></a>
+### Nested Schema for `list`
 
 Read-Only:
 
