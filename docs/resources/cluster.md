@@ -22,10 +22,11 @@ data "tdh_instance_types" "pg" {
 }
 locals {
   service_type        = "POSTGRES"
-  provider_type       = "tkgs"                   # can be get using datasource "tdh_provider_types"
-  instance_type       = "XX-SMALL"               # can be get using datasource "tdh_instance_types"
-  version             = "postgres-13"            # TBD
-  storage_policy_name = "tdh-k8s-cluster-policy" # can be get using the response from datasource "tdh_tdh_eligible_data_planes" . Use the field 'storage_policies'
+  provider_type       = "tkgs"        # can be get using datasource "tdh_provider_types"
+  instance_type       = "XX-SMALL"    # can be get using datasource "tdh_instance_types"
+  version             = "postgres-13" # complete list can be got using datasource "tdh_cluster_versions"
+  storage_policy_name = "tdh-k8s-cluster-policy"
+  # can be got using datasource "tdh_tdh_eligible_data_planes", in the field 'list'
 }
 data "tdh_regions" "shared" {
   instance_size = local.instance_type
@@ -35,9 +36,13 @@ data "tdh_object_storages" "all" {
 }
 data "tdh_network_ports" "all" {
 }
-// to get the storage policies and eligible data planes for the given provider
+# to get the storage policies and eligible data planes for the given provider, although it may not be available if given size doesn't meet resource requirement in this data plane
 data "tdh_eligible_data_planes" "all" {
-  provider_name = "tkgs"
+  provider_name = local.provider_type
+}
+data "tdh_cluster_versions" "name" {
+  service_type  = local.service_type
+  provider_type = local.provider_type
 }
 
 output "data" {
@@ -57,27 +62,27 @@ resource "tdh_network_policy" "network" {
   network_spec = {
     cidr = "0.0.0.0/32",
     network_port_ids = [
-      for port in data.tdh_network_ports.all.network_ports : port.id if strcontains(port.id, "postgres")
+      for port in data.tdh_network_ports.all.list : port.id if strcontains(port.id, "postgres")
     ]
   }
 }
 
 resource "tdh_cluster" "test" {
   name                = "tf-pg-cls"
-  service_type        = "POSTGRES"
-  provider_type       = "tkgs"
-  instance_size       = "XX-SMALL"
+  service_type        = local.service_type
+  provider_type       = local.provider_type
+  instance_size       = "XX-SMALL"    # complete list can be got using datasource "tdh_instance_types"
   region              = "REGION_NAME" # can get using datasource "tdh_regions"
-  data_plane_id       = "DP_ID"       # can get using datasource "tdh_eligible_data_planes"
+  data_plane_id       = "DP_ID"       # can get using datasource "tdh_regions" based on instance size selected there
   network_policy_ids  = [tdh_network_policy.network.id]
   tags                = ["tdh-tf", "new-tag"]
   version             = local.version
-  storage_policy_name = "tdh-k8s-cluster-policy" # complete list can be get using datasource "tdh_eligible_data_planes"
+  storage_policy_name = local.storage_policy_name # complete list can be got using datasource "tdh_eligible_data_planes"
   cluster_metadata = {
     username      = "test"
     password      = "Admin!23"
     database      = "test"
-    objectStoreId = "OBJECT_STORE_ID" # can be used from its datasource
+    objectStoreId = "OBJECT_STORE_ID" # can be used from datasource "tdh_object_storages"
   }
   // non editable fields
   lifecycle {
@@ -98,13 +103,17 @@ Please make use of datasource `tdh_network_ports` to decide on a size based on r
 - `name` (String) Name of the cluster.
 - `network_policy_ids` (Set of String) IDs of network policies to attach to the cluster.
 - `provider_type` (String) Short-code of provider to use for data-plane. Ex: `tkgs`, `tkgm` . Complete list can be seen using datasource `tdh_provider_types`.
-- `region` (String) Region of data plane. Supported values can be seen using datasource `tdh_regions`.
+- `region` (String) Region of data plane. Available values can be seen using datasource `tdh_regions`.
 - `storage_policy_name` (String) Name of the storage policy for the cluster.
 - `version` (String) Version of the cluster.
 
 ### Optional
 
 - `dedicated` (Boolean) If present and set to `true`, the cluster will get deployed on a dedicated data-plane in current Org.
+- `restore_from_backup` (String) ID of the Cluster Backup to restore.
+**NOTE**:
+1. Using this option will overwrite the existing attributes with that of cluster backup.
+2. Using this option makes only these fields mandatory: `name`, `storage_policy_name`, `network_policy_ids`.
 - `service_type` (String) Type of TDH Cluster to be created. Supported values: `POSTGRES`, `MYSQL`, `RABBITMQ`, `REDIS` .
  Default is `POSTGRES`.
 - `shared` (Boolean) If present and set to `true`, the cluster will get deployed on a shared data-plane in current Org.

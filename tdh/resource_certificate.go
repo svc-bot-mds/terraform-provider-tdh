@@ -140,7 +140,7 @@ func (r *certificateResource) Create(ctx context.Context, req resource.CreateReq
 		Shared:         true,
 	}
 
-	//tflog.Info(ctx, "req param", map[string]interface{}{"requestbody": certificateRequest})
+	tflog.Info(ctx, "req param", map[string]interface{}{"requestbody": certificateRequest})
 	certificate, err := r.client.InfraConnector.CreateCertificate(certificateRequest)
 	if err != nil {
 		apiErr := core.ApiError{}

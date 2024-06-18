@@ -45,7 +45,7 @@ Read-Only:
 Read-Only:
 
 - `host` (String) Host of the server.
-- `port` (String) Port of the server
+- `port` (Number) Port of the server
 - `protocol` (String) Protocol of the server.
 - `server_type` (String) Type of the server.
 

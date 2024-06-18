@@ -13,6 +13,7 @@ Represents a TDH Data Plane.
 ## Example Usage
 
 ```terraform
+
 data "tdh_provider_types" "all" {
 }
 
@@ -20,10 +21,20 @@ data "tdh_cloud_accounts" "all" {
 }
 
 data "tdh_k8s_clusters" "all" {
+  account_id = data.tdh_cloud_accounts.all.cloud_accounts[0].id
 }
 
 data "tdh_data_plane_helm_releases" "all" {
 
+}
+
+data "tdh_storage_policies" "all" {
+  cloud_account_id =data.tdh_cloud_accounts.all.cloud_accounts[0].id
+  k8s_cluster_name = data.tdh_k8s_clusters.all.list[0].name
+
+}
+output "resp" {
+  value = data.tdh_storage_policies.all
 }
 
 output "data" {
@@ -31,24 +42,25 @@ output "data" {
     provider_type = data.tdh_cloud_accounts.all
     cloud_accounts       = data.tdh_cloud_accounts.all
     k8s_clusters = data.tdh_k8s_clusters.all
-    helm_release = data.tdh_data_plane_helm_releases
+    helm_release = data.tdh_data_plane_helm_releases.all
+    storage_class = data.tdh_storage_policies.all
   }
 }
 
 
 resource "tdh_data_plane" "example" {
-  name                    = "name"
-  account_id              = data.tdh_cloud_accounts.all[0].id       # this ID can be fetched from the datasource "tdh_cloud_accounts" . Provider type can be verifies using the 'provider_type' field
-  k8s_cluster_name        = "k8s_cluster_name" # use datasource "tdh_k8s_clusters" to get the list of available K8s clusters available from an account
-  storage_classes         = ["tdh-k8s-storage-policy", "default"]
-  backup_storage_class    = "backup_storage_class"  # name of the storage class to use for backups
-  data_plane_release_id   = "data_plane_release_id" # use datasource "tdh_data_plane_helm_releases" to select one of the IDs
+  name                    = "dpname"
+  account_id              = data.tdh_cloud_accounts.all.cloud_accounts[0].id       # this ID can be fetched from the datasource "tdh_cloud_accounts" . Provider type can be verifies using the 'provider_type' field
+  k8s_cluster_name        = data.tdh_k8s_clusters.all.list[5].name # use datasource "tdh_k8s_clusters" to get the list of available K8s clusters available for a cloud account
+  storage_classes         = [for storageclass in data.tdh_storage_policies.all.list : storageclass.name]
+  backup_storage_class    = data.tdh_storage_policies.all.list[0].name  # name of the storage class to use for backups
+  data_plane_release_id   = data.tdh_data_plane_helm_releases.all.list[0].id # use datasource "tdh_data_plane_helm_releases" to select one of the IDs
   shared                  = true
   org_id                  = null # setting this to particular Org ID will make it available to only that Org
-  tags                    = ["dev-dp"]
+  tags                    = ["dev-dp-teraform"]
   auto_upgrade            = false
   services                = [] # can be fetched from the response of "tdh_data_plane_helm_releases" services field
-  cp_bootstrapped_cluster = false
+  cp_bootstrapped_cluster = true #Onboard Data Plane on TDH Control Plane
   configure_core_dns      = true
 
   // non editable fields, edit is not allowed
