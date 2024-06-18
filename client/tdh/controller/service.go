@@ -46,9 +46,8 @@ func (s *Service) GetClusters(query *ClustersQuery) (model.Paged[model.Cluster],
 	return response, nil
 }
 
-// GetBackups - Returns all the Backups
-func (s *Service) GetBackups(query *BackupQuery) (model.Paged[model.ClusterBackup], error) {
-
+// GetClusterBackups - Returns all the Backups
+func (s *Service) GetClusterBackups(query *BackupsQuery) (model.Paged[model.ClusterBackup], error) {
 	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Backup)
 	var response model.Paged[model.ClusterBackup]
 
@@ -64,9 +63,8 @@ func (s *Service) GetBackups(query *BackupQuery) (model.Paged[model.ClusterBacku
 	return response, nil
 }
 
-// GetRestore - Returns all the Restore
+// GetClusterRestores - Returns all the Restore
 func (s *Service) GetClusterRestores(query RestoreQuery) (model.Paged[model.ClusterRestore], error) {
-
 	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Restore)
 	var response model.Paged[model.ClusterRestore]
 
@@ -80,6 +78,34 @@ func (s *Service) GetClusterRestores(query RestoreQuery) (model.Paged[model.Clus
 	}
 
 	return response, nil
+}
+
+// RestoreClusterBackup - Restores a cluster backup
+func (s *Service) RestoreClusterBackup(request *RestoreClusterBackupRequest) (model.TaskResponse, error) {
+	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Clusters)
+	var response model.TaskResponse
+
+	_, err := s.Api.Post(&urlPath, request, &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, nil
+}
+
+// GetServiceVersions - Returns all the versions available for provisioning
+func (s *Service) GetServiceVersions(query *ServiceVersionsQuery) ([]string, error) {
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Services, Versions)
+	var response struct {
+		Versions []string `json:"versions"`
+	}
+
+	_, err := s.Api.Get(&urlPath, query, &response)
+	if err != nil {
+		return response.Versions, err
+	}
+
+	return response.Versions, nil
 }
 
 // GetAllClusters - Returns list of all clusters
@@ -269,13 +295,12 @@ func (s *Service) GetBackup(id string) (*model.ClusterBackup, error) {
 	return &response, err
 }
 
-// create cluster backup
-func (s *Service) CreateClusterBackup(requestBody *BackupCreateRequest) (*model.TaskResponse, error) {
+// CreateClusterBackup creates cluster backup
+func (s *Service) CreateClusterBackup(id string, requestBody *BackupCreateRequest) (*model.TaskResponse, error) {
 	if requestBody == nil {
 		return nil, fmt.Errorf("requestBody cannot be nil")
 	}
-	//var response model.CreateBackup
-	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Clusters, requestBody.ClusterId, Backup)
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Clusters, id, Backup)
 
 	var response model.TaskResponse
 	_, err := s.Api.Post(&urlPath, requestBody, response)
@@ -286,14 +311,15 @@ func (s *Service) CreateClusterBackup(requestBody *BackupCreateRequest) (*model.
 	return &response, err
 }
 
-// Delete cluster backup
-func (s *Service) DeleteClusterBackup(id string) error {
+// DeleteClusterBackup Deletes cluster backup
+func (s *Service) DeleteClusterBackup(id string) (*model.TaskResponse, error) {
 	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Backup, id)
 
-	_, err := s.Api.Delete(&urlPath, nil, nil)
+	var response model.TaskResponse
+	_, err := s.Api.Delete(&urlPath, nil, &response)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return err
+	return &response, nil
 }

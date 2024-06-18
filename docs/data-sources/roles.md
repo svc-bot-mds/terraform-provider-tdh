@@ -23,10 +23,10 @@ data "tdh_roles" "all" {
 ### Read-Only
 
 - `id` (String) The testing framework requires an id attribute to be present in every data source and resource
-- `roles` (Attributes List) List of roles. (see [below for nested schema](#nestedatt--roles))
+- `list` (Attributes List) List of roles. (see [below for nested schema](#nestedatt--list))
 
-<a id="nestedatt--roles"></a>
-### Nested Schema for `roles`
+<a id="nestedatt--list"></a>
+### Nested Schema for `list`
 
 Read-Only:
 

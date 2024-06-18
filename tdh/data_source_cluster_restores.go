@@ -14,22 +14,22 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource              = &restoreDataSource{}
-	_ datasource.DataSourceWithConfigure = &restoreDataSource{}
+	_ datasource.DataSource              = &restoresDataSource{}
+	_ datasource.DataSourceWithConfigure = &restoresDataSource{}
 )
 
 // NewRestoresDataSource is a helper function to simplify the provider implementation.
-func NewRestoreDataSource() datasource.DataSource {
-	return &restoreDataSource{}
+func NewRestoresDataSource() datasource.DataSource {
+	return &restoresDataSource{}
 }
 
-// restoreDataSource is the data source implementation.
-type restoreDataSource struct {
+// restoresDataSource is the data source implementation.
+type restoresDataSource struct {
 	client *tdh.Client
 }
 
-// localUsersDataSourceModel maps the datasource schema
-type restoreDataSourceModel struct {
+// restoresDataSourceModel maps the datasource schema
+type restoresDataSourceModel struct {
 	Id   types.String           `tfsdk:"id"`
 	List []restoreResponseModel `tfsdk:"list"`
 }
@@ -45,12 +45,12 @@ type restoreResponseModel struct {
 	TargetInstanceName types.String `tfsdk:"target_instance_name"`
 }
 
-// restoreResourceMode maps the resource schema data.
-func (d restoreDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_restores"
+// Metadata restoreResourceMode maps the resource schema data.
+func (d *restoresDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cluster_restores"
 }
 
-func (d restoreDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *restoresDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Used to fetch all the backups available for the service type on TDH.",
 		Attributes: map[string]schema.Attribute{
@@ -105,9 +105,8 @@ func (d restoreDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 	}
 }
 
-func (d restoreDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	//TODO implement me
-	var state restoreDataSourceModel
+func (d *restoresDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state restoresDataSourceModel
 	var restoreList []restoreResponseModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 
@@ -182,7 +181,7 @@ func (d restoreDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 }
 
 // Configure adds the provider configured client to the data source.
-func (d *restoreDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+func (d *restoresDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

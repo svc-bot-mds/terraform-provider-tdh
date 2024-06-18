@@ -316,9 +316,10 @@ func (p *tdhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewTasksDataSource,
 		NewLocalUsersDataSource,
 		NewBackupDataSource,
-		NewRestoreDataSource,
+		NewRestoresDataSource,
 		NewStorageClassDataSource,
 		NewEligibleDataPlanesDatasource,
+		NewClusterVersionsDataSource,
 	}
 }
 
@@ -337,7 +338,7 @@ func (p *tdhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewSmtpResource,
 		NewObjectStorageResource,
 		NewLocalUserResource,
-		NewclusterBackupResource,
+		NewClusterBackupResource,
 	}
 }
 
@@ -346,6 +347,19 @@ func supportedServiceTypesMarkdown() string {
 	serviceTypes := service_type.GetAll()
 	sb.WriteString(fmt.Sprintf("`%s`", serviceTypes[0]))
 	for _, serviceType := range serviceTypes[1:] {
+		sb.WriteString(fmt.Sprintf(", `%s`", serviceType))
+	}
+	return sb.String()
+}
+
+func supportedDataServiceTypesMarkdown() string {
+	var sb strings.Builder
+	serviceTypes := service_type.GetAll()
+	sb.WriteString(fmt.Sprintf("`%s`", serviceTypes[0]))
+	for _, serviceType := range serviceTypes[1:] {
+		if serviceType == service_type.RABBITMQ {
+			continue
+		}
 		sb.WriteString(fmt.Sprintf(", `%s`", serviceType))
 	}
 	return sb.String()
