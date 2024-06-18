@@ -23,7 +23,7 @@ output "data" {
 
 resource "tdh_data_plane" "example" {
   name                    = "name"
-  account_id              = data.tdh_cloud_accounts.all[0].id       # this ID can be fetched from the datasource "tdh_cloud_accounts" . Provider type can be verifies using the 'provider_type' field
+  account_id              = data.tdh_cloud_accounts.all.list[0].id       # this ID can be fetched from the datasource "tdh_cloud_accounts" . Provider type can be verifies using the 'provider_type' field
   k8s_cluster_name        = "k8s_cluster_name" # use datasource "tdh_k8s_clusters" to get the list of available K8s clusters available from an account
   storage_classes         = ["tdh-k8s-storage-policy", "default"]
   backup_storage_class    = "backup_storage_class"  # name of the storage class to use for backups
