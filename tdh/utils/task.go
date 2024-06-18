@@ -17,7 +17,7 @@ func WaitForTask(client *tdh.Client, taskId string) error {
 		if taskResponse.Status == "SUCCESS" {
 			return nil
 		} else if taskResponse.Status == "FAILED" {
-			return fmt.Errorf("task has failed, get more details using datasource \"tdh_tasks\"")
+			return fmt.Errorf("task has Failed, get more details using datasource \"tdh_tasks\"")
 		}
 		time.Sleep(time.Second * 10)
 	}

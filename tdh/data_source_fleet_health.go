@@ -18,25 +18,22 @@ var (
 
 // FleetHealthDataSourceModel maps the data source schema data.
 type FleetHealthDataSourceModel struct {
-	Id          types.String       `tfsdk:"id"`
-	FleetHealth []FleetHealthModel `tfsdk:"fleethealth""`
-}
-type FleetHealthModel struct {
+	Id                  types.String             `tfsdk:"id"`
 	TotalOrgCount       types.Int64              `tfsdk:"total_org_count"`
 	TotalHealthyCount   types.Int64              `tfsdk:"total_healthy_org_count"`
 	TotalUnHealthyCount types.Int64              `tfsdk:"total_unhealthy_org_count"`
-	DedicatedDataplanes types.Int64              `tfsdk:"dedicated_dataplanes"`
-	HealthyDataplanes   types.Int64              `tfsdk:"healthy_dataplanes"`
-	SharedDataplanes    types.Int64              `tfsdk:"shared_dataplanes"`
-	TotalDataplanes     types.Int64              `tfsdk:"total_dataplanes"`
-	UnhealthyDataplanes types.Int64              `tfsdk:"unhealthy_dataplanes"`
+	DedicatedDataPlanes types.Int64              `tfsdk:"dedicated_data_planes"`
+	HealthyDataPlanes   types.Int64              `tfsdk:"healthy_data_planes"`
+	SharedDataPlanes    types.Int64              `tfsdk:"shared_data_planes"`
+	TotalDataPlanes     types.Int64              `tfsdk:"total_data_planes"`
+	UnhealthyDataPlanes types.Int64              `tfsdk:"unhealthy_data_planes"`
 	ClusterCount        []ClusterCountModel      `tfsdk:"cluster_counts"`
 	ResourceByService   []ResourceByServiceModel `tfsdk:"resource_by_service"`
 	FleetDetails        []FleetsModel            `tfsdk:"fleets"`
 }
 
 type ResourceByServiceModel struct {
-	DataPlaneName types.String `tfsdk:"dataplane_name"`
+	DataPlaneName types.String `tfsdk:"data_plane_name"`
 	ServiceType   types.String `tfsdk:"resource_service_type"`
 	Cpu           types.String `tfsdk:"cpu"`
 	Memory        types.String `tfsdk:"memory"`
@@ -96,158 +93,149 @@ func (d *fleetHealthDatasource) Schema(_ context.Context, _ datasource.SchemaReq
 				Computed:            true,
 				MarkdownDescription: "The testing framework requires an id attribute to be present in every data source and resource",
 			},
-			"fleethealth": schema.ListNestedAttribute{
-				Description: "Fleet Health Details.",
+			"total_org_count": schema.Int64Attribute{
+				Description: "Total Count of Organizations",
+				Computed:    true,
+			},
+			"total_healthy_org_count": schema.Int64Attribute{
+				Description: "Total Count of Healthy Organizations",
+				Computed:    true,
+			},
+			"total_unhealthy_org_count": schema.Int64Attribute{
+				Description: "Total Count of UnHealthy Organizations",
+				Computed:    true,
+			},
+			"dedicated_data_planes": schema.Int64Attribute{
+				Description: "Total Count of Dedicated Data planes",
+				Computed:    true,
+			},
+			"healthy_data_planes": schema.Int64Attribute{
+				Description: "Total Count of Healthy Data planes",
+				Computed:    true,
+			},
+			"shared_data_planes": schema.Int64Attribute{
+				Description: "Total Count of Shared Data planes",
+				Computed:    true,
+			},
+			"total_data_planes": schema.Int64Attribute{
+				Description: "Total Count of Data planes",
+				Computed:    true,
+			},
+			"unhealthy_data_planes": schema.Int64Attribute{
+				Description: "Total Count of UnHealthy Data planes",
+				Computed:    true,
+			},
+			"cluster_counts": schema.ListNestedAttribute{
+				Description: "Cluster Count by Service.",
 				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-
-						"total_org_count": schema.Int64Attribute{
-							Description: "Total Count of Organizations",
+						"count": schema.Int64Attribute{
+							Description: "Count of the Cluster",
 							Computed:    true,
 						},
-						"total_healthy_org_count": schema.Int64Attribute{
-							Description: "Total Count of Healthy Organizations",
+						"service_type": schema.StringAttribute{
+							Description: "Service Type",
 							Computed:    true,
 						},
-						"total_unhealthy_org_count": schema.Int64Attribute{
-							Description: "Total Count of UnHealthy Organizations",
+					},
+				},
+			},
+			"resource_by_service": schema.ListNestedAttribute{
+				Description: "Resource by Service",
+				Computed:    true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"data_plane_name": schema.StringAttribute{
+							Description: "Data plane Name",
 							Computed:    true,
 						},
-						"dedicated_dataplanes": schema.Int64Attribute{
-							Description: "Total Count of Dedicated Dataplanes",
+						"resource_service_type": schema.StringAttribute{
+							Description: "Service Type",
 							Computed:    true,
 						},
-						"healthy_dataplanes": schema.Int64Attribute{
-							Description: "Total Count of Healthy Dataplanes",
+						"storage": schema.StringAttribute{
+							Description: "Storage",
 							Computed:    true,
 						},
-						"shared_dataplanes": schema.Int64Attribute{
-							Description: "Total Count of Shared Dataplanes",
+						"memory": schema.StringAttribute{
+							Description: "memory",
 							Computed:    true,
 						},
-						"total_dataplanes": schema.Int64Attribute{
-							Description: "Total Count of Dataplanes",
+						"cpu": schema.StringAttribute{
+							Description: "CPU",
 							Computed:    true,
 						},
-						"unhealthy_dataplanes": schema.Int64Attribute{
-							Description: "Total Count of UnHealthy Dataplnes",
+					},
+				},
+			},
+			"fleets": schema.ListNestedAttribute{
+				Description: "Organization Details",
+				Computed:    true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"org_name": schema.StringAttribute{
+							Description: "Organization Name",
 							Computed:    true,
 						},
-						"cluster_counts": schema.ListNestedAttribute{
-							Description: "Cluster Count by Service.",
+						"org_status": schema.StringAttribute{
+							Description: "Organization Status",
+							Computed:    true,
+						},
+						"cluster_status": schema.SingleNestedAttribute{
+							Description: "Additional info for the cluster.",
+							Required:    true,
+							Attributes: map[string]schema.Attribute{
+								"critical": schema.Int64Attribute{
+									Description: "Critical -Cluster Count.",
+									Required:    true,
+								},
+								"warning": schema.Int64Attribute{
+									Description: "Warning - Cluster Count.",
+									Required:    true,
+								},
+								"healthy": schema.Int64Attribute{
+									Description: "Healthy - Cluster Count.",
+									Required:    false,
+									Optional:    true,
+								},
+							},
+						},
+						"cluster_counts": schema.Int64Attribute{
+							Description: "Cluster Count",
+							Computed:    true,
+						},
+						"customer_cluster_info": schema.ListNestedAttribute{
+							Description: "Organization - Cluster Details",
 							Computed:    true,
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
-									"count": schema.Int64Attribute{
-										Description: "Count of the Cluster",
+									"cluster_id": schema.StringAttribute{
+										Description: "Cluster Id",
+										Computed:    true,
+									},
+									"cluster_name": schema.StringAttribute{
+										Description: "Cluster Name",
+										Computed:    true,
+									},
+									"instance_size": schema.StringAttribute{
+										Description: "Instance Size",
+										Computed:    true,
+									},
+									"status": schema.StringAttribute{
+										Description: "Cluster Status",
 										Computed:    true,
 									},
 									"service_type": schema.StringAttribute{
-										Description: "Service Type",
+										Description: "Service Type of the Cluster",
 										Computed:    true,
 									},
 								},
 							},
 						},
-						"resource_by_service": schema.ListNestedAttribute{
-							Description: "Resource by Service",
+						"sre_org": schema.BoolAttribute{
+							Description: "Flag which denotes if the organization is SRE organization/Default Org of SRE",
 							Computed:    true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"dataplane_name": schema.StringAttribute{
-										Description: "Dataplane Name",
-										Computed:    true,
-									},
-									"resource_service_type": schema.StringAttribute{
-										Description: "Service Type",
-										Computed:    true,
-									},
-									"storage": schema.StringAttribute{
-										Description: "Storage",
-										Computed:    true,
-									},
-									"memory": schema.StringAttribute{
-										Description: "memory",
-										Computed:    true,
-									},
-									"cpu": schema.StringAttribute{
-										Description: "CPU",
-										Computed:    true,
-									},
-								},
-							},
-						},
-						"fleets": schema.ListNestedAttribute{
-							Description: "Organization Details",
-							Computed:    true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"org_name": schema.StringAttribute{
-										Description: "Organization Name",
-										Computed:    true,
-									},
-									"org_status": schema.StringAttribute{
-										Description: "Organization Status",
-										Computed:    true,
-									},
-									"cluster_status": schema.SingleNestedAttribute{
-										Description: "Additional info for the cluster.",
-										Required:    true,
-										Attributes: map[string]schema.Attribute{
-											"critical": schema.Int64Attribute{
-												Description: "Critical -Cluster Count.",
-												Required:    true,
-											},
-											"warning": schema.Int64Attribute{
-												Description: "Warning - Cluster Count.",
-												Required:    true,
-											},
-											"healthy": schema.Int64Attribute{
-												Description: "Healthy - Cluster Count.",
-												Required:    false,
-												Optional:    true,
-											},
-										},
-									},
-									"cluster_counts": schema.Int64Attribute{
-										Description: "Cluster Count",
-										Computed:    true,
-									},
-									"customer_cluster_info": schema.ListNestedAttribute{
-										Description: "Organization - Cluster Details",
-										Computed:    true,
-										NestedObject: schema.NestedAttributeObject{
-											Attributes: map[string]schema.Attribute{
-												"cluster_id": schema.StringAttribute{
-													Description: "Cluster Id",
-													Computed:    true,
-												},
-												"cluster_name": schema.StringAttribute{
-													Description: "Cluster Name",
-													Computed:    true,
-												},
-												"instance_size": schema.StringAttribute{
-													Description: "Instance Size",
-													Computed:    true,
-												},
-												"status": schema.StringAttribute{
-													Description: "Cluster Status",
-													Computed:    true,
-												},
-												"service_type": schema.StringAttribute{
-													Description: "Service Type of the Cluster",
-													Computed:    true,
-												},
-											},
-										},
-									},
-									"sre_org": schema.BoolAttribute{
-										Description: "Flag which denotes if the organization is SRE organization/Default Org of SRE",
-										Computed:    true,
-									},
-								},
-							},
 						},
 					},
 				},
@@ -307,15 +295,15 @@ func (d *fleetHealthDatasource) Read(ctx context.Context, req datasource.ReadReq
 			err.Error())
 	}
 
-	fleetHealthDto := FleetHealthModel{
+	state = FleetHealthDataSourceModel{
 		TotalHealthyCount:   types.Int64Value(orgHealth.TotalHealthyOrgsCount),
 		TotalOrgCount:       types.Int64Value(orgHealth.TotalOrgCount),
 		TotalUnHealthyCount: types.Int64Value(orgHealth.TotalUnhealthyOrgsCount),
-		TotalDataplanes:     types.Int64Value(dataplaneCount.TotalDataplanes),
-		HealthyDataplanes:   types.Int64Value(dataplaneCount.HealthyDataplanes),
-		UnhealthyDataplanes: types.Int64Value(dataplaneCount.UnhealthyDataplanes),
-		SharedDataplanes:    types.Int64Value(dataplaneCount.SharedDataplanes),
-		DedicatedDataplanes: types.Int64Value(dataplaneCount.DedicatedDataplanes),
+		TotalDataPlanes:     types.Int64Value(dataplaneCount.TotalDataplanes),
+		HealthyDataPlanes:   types.Int64Value(dataplaneCount.HealthyDataplanes),
+		UnhealthyDataPlanes: types.Int64Value(dataplaneCount.UnhealthyDataplanes),
+		SharedDataPlanes:    types.Int64Value(dataplaneCount.SharedDataplanes),
+		DedicatedDataPlanes: types.Int64Value(dataplaneCount.DedicatedDataplanes),
 	}
 
 	for _, cc := range clusterCount {
@@ -324,7 +312,7 @@ func (d *fleetHealthDatasource) Read(ctx context.Context, req datasource.ReadReq
 			Count:       types.Int64Value(cc.Count),
 		}
 
-		fleetHealthDto.ClusterCount = append(fleetHealthDto.ClusterCount, ccList)
+		state.ClusterCount = append(state.ClusterCount, ccList)
 	}
 
 	for _, cc := range resourceByService {
@@ -336,7 +324,7 @@ func (d *fleetHealthDatasource) Read(ctx context.Context, req datasource.ReadReq
 			Storage:       types.StringValue(cc.Storage),
 		}
 
-		fleetHealthDto.ResourceByService = append(fleetHealthDto.ResourceByService, ccList)
+		state.ResourceByService = append(state.ResourceByService, ccList)
 	}
 
 	if srecustomerInfo.Page.TotalPages > 1 {
@@ -358,6 +346,12 @@ func (d *fleetHealthDatasource) Read(ctx context.Context, req datasource.ReadReq
 					CustomerCumulativeStatus: types.StringValue(fleetsDto.CustomerCumulativeStatus),
 					ClusterCounts:            types.Int64Value(fleetsDto.ClusterCounts),
 				}
+				customerClusterModel := ClusterStatus{
+					Critical: types.Int64Value(fleetsDto.ClusterStatus.Critical),
+					Warning:  types.Int64Value(fleetsDto.ClusterStatus.Warning),
+					Healthy:  types.Int64Value(fleetsDto.ClusterStatus.Healthy),
+				}
+				fleets.ClusterStatus = customerClusterModel
 				for _, cc := range fleetsDto.CustomerClusterInfo {
 					ccList := CustomerClusterModel{
 						ClusterId:    types.StringValue(cc.ClusterId),
@@ -369,7 +363,7 @@ func (d *fleetHealthDatasource) Read(ctx context.Context, req datasource.ReadReq
 
 					fleets.CustomerClusterInfo = append(fleets.CustomerClusterInfo, ccList)
 				}
-				fleetHealthDto.FleetDetails = append(fleetHealthDto.FleetDetails, fleets)
+				state.FleetDetails = append(state.FleetDetails, fleets)
 			}
 		}
 
@@ -400,10 +394,10 @@ func (d *fleetHealthDatasource) Read(ctx context.Context, req datasource.ReadReq
 
 				fleets.CustomerClusterInfo = append(fleets.CustomerClusterInfo, ccList)
 			}
-			fleetHealthDto.FleetDetails = append(fleetHealthDto.FleetDetails, fleets)
+			state.FleetDetails = append(state.FleetDetails, fleets)
 		}
 	}
-	state.FleetHealth = append(state.FleetHealth, fleetHealthDto)
+
 	state.Id = types.StringValue(common.DataSource + common.ServiceRolesId)
 	// Set state
 	diags := resp.State.Set(ctx, &state)

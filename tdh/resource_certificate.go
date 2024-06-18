@@ -134,13 +134,13 @@ func (r *certificateResource) Create(ctx context.Context, req resource.CreateReq
 		Name:           plan.Name.ValueString(),
 		DomainName:     plan.DomainName.ValueString(),
 		Provider:       plan.ProviderType.ValueString(),
-		Certificate:    plan.Certificate.ValueString(),
-		CertificateCA:  plan.CertificateCA.ValueString(),
-		CertificateKey: plan.CertificateKey.ValueString(),
+		Certificate:    url.QueryEscape(plan.Certificate.ValueString()),
+		CertificateCA:  url.QueryEscape(plan.CertificateCA.ValueString()),
+		CertificateKey: url.QueryEscape(plan.CertificateKey.ValueString()),
 		Shared:         true,
 	}
 
-	//tflog.Info(ctx, "req param", map[string]interface{}{"requestbody": certificateRequest})
+	tflog.Info(ctx, "req param", map[string]interface{}{"requestbody": certificateRequest})
 	certificate, err := r.client.InfraConnector.CreateCertificate(certificateRequest)
 	if err != nil {
 		apiErr := core.ApiError{}

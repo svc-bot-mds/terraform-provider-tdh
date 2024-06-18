@@ -96,7 +96,7 @@ func (d *dnsDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, re
 										Description: "Protocol of the server.",
 										Computed:    true,
 									},
-									"port": schema.StringAttribute{
+									"port": schema.Int64Attribute{
 										Description: "Port of the server",
 										Computed:    true,
 									},

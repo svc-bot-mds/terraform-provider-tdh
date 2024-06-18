@@ -21,14 +21,14 @@ output "provider_types" {
 }
 resource "tdh_cloud_account" "example" {
   name          = "tf-cloud-account1"
-  provider_type = element(data.tdh_provider_types.create.list, 0)
+  provider_type = "tkgs"
   credentials   = var.tkgs_cred
-  shared        = true
-  tags          = ["tag1", "tag2"]
+  shared        = false
+  tags          = ["tag3", "tag4"]
 
   //non editable fields during the update
   lifecycle {
-    ignore_changes = [name]
+    ignore_changes = [name, provider_type,org_id, shared]
   }
 }
 

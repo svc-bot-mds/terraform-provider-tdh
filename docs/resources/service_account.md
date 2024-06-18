@@ -43,7 +43,7 @@ resource "tdh_service_account" "example" {
   //Oauth app details
   oauth_app = {
     description = "Oauth app created for example-acc service account"
-    ttl_spec    = {
+    ttl_spec = {
       ttl       = "1"
       time_unit = "HOURS"
     }

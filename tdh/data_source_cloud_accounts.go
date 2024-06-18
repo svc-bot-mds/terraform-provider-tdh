@@ -20,7 +20,7 @@ var (
 // instanceTypesDataSourceModel maps the data source schema data.
 type cloudAccountsDatasourceModel struct {
 	Id            types.String        `tfsdk:"id"`
-	CloudAccounts []cloudAccountModel `tfsdk:"cloud_accounts"`
+	CloudAccounts []cloudAccountModel `tfsdk:"list"`
 }
 
 type cloudAccountModel struct {
@@ -63,7 +63,7 @@ func (d *cloudAccountsDatasource) Schema(_ context.Context, _ datasource.SchemaR
 				Computed:            true,
 				MarkdownDescription: "The testing framework requires an id attribute to be present in every data source and resource",
 			},
-			"cloud_accounts": schema.ListNestedAttribute{
+			"list": schema.ListNestedAttribute{
 				Computed: true,
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{

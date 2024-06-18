@@ -55,4 +55,5 @@ type TKC struct {
 	Name        string `json:"clusterName"`
 	IsAvailable bool   `json:"isAvailable"`
 	IsCpPresent bool   `json:"isCPPresent"`
+	IsDpPresent bool   `json:"isDPPresent"`
 }
