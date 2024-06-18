@@ -8,8 +8,8 @@ type DataPlanesQuery struct {
 }
 
 type EligibleDataPlanesQuery struct {
-	Provider          string `schema:"provider"`
-	InfraResourceType string `schema:"infraResourceType"`
-	OrgId             string `schema:"orgId"`
+	Provider          string `schema:"provider,omitempty"`
+	InfraResourceType string `schema:"infraResourceType,omitempty"`
+	OrgId             string `schema:"orgId,omitempty"`
 	model.PageQuery
 }

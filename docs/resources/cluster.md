@@ -22,11 +22,11 @@ data "tdh_instance_types" "pg" {
 }
 locals {
   service_type        = "POSTGRES"
-  provider_type       = "tkgs"        # can be get using datasource "tdh_provider_types"
-  instance_type       = "XX-SMALL"    # can be get using datasource "tdh_instance_types"
-  version             = "postgres-13" # complete list can be got using datasource "tdh_cluster_versions"
+  provider_type       = "tkgs"        # can get using datasource "tdh_provider_types"
+  instance_type       = "XX-SMALL"    # can get using datasource "tdh_instance_types"
+  version             = "postgres-13" # complete list can be got using datasource "tdh_service_versions"
   storage_policy_name = "tdh-k8s-cluster-policy"
-  # can be got using datasource "tdh_tdh_eligible_data_planes", in the field 'list'
+  # can get using datasource "tdh_eligible_data_planes", in the field 'list'
 }
 data "tdh_regions" "shared" {
   instance_size = local.instance_type
@@ -40,7 +40,7 @@ data "tdh_network_ports" "all" {
 data "tdh_eligible_data_planes" "all" {
   provider_name = local.provider_type
 }
-data "tdh_cluster_versions" "name" {
+data "tdh_service_versions" "name" {
   service_type  = local.service_type
   provider_type = local.provider_type
 }
@@ -96,7 +96,6 @@ resource "tdh_cluster" "test" {
 
 ### Required
 
-- `cluster_metadata` (Attributes) Additional info for the cluster. (see [below for nested schema](#nestedatt--cluster_metadata))
 - `data_plane_id` (String) ID of the data-plane where the cluster is running.
 - `instance_size` (String) Size of instance. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`.
 Please make use of datasource `tdh_network_ports` to decide on a size based on resources it requires.
@@ -109,6 +108,7 @@ Please make use of datasource `tdh_network_ports` to decide on a size based on r
 
 ### Optional
 
+- `cluster_metadata` (Attributes) Additional info for the cluster. Required for services: `POSTGRES`, `MYSQL`, `REDIS`. (see [below for nested schema](#nestedatt--cluster_metadata))
 - `dedicated` (Boolean) If present and set to `true`, the cluster will get deployed on a dedicated data-plane in current Org.
 - `restore_from_backup` (String) ID of the Cluster Backup to restore.
 **NOTE**:
@@ -139,7 +139,7 @@ Required:
 
 Optional:
 
-- `database` (String) Database name in the cluster.
+- `database` (String) Database name in the cluster. Required for services: `POSTGRES` & `MYSQL`.
 - `extensions` (Set of String) Set of extensions to be enabled on the cluster.
 - `object_storage_id` (String) ID of the object storage for backup operations.
 - `restore_from` (String) Restore from a specific backup.
