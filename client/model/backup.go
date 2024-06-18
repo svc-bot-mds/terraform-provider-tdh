@@ -8,6 +8,8 @@ type ClusterBackup struct {
 	ClusterId         string `json:"clusterId"`
 	ClusterName       string `json:"clusterName"`
 	Provider          string `json:"provider"`
+	TimeStarted       string `json:"timeStarted"`
+	TimeCompleted     string `json:"timeCompleted"`
 	Region            string `json:"region"`
 	Status            string `json:"status"`
 	ClusterVersion    string `json:"clusterVersion"`
@@ -17,8 +19,13 @@ type ClusterBackup struct {
 	BackupRequestId   string `json:"backupRequestId"`
 	BackupTriggerType string `json:"backupTriggerType"`
 	Metadata          struct {
-		ClusterName    string `json:"clusterName"`
-		ClusterSize    string `json:"clusterSize"`
-		BackupLocation string `json:"backupLocation"`
+		ClusterName        string   `json:"clusterName"`
+		ClusterSize        string   `json:"clusterSize"`
+		BackupLocation     string   `json:"backupLocation"`
+		Databases          []string `json:"databases"`
+		PostgresExtensions []struct {
+			Name    string `json:"name"`
+			Version string `json:"version"`
+		} `json:"postgresExtensions"`
 	} `json:"metadata"`
 }

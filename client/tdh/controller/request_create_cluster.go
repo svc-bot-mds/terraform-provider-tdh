@@ -20,7 +20,7 @@ type ClusterMetadata struct {
 	Username      string   `json:"username"`
 	Password      string   `json:"password"`
 	Database      string   `json:"database"`
-	RestoreFrom   string   `json:"restore_from"`
-	ObjectStoreId string   `json:"ObjectStoreId"`
+	RestoreFrom   string   `json:"restoreFrom,omitempty"`
+	ObjectStoreId string   `json:"objectStoreId,omitempty"`
 	Extensions    []string `json:"extensions"`
 }
