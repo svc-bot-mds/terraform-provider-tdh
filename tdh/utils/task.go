@@ -16,8 +16,8 @@ func WaitForTask(client *tdh.Client, taskId string) error {
 		}
 		if taskResponse.Status == "SUCCESS" {
 			return nil
-		} else if taskResponse.Status == "FAILED" || taskResponse.Status == "RESCHEDULED" {
-			return fmt.Errorf("task has " + taskResponse.Status + ", get more details using datasource \"tdh_tasks\"")
+		} else if taskResponse.Status == "FAILED" {
+			return fmt.Errorf("task has Failed, get more details using datasource \"tdh_tasks\"")
 		}
 		time.Sleep(time.Second * 10)
 	}
