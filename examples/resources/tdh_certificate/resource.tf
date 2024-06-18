@@ -5,9 +5,9 @@ output "resp" {
   value = data.tdh_provider_types.create
 }
 resource "tdh_certificate" "example" {
-  name            = "tf-example-certificate-names"
+  name            = "tf-example-certificate-name"
   domain_name     = "tdh.domain.com"
-  provider_type   = data.tdh_provider_types.create.list[2] # can be fetched using 'tdh_tdh_provider_types' datasource
+  provider_type   = data.tdh_provider_types.create.list[2] # can be fetched using 'tdh_provider_types' datasource
   certificate     = <<EOF
 -----BEGIN CERTIFICATE-----
 -----END CERTIFICATE-----

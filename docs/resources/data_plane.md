@@ -19,7 +19,7 @@ data "tdh_provider_types" "all" {
 data "tdh_cloud_accounts" "all" {
 }
 
-# For onboarding the data plane use the k8s cluster with the attribute "avaialble" is set to true
+# For onboarding the data plane use the k8s cluster with the attribute "available" is set to true
 # If onboarding data Plane on TDH Control Plane, use the k8s cluster with the attribute "cp_present" is set to true and "dp_present" is set to false
 data "tdh_k8s_clusters" "all" {
   account_id = data.tdh_cloud_accounts.all.list[0].id
@@ -50,18 +50,18 @@ output "data" {
 
 
 resource "tdh_data_plane" "example" {
-  name                    = "dpname-new"
+  name                    = "dp_name-new"
   account_id              = data.tdh_cloud_accounts.all.list[0].id       # this ID can be fetched from the datasource "tdh_cloud_accounts" . Provider type can be verifies using the 'provider_type' field
   k8s_cluster_name        = data.tdh_k8s_clusters.all.list[5].name # use datasource "tdh_k8s_clusters" to get the list of available K8s clusters.# For onboarding the data plane use the k8s cluster with the attribute "available" is set to tru. If onboarding Data Plane on TDH Control Plane, use the k8s cluster with the attribute "cp_present" is set to true and "dp_present" is set to false
-  storage_classes         = [for storageclass in data.tdh_storage_policies.all.list : storageclass.name]
+  storage_classes         = [for storage_class in data.tdh_storage_policies.all.list : storage_class.name]
   backup_storage_class    = data.tdh_storage_policies.all.list[0].name  # name of the storage class to use for backups
   data_plane_release_id   = data.tdh_data_plane_helm_releases.all.list[0].id # use datasource "tdh_data_plane_helm_releases" to select one of the IDs
   shared                  = true
   org_id                  = null # setting this to particular Org ID will make it available to only that Org
-  tags                    = ["dev-dp-teraform"]
+  tags                    = ["dev-dp-terraform"]
   auto_upgrade            = false
   services                = data.tdh_data_plane_helm_releases.all.list[0].services # can be fetched from the response of "tdh_data_plane_helm_releases" services field
-  cp_bootstrapped_cluster = false #Onboard Data Plane on TDH Control Plane
+  cp_bootstrapped_cluster = false # set to true to Onboard Data Plane on TDH Control Plane
   configure_core_dns      = true
 
   // non editable fields, edit is not allowed
@@ -81,7 +81,7 @@ resource "tdh_data_plane" "example" {
 
 - `account_id` (String) ID of the account to use for data plane operations. Please use datasource `tdh_cloud_accounts` to get the list of available accounts.
 - `auto_upgrade` (Boolean) Whether to enable auto-upgrade on Data plane
-- `backup_storage_class` (String) Backup Storage Class will be used to create all backups on this data plane. Please note this cannot be changed in future.
+- `backup_storage_class` (String) Backup Storage Class will be used to create all backups on this data plane. Please note this cannot be changed in the future.
 - `data_plane_release_id` (String) ID of the Helm Release. Please use datasource `tdh_data_plane_helm_releases` to get this.
 - `k8s_cluster_name` (String) Name of Kubernetes Cluster. Please use datasource `tdh_k8s_clusters` to get the list of available clusters from an account.
 - `name` (String) Name of the Data Plane

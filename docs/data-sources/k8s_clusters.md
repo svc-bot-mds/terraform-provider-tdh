@@ -17,7 +17,7 @@ Used to fetch all Kubernetes Clusters within an provider account.
 # If onboarding data Plane on TDH Control Plane, use the k8s cluster with the attribute "cp_present" is set to true and "dp_present" is set to false
 
 data "tdh_k8s_clusters" "all" {
-  account_id = "CLOUD_ACCOUNT_ID" #can be fetched using 'tdh__cloud_accounts" datasource
+  account_id = "CLOUD_ACCOUNT_ID" # can be fetched using 'tdh_cloud_accounts" datasource
 }
 output "resp" {
   value = data.tdh_k8s_clusters.all
