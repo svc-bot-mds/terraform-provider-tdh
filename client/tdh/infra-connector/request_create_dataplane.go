@@ -7,7 +7,7 @@ type DataPlaneCreateRequest struct {
 	DataplaneType         string   `json:"dataplaneType"`
 	CertificateId         string   `json:"certificateId"`
 	StorageClasses        []string `json:"storageClasses"`
-	BackupStorageCLass    string   `json:"backupStorageCLass"`
+	BackupStorageClass    string   `json:"backupStorageClass"`
 	ManagedDns            bool     `json:"managedDns"`
 	DataPlaneReleaseId    string   `json:"dataPlaneReleaseId"`
 	Shared                bool     `json:"shared"`
