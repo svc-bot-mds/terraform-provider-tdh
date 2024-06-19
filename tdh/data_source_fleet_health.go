@@ -68,7 +68,7 @@ type CustomerClusterModel struct {
 	ServiceType  types.String `tfsdk:"service_type"`
 }
 
-// NewFleetHealthDataSource is a helper function to simplify the provider implementation.
+// NewFleetHealthDatasource is a helper function to simplify the provider implementation.
 func NewFleetHealthDatasource() datasource.DataSource {
 	return &fleetHealthDatasource{}
 }
@@ -87,7 +87,7 @@ func (d *fleetHealthDatasource) Metadata(_ context.Context, req datasource.Metad
 // Schema defines the schema for the data source.
 func (d *fleetHealthDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Used to fetch Fleet Health Details for SRE",
+		MarkdownDescription: "Used to fetch Fleet Health Details for SRE.\n ## Note: For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,

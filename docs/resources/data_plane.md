@@ -19,7 +19,7 @@ data "tdh_provider_types" "all" {
 data "tdh_cloud_accounts" "all" {
 }
 
-# For onboarding the data plane use the k8s cluster with the attribute "avaialble" is set to true
+# For onboarding the data plane use the k8s cluster with the attribute "available" is set to true
 # If onboarding data Plane on TDH Control Plane, use the k8s cluster with the attribute "cp_present" is set to true and "dp_present" is set to false
 data "tdh_k8s_clusters" "all" {
   account_id = data.tdh_cloud_accounts.all.list[0].id

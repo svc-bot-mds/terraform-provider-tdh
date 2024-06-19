@@ -72,7 +72,7 @@ func (r *certificateResource) Schema(ctx context.Context, _ resource.SchemaReque
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents a certificate created on TDH, can be used to create/update/delete/import a certificate.",
+		MarkdownDescription: "Represents a certificate created on TDH, can be used to create/update/delete/import a certificate. \n ## Note: For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Auto-generated ID after creating a certificate, and can be passed to import an existing user from TDH to terraform state.",

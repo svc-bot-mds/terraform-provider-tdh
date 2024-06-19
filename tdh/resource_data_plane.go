@@ -76,7 +76,7 @@ func (r *dataPlaneResource) Configure(_ context.Context, req resource.ConfigureR
 func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	tflog.Info(ctx, "INIT__Schema")
 	resp.Schema = schema.Schema{
-		Description: "Represents a TDH Data Plane.",
+		MarkdownDescription: "Represents a TDH Data Plane.\n ## Note: For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Auto-generated ID of the data plane after creation, and can be used to import it from TDH to terraform state.",

@@ -15,12 +15,9 @@ var (
 	_ datasource.DataSourceWithConfigure = &smtpDatasource{}
 )
 
-// SmtpDatasourceModel maps the data source schema data.
+// SmtpDataSourceModel maps the data source schema data.
 type SmtpDataSourceModel struct {
-	Id           types.String `tfsdk:"id"`
-	SmptpDetails []SmtpModel  `tfsdk:"smtp""`
-}
-type SmtpModel struct {
+	Id                    types.String `tfsdk:"id"`
 	AuthenticationEnabled types.String `tfsdk:"auth"`
 	TlsEnabled            types.String `tfsdk:"tls"`
 	FromEmail             types.String `tfsdk:"from_email"`
@@ -48,44 +45,35 @@ func (d *smtpDatasource) Metadata(_ context.Context, req datasource.MetadataRequ
 // Schema defines the schema for the data source.
 func (d *smtpDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Used to fetch SMTP details.",
+		MarkdownDescription: "Used to fetch SMTP details.\n ## Note: For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "The testing framework requires an id attribute to be present in every data source and resource",
 			},
-			"smtp": schema.ListNestedAttribute{
-				Description: "SMTP Details",
+			"auth": schema.StringAttribute{
+				Description: " Authentication Enabled ?",
 				Computed:    true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-
-						"auth": schema.StringAttribute{
-							Description: " Authentication Enabled ?",
-							Computed:    true,
-						},
-						"tls": schema.StringAttribute{
-							Description: " TLS Enabled",
-							Computed:    true,
-						},
-						"from_email": schema.StringAttribute{
-							Description: "SMTP email address",
-							Computed:    true,
-						},
-						"user_name": schema.StringAttribute{
-							Description: "SMTP user name",
-							Computed:    true,
-						},
-						"host": schema.StringAttribute{
-							Description: "SMTP Host",
-							Computed:    true,
-						},
-						"port": schema.StringAttribute{
-							Description: "SMTP Port",
-							Computed:    true,
-						},
-					},
-				},
+			},
+			"tls": schema.StringAttribute{
+				Description: " TLS Enabled",
+				Computed:    true,
+			},
+			"from_email": schema.StringAttribute{
+				Description: "SMTP email address",
+				Computed:    true,
+			},
+			"user_name": schema.StringAttribute{
+				Description: "SMTP user name",
+				Computed:    true,
+			},
+			"host": schema.StringAttribute{
+				Description: "SMTP Host",
+				Computed:    true,
+			},
+			"port": schema.StringAttribute{
+				Description: "SMTP Port",
+				Computed:    true,
 			},
 		},
 	}
@@ -107,7 +95,7 @@ func (d *smtpDatasource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	smtpDetails := SmtpModel{
+	state = SmtpDataSourceModel{
 		AuthenticationEnabled: types.StringValue(smtp.Auth),
 		TlsEnabled:            types.StringValue(smtp.Tls),
 		FromEmail:             types.StringValue(smtp.FromEmail),
@@ -116,7 +104,6 @@ func (d *smtpDatasource) Read(ctx context.Context, req datasource.ReadRequest, r
 		Port:                  types.StringValue(smtp.Port),
 	}
 
-	state.SmptpDetails = append(state.SmptpDetails, smtpDetails)
 	state.Id = types.StringValue(common.DataSource + common.ServiceRolesId)
 	// Set state
 	diags := resp.State.Set(ctx, &state)

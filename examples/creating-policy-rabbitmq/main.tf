@@ -7,8 +7,11 @@ terraform {
 }
 
 provider "tdh" {
-  host      = "TDH_HOST_URL"
-  api_token = "API_TOKEN"
+  host     = "TDH_HOST_URL"
+  type     = "user_creds" # Authentication using username and password
+  username = "TDH_USERNAME"
+  password = "TDH_PASSWORD"
+  org_id   = "TDH_ORG_ID"
 }
 
 locals {
@@ -24,18 +27,18 @@ data "tdh_service_roles" "roles" {
   type = "RABBITMQ"
 }
 
-data "tdh_cluster_metadata" "metadata" {
-  id = "6465f3ae265b393b4e42e9bd"
+data "tdh_cluster_metadata" "rmq" {
+  id = "d3c49288-7b17-4e78-a6af-257b49e34e53"
 }
 
 // queue and other RMQ resources can be referred from the output to craft a permission on resources
 output "cluster_metadata" {
-  value = data.tdh_cluster_metadata.metadata
+  value = data.tdh_cluster_metadata.rmq
 }
 
 resource "tdh_policy" "rabbitmq" {
-  name             = "test-tf"
-  service_type     = "RABBITMQ"
+  name         = "test-tf"
+  service_type = "RABBITMQ"
   permission_specs = [
     {
       permissions = ["read"],

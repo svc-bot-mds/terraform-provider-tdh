@@ -16,9 +16,12 @@ resource "tdh_cluster_backup" "example" {
   cluster_id = "CLUSTER_ID"     # if importing, ID has to match with existing state
 
   restore = {
-    cluster_name   = "tf-restore-6"           # this will be the name of cluster that will be created with this restore. Not Applicable for "REDIS"
-    storage_policy = "tdh-k8s-cluster-policy" # can get using datasource "tdh_storage_policies". Not Applicable for "REDIS"
-    network_policy_ids = [                    # can get using datasource "tdh_network_policies"
+    cluster_name = "tf-restore-6"
+    # this will be the name of cluster that will be created with this restore. Not Applicable for "REDIS"
+    storage_policy = "tdh-k8s-cluster-policy"
+    # can get using datasource "tdh_storage_policies". Not Applicable for "REDIS"
+    network_policy_ids = [
+      # can get using datasource "tdh_network_policies"
       "6ad0cf49-81be-48e3-bab4-2a13b9de0c95"
     ]
   }
