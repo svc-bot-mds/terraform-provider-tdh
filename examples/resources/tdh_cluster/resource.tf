@@ -22,12 +22,13 @@ data "tdh_network_ports" "all" {
 # to get the storage policies and eligible data planes for the given provider, although it may not be available if given size doesn't meet resource requirement in this data plane
 data "tdh_eligible_data_planes" "all" {
   provider_name = local.provider_type
+  org_id        = "ORG_ID" # leave out to filter shared data planes
 }
+
 data "tdh_service_versions" "name" {
   service_type  = local.service_type
   provider_type = local.provider_type
 }
-
 output "data" {
   value = {
     providers       = data.tdh_provider_types.all

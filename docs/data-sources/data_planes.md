@@ -3,12 +3,12 @@
 page_title: "tdh_data_planes Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch all Data planes
+  Used to fetch all Data planes for SRE user
 ---
 
 # tdh_data_planes (Data Source)
 
-Used to fetch all Data planes
+Used to fetch all Data planes for SRE user
 
 ## Example Usage
 
