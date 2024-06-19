@@ -24,7 +24,8 @@ data "tdh_policies" "all" {
   identity_type = "SERVICE_ACCOUNT"
 }
 
-output "values" { # view the output to decide on resource values
+output "values" {
+  # view the output to decide on resource values
   value = {
     roles    = data.tdh_roles.all
     policies = data.tdh_policies.all

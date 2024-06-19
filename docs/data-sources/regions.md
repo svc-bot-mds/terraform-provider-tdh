@@ -17,9 +17,9 @@ Used to fetch the regions having data-planes by desired amount of resources avai
 ## Example Usage
 
 ```terraform
-// pass valid data with respect to the instance type selected
+# pass valid data with respect to the instance type selected
 data "tdh_regions" "dedicated_aws" {
-  instance_size = "XX-SMALL"
+  instance_size        = "XX-SMALL"
   dedicated_data_plane = true
 }
 ```

@@ -7,11 +7,14 @@ terraform {
 }
 
 provider "tdh" {
-  host      = "TDH_HOST_URL"
-  api_token = "API_TOKEN"
+  host     = "TDH_HOST_URL"
+  type     = "user_creds" # Authentication using username and password
+  username = "TDH_USERNAME"
+  password = "TDH_PASSWORD"
+  org_id   = "TDH_ORG_ID"
 }
 
-// network port IDs can be referred using this datasource
+# network port IDs can be referred using this datasource
 data "tdh_network_ports" "all" {
 }
 
@@ -20,8 +23,7 @@ output "cluster_metadata" {
 }
 
 resource "tdh_network_policy" "network" {
-  name         = "network-policy-from-m"
-  service_type = "NETWORK"
+  name = "network-policy-from-tf"
   network_spec = {
     cidr             = "10.22.55.0/24",
     network_port_ids = ["rmq-streams", "rmq-amqps"]

@@ -4,11 +4,13 @@ page_title: "tdh_smtp Resource - tdh"
 subcategory: ""
 description: |-
   Represents SMTP details. We can only edit the smtp details.
+   ## Note: For SRE only.
 ---
 
 # tdh_smtp (Resource)
 
 Represents SMTP details. We can only edit the smtp details.
+ ## Note: For SRE only.
 
 ## Example Usage
 

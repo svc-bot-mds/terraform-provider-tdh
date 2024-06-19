@@ -40,8 +40,7 @@ output "data" {
 }
 
 resource "tdh_network_policy" "network" {
-  name         = "tf-pg-nw-policy"
-  service_type = "NETWORK"
+  name = "tf-pg-nw-policy"
   network_spec = {
     cidr = "0.0.0.0/32",
     network_port_ids = [

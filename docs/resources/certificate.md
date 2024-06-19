@@ -4,11 +4,13 @@ page_title: "tdh_certificate Resource - tdh"
 subcategory: ""
 description: |-
   Represents a certificate created on TDH, can be used to create/update/delete/import a certificate.
+   ## Note: For SRE only.
 ---
 
 # tdh_certificate (Resource)
 
-Represents a certificate created on TDH, can be used to create/update/delete/import a certificate.
+Represents a certificate created on TDH, can be used to create/update/delete/import a certificate. 
+ ## Note: For SRE only.
 
 ## Example Usage
 
@@ -37,7 +39,7 @@ EOF
 EOF
   // non editable fields during the update
   lifecycle {
-    ignore_changes = [name,domain_name,provider_type,certificate_ca,certificate_key,certificate]
+    ignore_changes = [name, domain_name, provider_type, certificate_ca, certificate_key, certificate]
   }
 }
 ```

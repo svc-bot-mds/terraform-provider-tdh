@@ -157,7 +157,7 @@ func (s *Service) GetDataPlaneRegions() ([]model.DataPlaneRegion, error) {
 	return response, nil
 }
 
-// CreateDataPlane - Submits a request to create dataplane
+// CreateDataPlane - Submits a request to create data plane
 func (s *Service) CreateDataPlane(requestBody *DataPlaneCreateRequest) (*model.TaskResponse, error) {
 	if requestBody == nil {
 		return nil, fmt.Errorf("requestBody cannot be nil")
