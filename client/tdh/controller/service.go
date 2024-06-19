@@ -303,7 +303,7 @@ func (s *Service) CreateClusterBackup(id string, requestBody *BackupCreateReques
 	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Clusters, id, Backup)
 
 	var response model.TaskResponse
-	_, err := s.Api.Post(&urlPath, requestBody, response)
+	_, err := s.Api.Post(&urlPath, requestBody, &response)
 	if err != nil {
 		return nil, err
 	}

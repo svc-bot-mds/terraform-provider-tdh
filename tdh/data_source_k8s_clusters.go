@@ -26,6 +26,7 @@ type K8sCluster struct {
 	Name      types.String `tfsdk:"name"`
 	Available types.Bool   `tfsdk:"available"`
 	CpPresent types.Bool   `tfsdk:"cp_present"`
+	DpPresent types.Bool   `tfsdk:"dp_present"`
 }
 
 // NewK8sClustersDatasource is a helper function to simplify the provider implementation.
@@ -74,6 +75,10 @@ func (d *k8sClustersDatasource) Schema(_ context.Context, _ datasource.SchemaReq
 							Computed:            true,
 							MarkdownDescription: "Denotes if Control Plane is available. Use the Kubernetes Cluster with this set to `true` while onboarding Data Plane on TDH Control Plane.",
 						},
+						"dp_present": schema.BoolAttribute{
+							Computed:            true,
+							MarkdownDescription: "Denotes if Data Plane is already deployed. Use the Kubernetes Cluster with this set to `false` while onboarding Data Plane on TDH Control Plane.",
+						},
 					},
 				},
 			},
@@ -102,6 +107,7 @@ func (d *k8sClustersDatasource) Read(ctx context.Context, req datasource.ReadReq
 			Name:      types.StringValue(dto.Name),
 			Available: types.BoolValue(dto.IsAvailable),
 			CpPresent: types.BoolValue(dto.IsCpPresent),
+			DpPresent: types.BoolValue(dto.IsDpPresent),
 		}
 		clusterList = append(clusterList, tfModel)
 	}

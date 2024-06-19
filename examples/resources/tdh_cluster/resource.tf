@@ -5,11 +5,11 @@ data "tdh_instance_types" "pg" {
 }
 locals {
   service_type        = "POSTGRES"
-  provider_type       = "tkgs"        # can be get using datasource "tdh_provider_types"
-  instance_type       = "XX-SMALL"    # can be get using datasource "tdh_instance_types"
-  version             = "postgres-13" # complete list can be got using datasource "tdh_cluster_versions"
+  provider_type       = "tkgs"        # can get using datasource "tdh_provider_types"
+  instance_type       = "XX-SMALL"    # can get using datasource "tdh_instance_types"
+  version             = "postgres-13" # complete list can be got using datasource "tdh_service_versions"
   storage_policy_name = "tdh-k8s-cluster-policy"
-  # can be got using datasource "tdh_tdh_eligible_data_planes", in the field 'list'
+  # can get using datasource "tdh_eligible_data_planes", in the field 'list'
 }
 data "tdh_regions" "shared" {
   instance_size = local.instance_type
@@ -23,7 +23,7 @@ data "tdh_network_ports" "all" {
 data "tdh_eligible_data_planes" "all" {
   provider_name = local.provider_type
 }
-data "tdh_cluster_versions" "name" {
+data "tdh_service_versions" "name" {
   service_type  = local.service_type
   provider_type = local.provider_type
 }

@@ -1,3 +1,3 @@
-data "tdh_service_roles" "rmq"{
-  type = "RABBITMQ"
+data "tdh_service_roles" "pg" {
+  type = "POSTGRES"
 }
