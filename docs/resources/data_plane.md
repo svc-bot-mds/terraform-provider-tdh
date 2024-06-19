@@ -68,7 +68,7 @@ resource "tdh_data_plane" "example" {
   auto_upgrade = true
   services     = data.tdh_data_plane_helm_releases.all.list[0].services
   # can be fetched from the response of "tdh_data_plane_helm_releases" services field
-  cp_bootstrapped_cluster = true
+  cp_bootstrapped_cluster = false
   # set to true to Onboard Data Plane on TDH Control Plane
   configure_core_dns = true
 
