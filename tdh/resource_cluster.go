@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -14,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/service_type"
@@ -137,6 +140,9 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(3),
+				},
 			},
 			"service_type": schema.StringAttribute{
 				MarkdownDescription: fmt.Sprintf("Type of TDH Cluster to be created. Supported values: %s .\n Default is `POSTGRES`.", supportedServiceTypesMarkdown()),
@@ -153,6 +159,9 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"instance_size": schema.StringAttribute{
 				MarkdownDescription: "Size of instance. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`." +
@@ -161,6 +170,9 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(3),
+				},
 			},
 			"region": schema.StringAttribute{
 				MarkdownDescription: "Region of data plane. Available values can be seen using datasource `tdh_regions`.",
@@ -168,6 +180,9 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(2),
 				},
 			},
 			"dedicated": schema.BoolAttribute{
@@ -193,6 +208,9 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+				},
 			},
 			"status": schema.StringAttribute{
 				Description: "Status of the cluster.",
@@ -201,6 +219,9 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			"data_plane_id": schema.StringAttribute{
 				Description: "ID of the data-plane where the cluster is running.",
 				Required:    true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"last_updated": schema.StringAttribute{
 				Description: "Time when the cluster was last modified.",
@@ -219,12 +240,18 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"storage_policy_name": schema.StringAttribute{
 				Description: "Name of the storage policy for the cluster.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"metadata": schema.SingleNestedAttribute{
@@ -273,8 +300,8 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"cluster_metadata": schema.SingleNestedAttribute{
-				Description: "Additional info for the cluster.",
-				Required:    true,
+				MarkdownDescription: fmt.Sprintf("Additional info for the cluster. Required for services: %s.", supportedDataServiceTypesMarkdown()),
+				Optional:            true,
 				Attributes: map[string]schema.Attribute{
 					"username": schema.StringAttribute{
 						Description: "Username for the cluster.",
@@ -285,7 +312,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 						Required:    true,
 					},
 					"database": schema.StringAttribute{
-						Description: "Database name in the cluster.",
+						Description: "Database name in the cluster. Required for services: `POSTGRES` & `MYSQL`.",
 						Required:    false,
 						Optional:    true,
 					},
@@ -365,12 +392,14 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 		DataPlaneId:       plan.DataPlaneId.ValueString(),
 		Version:           plan.Version.ValueString(),
 		StoragePolicyName: plan.StoragePolicyName.ValueString(),
-		ClusterMetadata: controller.ClusterMetadata{
+	}
+	if plan.ServiceType.ValueString() != service_type.RABBITMQ {
+		clusterRequest.ClusterMetadata = controller.ClusterMetadata{
 			Username:      plan.ClusterMetadata.Username.ValueString(),
 			Password:      plan.ClusterMetadata.Password.ValueString(),
 			Database:      plan.ClusterMetadata.Database.ValueString(),
 			ObjectStoreId: plan.ClusterMetadata.ObjectStoreId.ValueString(),
-		},
+		}
 	}
 
 	plan.ClusterMetadata.Extensions.ElementsAs(ctx, &clusterRequest.ClusterMetadata.Extensions, true)
@@ -652,5 +681,17 @@ func (r *clusterResource) saveFromResponse(ctx *context.Context, diagnostics *di
 
 func (r *clusterResource) validateInputs(ctx *context.Context, diags *diag.Diagnostics, tfPlan *clusterResourceModel) {
 	tflog.Info(*ctx, "validating inputs")
-
+	if tfPlan.ServiceType.ValueString() == service_type.RABBITMQ {
+		return
+	}
+	if tfPlan.ClusterMetadata == nil {
+		diags.AddAttributeError(path.Root("cluster_metadata"),
+			"Invalid input", fmt.Sprintf("Service \"%s\" requires this attribute.", tfPlan.ServiceType.ValueString()))
+		return
+	}
+	if tfPlan.ServiceType.ValueString() != service_type.REDIS && tfPlan.ClusterMetadata.Database.IsNull() {
+		diags.AddAttributeError(path.Root("cluster_metadata").AtName("database"),
+			"Invalid input", fmt.Sprintf("Service \"%s\" requires this attribute.", tfPlan.ServiceType.ValueString()))
+		return
+	}
 }

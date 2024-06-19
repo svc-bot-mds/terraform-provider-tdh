@@ -20,6 +20,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/core"
 	customer_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
 	"time"
 )
 
@@ -116,15 +117,28 @@ func (r *localUserResource) Schema(ctx context.Context, _ resource.SchemaRequest
 								path.Root("password").AtName("new").Expression(),
 								path.Root("password").AtName("confirm").Expression(),
 							}...),
+							stringvalidator.LengthAtLeast(8),
 						},
 					},
 					"new": schema.StringAttribute{
 						Description: "Password to set for this local user. (Required for creation)",
 						Required:    true,
+						Validators: []validator.String{
+							stringvalidator.AlsoRequires(path.Expressions{
+								path.Root("password").AtName("confirm").Expression(),
+							}...),
+							stringvalidator.LengthAtLeast(8),
+						},
 					},
 					"confirm": schema.StringAttribute{
-						MarkdownDescription: "Confirm the password to match the `new`. (Required for creation & password reset)",
+						MarkdownDescription: "Confirm the password to match `new`. (Required for creation & password reset)",
 						Required:            true,
+						Validators: []validator.String{
+							stringvalidator.AlsoRequires(path.Expressions{
+								path.Root("password").AtName("new").Expression(),
+							}...),
+							stringvalidator.LengthAtLeast(8),
+						},
 					},
 				},
 			},
@@ -166,8 +180,7 @@ func (r *localUserResource) Create(ctx context.Context, req resource.CreateReque
 
 	// local user operation usually happens instantly
 	time.Sleep(5 * time.Second)
-	err = r.pollTaskStatus((*response)[0].TaskId)
-	if err != nil {
+	if err = <-utils.WaitForTaskV2(r.client, (*response)[0].TaskId, nil, nil); err != nil {
 		resp.Diagnostics.AddError("Creating local user",
 			"Could not create local user, error: "+err.Error(),
 		)
@@ -221,18 +234,17 @@ func (r *localUserResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	if r.validateUpdateInputs(state.Password, plan.Password, &resp.Diagnostics).HasError() {
+	passwordChanged := false
+	if passwordChanged = r.validateUpdateInputs(state.Password, plan.Password, &resp.Diagnostics); resp.Diagnostics.HasError() {
 		return
 	}
 	// Generate API request body from plan
 	updateRequest := customer_metadata.LocalUserUpdateRequest{}
-	var taskRequired = true
 	plan.PolicyIds.ElementsAs(ctx, &updateRequest.PolicyIds, true)
-	if plan.Password != nil {
+	if passwordChanged {
 		updateRequest.CurrentPassword = plan.Password.Current.ValueString()
 		updateRequest.NewPassword = plan.Password.New.ValueString()
 		updateRequest.ConfirmNewPassword = plan.Password.Confirm.ValueString()
-		taskRequired = false
 	}
 
 	response, err := r.client.CustomerMetadata.UpdateLocalUser(plan.ID.ValueString(), &updateRequest)
@@ -244,13 +256,12 @@ func (r *localUserResource) Update(ctx context.Context, req resource.UpdateReque
 		)
 		return
 	}
-	if taskRequired {
+	if len(*response) > 0 {
 		// local user operation usually happens instantly
 		time.Sleep(5 * time.Second)
-		err = r.pollTaskStatus((*response)[0].TaskId)
-		if err != nil {
+		if err = utils.WaitForAllTasks(r.client, *response); err != nil {
 			resp.Diagnostics.AddError("Updating local user",
-				"Could not update local user, error: "+err.Error(),
+				"Could not update local user: "+err.Error(),
 			)
 			return
 		}
@@ -304,10 +315,10 @@ func (r *localUserResource) Delete(ctx context.Context, request resource.DeleteR
 
 	// local user operation usually happens instantly
 	time.Sleep(5 * time.Second)
-	err = r.pollTaskStatus((*response)[0].TaskId)
-	if err != nil {
+
+	if err = utils.WaitForAllTasks(r.client, *response); err != nil {
 		resp.Diagnostics.AddError("Deleting local user",
-			"Could not delete local user, error: "+err.Error(),
+			"Could not delete local user: "+err.Error(),
 		)
 		return
 	}
@@ -382,22 +393,6 @@ func (r *localUserResource) convertFromRolesDto(ctx *context.Context, roles *[]m
 	}}, tfRoleModels)
 }
 
-func (r *localUserResource) pollTaskStatus(taskId string) error {
-	for true {
-		taskResponse, err := r.client.TaskService.GetTask(taskId)
-		if err != nil {
-			return err
-		}
-		if taskResponse.Status == "SUCCESS" {
-			return nil
-		} else if taskResponse.Status == "FAILED" {
-			return err
-		}
-		time.Sleep(time.Second * 10)
-	}
-	return nil
-}
-
 func (r *localUserResource) validateCreateInputs(password *localUserPassword, diag *diag.Diagnostics) *diag.Diagnostics {
 	if password == nil {
 		diag.AddError("Invalid inputs", "'password' is required during create operation.")
@@ -412,19 +407,32 @@ func (r *localUserResource) validateCreateInputs(password *localUserPassword, di
 		return diag
 	}
 	if password.New.ValueString() != password.Confirm.ValueString() {
-		diag.AddError("Invalid inputs", "'new' must match with 'confirm'.")
+		diag.AddError("Invalid inputs", "'new' and 'confirm' password must match.")
 		return diag
 	}
 	return diag
 }
 
-func (r *localUserResource) validateUpdateInputs(statePassword *localUserPassword, password *localUserPassword, diag *diag.Diagnostics) *diag.Diagnostics {
-	if password == nil {
-		return diag
+// Returns true if password change is detected
+func (r *localUserResource) validateUpdateInputs(statePassword *localUserPassword, planPassword *localUserPassword, diag *diag.Diagnostics) bool {
+	if planPassword == nil {
+		return false
 	}
-	if password.Current.IsNull() && (statePassword == nil || statePassword.New != password.New) {
-		diag.AddError("Invalid inputs", "Password reset requires all of 'current', 'new' & 'confirm'.")
-		return diag
+	// this point onwards means password block is declared
+	if planPassword.Current.IsNull() {
+		if statePassword == nil || statePassword.New != planPassword.New {
+			diag.AddError("Invalid inputs", "Password reset requires all of 'current', 'new' & 'confirm'.")
+			return false
+		}
+	} else if planPassword.Current.ValueString() == planPassword.New.ValueString() {
+		diag.AddError("Invalid inputs", "'current' and 'new' password cannot be same.")
+		return false
+	} else if planPassword.New.ValueString() != planPassword.Confirm.ValueString() {
+		diag.AddError("Invalid inputs", "'new' and 'confirm' password must match.")
+		return false
+	} else {
+		// when "current" is set, and is different from "new"
+		return true
 	}
-	return diag
+	return false
 }

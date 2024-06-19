@@ -19,7 +19,7 @@ data "tdh_provider_types" "all" {
 data "tdh_cloud_accounts" "all" {
 }
 
-# For onboarding the data plane use the k8s cluster with the attribute "available" is set to true
+# For onboarding the data plane use the k8s cluster with the attribute "avaialble" is set to true
 # If onboarding data Plane on TDH Control Plane, use the k8s cluster with the attribute "cp_present" is set to true and "dp_present" is set to false
 data "tdh_k8s_clusters" "all" {
   account_id = data.tdh_cloud_accounts.all.list[0].id
@@ -81,7 +81,7 @@ resource "tdh_data_plane" "example" {
 
 - `account_id` (String) ID of the account to use for data plane operations. Please use datasource `tdh_cloud_accounts` to get the list of available accounts.
 - `auto_upgrade` (Boolean) Whether to enable auto-upgrade on Data plane
-- `backup_storage_class` (String) Backup Storage Class will be used to create all backups on this data plane. Please note this cannot be changed in the future.
+- `backup_storage_class` (String) Backup Storage Class will be used to create all backups on this data plane. Please note this cannot be changed in future.
 - `data_plane_release_id` (String) ID of the Helm Release. Please use datasource `tdh_data_plane_helm_releases` to get this.
 - `k8s_cluster_name` (String) Name of Kubernetes Cluster. Please use datasource `tdh_k8s_clusters` to get the list of available clusters from an account.
 - `name` (String) Name of the Data Plane

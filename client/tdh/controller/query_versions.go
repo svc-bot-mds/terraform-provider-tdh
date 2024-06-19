@@ -1,8 +1,8 @@
 package controller
 
 type ServiceVersionsQuery struct {
-	ServiceType  string `schema:"serviceType"`
-	Provider     string `schema:"provider"`
-	Action       string `schema:"action"`
-	TemplateType string `schema:"templateType"`
+	ServiceType  string `schema:"serviceType,omitempty"`
+	Provider     string `schema:"provider,omitempty"`
+	Action       string `schema:"action,omitempty"`
+	TemplateType string `schema:"templateType,omitempty"`
 }

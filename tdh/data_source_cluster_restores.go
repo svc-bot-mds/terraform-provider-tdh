@@ -2,6 +2,7 @@ package tdh
 
 import (
 	"context"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -30,8 +31,9 @@ type restoresDataSource struct {
 
 // restoresDataSourceModel maps the datasource schema
 type restoresDataSourceModel struct {
-	Id   types.String           `tfsdk:"id"`
-	List []restoreResponseModel `tfsdk:"list"`
+	Id          types.String           `tfsdk:"id"`
+	ServiceType types.String           `tfsdk:"service_type"`
+	List        []restoreResponseModel `tfsdk:"list"`
 }
 
 type restoreResponseModel struct {
@@ -55,8 +57,15 @@ func (d *restoresDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 		Description: "Used to fetch all the backups available for the service type on TDH.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
+				MarkdownDescription: "ID of the restore.",
 				Computed:            true,
-				MarkdownDescription: "Restore of the ID",
+			},
+			"service_type": schema.StringAttribute{
+				MarkdownDescription: fmt.Sprintf("Type of the service. Supported values: %s .", supportedDataServiceTypesMarkdown()),
+				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("POSTGRES", "MYSQL", "REDIS"),
+				},
 			},
 			"list": schema.ListNestedAttribute{
 				Description: "List of restores.",

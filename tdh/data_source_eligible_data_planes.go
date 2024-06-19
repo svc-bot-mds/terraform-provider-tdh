@@ -64,7 +64,7 @@ func (d *eligibleDataPlanesDatasource) Schema(_ context.Context, _ datasource.Sc
 				Description: "Org ID, can be left out to filter shared data planes.",
 				Optional:    true,
 			},
-			"data_planes": schema.ListNestedAttribute{
+			"list": schema.ListNestedAttribute{
 				Computed: true,
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
@@ -139,7 +139,6 @@ func (d *eligibleDataPlanesDatasource) Read(ctx context.Context, req datasource.
 		}
 
 		tflog.Debug(ctx, "dp dto", map[string]interface{}{"dto": dataPlaneList})
-		state.List = append(state.List, dataPlaneList...)
 	} else {
 		for _, dpDto := range *dataPlanes.Get() {
 			tflog.Info(ctx, "Converting data plane dto")
@@ -148,9 +147,10 @@ func (d *eligibleDataPlanesDatasource) Read(ctx context.Context, req datasource.
 				return
 			}
 			tflog.Debug(ctx, "converted data plane dto", map[string]interface{}{"dto": dataPlaneModel})
-			state.List = append(state.List, dataPlaneModel)
+			dataPlaneList = append(dataPlaneList, dataPlaneModel)
 		}
 	}
+	state.List = append(state.List, dataPlaneList...)
 	state.Id = types.StringValue(common.DataSource + common.DataplaneId)
 	// Set state
 	diags := resp.State.Set(ctx, &state)
