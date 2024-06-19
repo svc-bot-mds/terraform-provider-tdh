@@ -7,8 +7,11 @@ terraform {
 }
 
 provider "tdh" {
-  host      = "TDH_HOST"
-  api_token = "API_TOKEN"
+  host     = "TDH_HOST"
+  type     = "user_creds" # Authentication using username and password
+  username = "TDH_USERNAME"
+  password = "TDH_PASSWORD"
+  org_id   = "TDH_ORG_ID"
 }
 
 locals {
