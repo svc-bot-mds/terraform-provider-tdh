@@ -33,6 +33,6 @@ data "tdh_service_versions" "pg" {
 ### Read-Only
 
 - `id` (String) The testing framework requires an id attribute to be present in every data source and resource.
-- `list` (Set of String) List of available cluster versions.
+- `list` (Set of String) List of available service versions.
 
 

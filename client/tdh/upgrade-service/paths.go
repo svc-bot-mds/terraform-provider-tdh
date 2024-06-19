@@ -1,5 +1,6 @@
 package upgrade_service
 
 const (
-	Upgrade = "upgrade"
+	Upgrade        = "upgrade"
+	TargetVersions = "target-versions"
 )

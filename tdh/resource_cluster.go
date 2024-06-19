@@ -317,27 +317,27 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 						Optional:    true,
 					},
 					"extensions": schema.SetAttribute{
-						Description: "Set of extensions to be enabled on the cluster.",
+						Description: "Set of extensions to be enabled on the cluster. Specific to service: `POSTGRES`, available values can be fetched using datasource `tdh_service_extensions`.",
 						Optional:    true,
 						ElementType: types.StringType,
 					},
 					"object_storage_id": schema.StringAttribute{
-						MarkdownDescription: "ID of the object storage for backup operations.",
+						MarkdownDescription: "ID of the object storage for backup operations. Can be fetched using datasource `tdh_object_storages`.",
 						Optional:            true,
 					},
 				},
 			},
 			"upgrade": schema.SingleNestedAttribute{
-				Description: "Use this to upgrade cluster version",
+				Description: "Use this to upgrade cluster version.",
 				Required:    false,
 				Optional:    true,
 				Attributes: map[string]schema.Attribute{
 					"target_version": schema.StringAttribute{
-						MarkdownDescription: "Target version to upgrade.",
+						MarkdownDescription: "Target version to upgrade to. Use datasource `tdh_cluster_target_versions` to get available versions.",
 						Required:            true,
 					},
 					"omit_backup": schema.BoolAttribute{
-						Description: "Whether to take backup before upgrade process",
+						Description: "Whether to take backup before upgrade process.",
 						Optional:    true,
 					},
 				},

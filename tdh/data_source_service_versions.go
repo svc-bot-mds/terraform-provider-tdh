@@ -60,7 +60,7 @@ func (d *clusterVersionsDataSource) Schema(_ context.Context, _ datasource.Schem
 				Required:            true,
 			},
 			"list": schema.SetAttribute{
-				Description: "List of available cluster versions.",
+				Description: "List of available service versions.",
 				Computed:    true,
 				ElementType: types.StringType,
 			},
