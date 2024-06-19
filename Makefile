@@ -6,6 +6,9 @@ generate:
 install:
 	go install .
 
+hooks:
+	git config core.hooksPath .githooks
+
 test:
 	go test -count=1 -parallel=4 ./...
 

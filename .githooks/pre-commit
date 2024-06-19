@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo "⌛  Checking if corresponding examples are there..."
+go run tools/example_checks/main.go
