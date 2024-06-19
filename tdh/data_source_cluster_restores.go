@@ -39,7 +39,7 @@ type restoresDataSourceModel struct {
 type restoreResponseModel struct {
 	Id                 types.String `tfsdk:"id"`
 	Name               types.String `tfsdk:"name"`
-	DataPlaneId        types.String `tfsdk:"dataplane_id"`
+	DataPlaneId        types.String `tfsdk:"data_plane_id"`
 	ServiceType        types.String `tfsdk:"service_type"`
 	BackupId           types.String `tfsdk:"backup_id"`
 	BackupName         types.String `tfsdk:"backup_name"`
@@ -87,8 +87,8 @@ func (d *restoresDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 							Description: "Name of the Backup.",
 							Computed:    true,
 						},
-						"dataplane_id": schema.StringAttribute{
-							Description: "Dataplane ID",
+						"data_plane_id": schema.StringAttribute{
+							Description: "Data plane ID",
 							Computed:    true,
 						},
 						"backup_name": schema.StringAttribute{

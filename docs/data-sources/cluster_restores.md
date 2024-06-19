@@ -49,7 +49,7 @@ Read-Only:
 
 - `backup_id` (String) Backup ID
 - `backup_name` (String) Backup name
-- `dataplane_id` (String) Dataplane ID
+- `data_plane_id` (String) Data plane ID
 - `name` (String) Name of the Backup.
 - `target_instance` (String) Target instance
 - `target_instance_name` (String) Target Instance Name
