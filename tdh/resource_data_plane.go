@@ -40,7 +40,7 @@ type dataPlaneResourceModel struct {
 	DataPlaneReleaseId    types.String `tfsdk:"data_plane_release_id"`
 	K8sClusterName        types.String `tfsdk:"k8s_cluster_name"`
 	StorageClasses        types.Set    `tfsdk:"storage_classes"`
-	BackupStorageCLass    types.String `tfsdk:"backup_storage_class"`
+	BackupStorageClass    types.String `tfsdk:"backup_storage_class"`
 	Shared                types.Bool   `tfsdk:"shared"`
 	OrgId                 types.String `tfsdk:"org_id"`
 	Tags                  types.Set    `tfsdk:"tags"`
@@ -168,7 +168,7 @@ func (r *dataPlaneResource) Create(ctx context.Context, req resource.CreateReque
 		DataplaneName:         plan.Name.ValueString(),
 		K8sClusterName:        plan.K8sClusterName.ValueString(),
 		DataplaneType:         "regular",
-		BackupStorageCLass:    plan.BackupStorageCLass.ValueString(),
+		BackupStorageClass:    plan.BackupStorageClass.ValueString(),
 		ManagedDns:            true,
 		DataPlaneReleaseId:    plan.DataPlaneReleaseId.ValueString(),
 		Shared:                plan.Shared.ValueBool(),
