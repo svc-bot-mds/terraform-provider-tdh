@@ -3,18 +3,18 @@
 page_title: "tdh_eligible_data_planes Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch all Data planes.
+  Used to fetch all Data planes for Admin User
 ---
 
 # tdh_eligible_data_planes (Data Source)
 
-Used to fetch all Data planes.
+Used to fetch all Data planes for Admin User
 
 ## Example Usage
 
 ```terraform
 data "tdh_eligible_data_planes" "all" {
-  provider_name = "tkgs"
+  provider_name = "tkgs" # can be fetched using 'tdh_provider_types' data source
   org_id        = "ORG_ID" # leave out t filter shared data planes
 }
 output "resp" {
@@ -45,7 +45,7 @@ Read-Only:
 
 - `backup_storage_policy` (String) Name of the storage class set for backup purposes.
 - `data_plane_name` (String) Name of the data plane
-- `id` (String) ID of the data plane.
+- `id` (String) ID of the data plane.This is used during service cluster creation.
 - `storage_policies` (Set of String) Storage Policies of the data plane
 
 
