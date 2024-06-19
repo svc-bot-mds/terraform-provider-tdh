@@ -19,8 +19,8 @@ var (
 
 // instanceTypesDataSourceModel maps the data source schema data.
 type cloudAccountsDatasourceModel struct {
-	Id            types.String        `tfsdk:"id"`
-	CloudAccounts []cloudAccountModel `tfsdk:"list"`
+	Id   types.String        `tfsdk:"id"`
+	List []cloudAccountModel `tfsdk:"list"`
 }
 
 type cloudAccountModel struct {
@@ -168,7 +168,7 @@ func (d *cloudAccountsDatasource) Read(ctx context.Context, req datasource.ReadR
 		}
 
 		tflog.Debug(ctx, "cloud accounts dto", map[string]interface{}{"dto": cloudAccountList})
-		state.CloudAccounts = append(state.CloudAccounts, cloudAccountList...)
+		state.List = append(state.List, cloudAccountList...)
 	} else {
 		for _, cloudAccountDto := range *cloudAccounts.Get() {
 			tflog.Info(ctx, "Converting cloud account dto")
@@ -177,7 +177,7 @@ func (d *cloudAccountsDatasource) Read(ctx context.Context, req datasource.ReadR
 				return
 			}
 			tflog.Debug(ctx, "converted cloud Account dto", map[string]interface{}{"dto": cloudAccount})
-			state.CloudAccounts = append(state.CloudAccounts, cloudAccount)
+			state.List = append(state.List, cloudAccount)
 		}
 	}
 	state.Id = types.StringValue(common.DataSource + common.CloudAccountsId)

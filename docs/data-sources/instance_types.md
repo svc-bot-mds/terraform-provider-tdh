@@ -13,8 +13,8 @@ Used to fetch all instance sizes available for a service type on TDH.
 ## Example Usage
 
 ```terraform
-data "tdh_instance_types" "rmq" {
-  service_type = "RABBITMQ"
+data "tdh_instance_types" "pg" {
+  service_type = "POSTGRES"
 }
 ```
 

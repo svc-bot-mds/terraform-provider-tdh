@@ -235,7 +235,7 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 				},
 			},
 			"restore": schema.SingleNestedAttribute{
-				MarkdownDescription: "Use it to restore this backup. **NOTE**: Just declare it as empty block in case of `REDIS` cluster backup.",
+				MarkdownDescription: "Use it to restore this backup. **NOTE**: Just declare it as empty block in case of `REDIS` cluster backup since in case of Redis, restore happens on same cluster i.e. the cluster has to be present and there will be some downtime.",
 				Required:            false,
 				Optional:            true,
 				PlanModifiers: []planmodifier.Object{
@@ -398,7 +398,7 @@ func (r *clusterBackupResource) Update(ctx context.Context, request resource.Upd
 		if r.validateRestoreInputs(&ctx, &resp.Diagnostics, &plan); resp.Diagnostics.HasError() {
 			return
 		}
-		//r.waitForRestore(&ctx, &resp.Diagnostics, &state, &plan)
+		r.waitForRestore(&ctx, &resp.Diagnostics, &state, &plan)
 		state.Restore, diags = types.ObjectValueFrom(ctx, state.Restore.AttributeTypes(ctx), plan.Restore)
 		diags = resp.State.Set(ctx, state)
 	}

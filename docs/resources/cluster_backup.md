@@ -56,7 +56,7 @@ resource "tdh_cluster_backup" "example" {
 
 - `description` (String) Description for the create backup.
 - `metadata` (Attributes) The metadata of the backup. (see [below for nested schema](#nestedatt--metadata))
-- `restore` (Attributes) Use it to restore this backup. **NOTE**: Just declare it as empty block in case of `REDIS` cluster backup. (see [below for nested schema](#nestedatt--restore))
+- `restore` (Attributes) Use it to restore this backup. **NOTE**: Just declare it as empty block in case of `REDIS` cluster backup since in case of Redis, restore happens on same cluster i.e. the cluster has to be present and there will be some downtime. (see [below for nested schema](#nestedatt--restore))
 
 ### Read-Only
 

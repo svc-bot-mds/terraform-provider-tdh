@@ -37,8 +37,7 @@ type clusterVersionsDataSource struct {
 
 // Metadata returns the data source type name.
 func (d *clusterVersionsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	// TODO: rename it to "_service_versions" after changing it in MDS UI example
-	resp.TypeName = req.ProviderTypeName + "_cluster_versions"
+	resp.TypeName = req.ProviderTypeName + "_service_versions"
 }
 
 func (d *clusterVersionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -80,7 +79,7 @@ func (d *clusterVersionsDataSource) Configure(_ context.Context, req datasource.
 
 // Read refreshes the Terraform state with the latest data.
 func (d *clusterVersionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	tflog.Info(ctx, "INIT__READ cluster_versions")
+	tflog.Info(ctx, "INIT__READ service_versions")
 	var state clusterVersionsDataSourceModel
 
 	//Read Terraform configuration data into the model
@@ -101,7 +100,7 @@ func (d *clusterVersionsDataSource) Read(ctx context.Context, req datasource.Rea
 		)
 		return
 	}
-	state.Id = types.StringValue(common.DataSource + common.ClusterVersions)
+	state.Id = types.StringValue(common.DataSource + common.ServiceVersionsId)
 	state.List = append(state.List, list...)
 	// Set state
 	diags := resp.State.Set(ctx, &state)
