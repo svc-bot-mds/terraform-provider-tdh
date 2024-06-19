@@ -21,7 +21,7 @@ func NewService(hostUrl *string, root *core.Root) *Service {
 }
 
 // UpdateClusterVersion updates the version of the TDH cluster
-func (s *Service) UpdateClusterVersion(id string, requestBody *UpdateClusterVersionRequest) (*model.UpdateClusterVersionResponse, error) {
+func (s *Service) UpdateClusterVersion(requestBody *UpdateClusterVersionRequest) (*model.UpdateClusterVersionResponse, error) {
 	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Upgrade)
 	var response model.UpdateClusterVersionResponse
 
