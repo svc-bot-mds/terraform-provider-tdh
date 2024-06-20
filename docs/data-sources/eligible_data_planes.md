@@ -45,7 +45,7 @@ Read-Only:
 
 - `backup_storage_policy` (String) Name of the storage class set for backup purposes.
 - `data_plane_name` (String) Name of the data plane
-- `id` (String) ID of the data plane.This is used during service cluster creation.
+- `id` (String) ID of the data plane. This is used during service cluster creation.
 - `storage_policies` (Set of String) Storage Policies of the data plane
 
 

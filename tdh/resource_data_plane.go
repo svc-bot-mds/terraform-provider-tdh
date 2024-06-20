@@ -48,6 +48,8 @@ type dataPlaneResourceModel struct {
 	Services              types.Set    `tfsdk:"services"`
 	CpBootstrappedCluster types.Bool   `tfsdk:"cp_bootstrapped_cluster"`
 	ConfigureCoreDns      types.Bool   `tfsdk:"configure_core_dns"`
+	Network               types.String `tfsdk:"network"`
+	AvailabilityZone      types.String `tfsdk:"az"`
 }
 
 func (r *dataPlaneResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -94,45 +96,50 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				Required:    true,
 			},
 			"k8s_cluster_name": schema.StringAttribute{
-				MarkdownDescription: "Name of Kubernetes Cluster. Please use datasource `tdh_k8s_clusters` to get the list of available clusters from an account.",
-				Required:            true,
+				MarkdownDescription: "Name of Kubernetes Cluster. Please use datasource `tdh_k8s_clusters` to get the list of available clusters from an account.\n Note: This field is non-mandatory during the TAS data plane creation . \n It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`) data plane creation.",
+				Required:            false,
+				Optional:            true,
 			},
 			"shared": schema.BoolAttribute{
-				Description: "Shared Data Plane",
-				Required:    true,
+				MarkdownDescription: "Shared Data Plane.\n Note: This field should be set to true during the TAS data plane creation . \n It can be set to true/false during Non TAS (i.e `tkgm`, `tkgs`, `openshift`) data plane creation.",
+				Required:            true,
 			},
 			"configure_core_dns": schema.BoolAttribute{
 				Description: "Turn on publishing the TDH's DNS to core DNS of the K8S cluster. This will enable communication between pods of the control plane and the data plane with control plane pods. Disable this only when the TDH base URL has a forwarder set in corporate DNS or for some specific use case.\nPlease note that TDH needs these communications between the pods to function.",
 				Optional:    true,
 			},
 			"auto_upgrade": schema.BoolAttribute{
-				Description: "Whether to enable auto-upgrade on Data plane",
-				Required:    true,
+				MarkdownDescription: "Whether to enable auto-upgrade on Data plane.\n Note: This field should be set to false for TAS data-plane creation ",
+				Optional:            true,
+				Required:            false,
 			},
 			"cp_bootstrapped_cluster": schema.BoolAttribute{
-				Description: "Whether to onboard Data Plane on a K8s cluster running TDH Control Plane",
-				Optional:    true,
+				MarkdownDescription: "Whether to onboard Data Plane on a K8s cluster running TDH Control Plane \n Note: Not a required field during TAS data-plane creation",
+				Optional:            true,
 			},
 			"org_id": schema.StringAttribute{
-				Description: "Organization ID",
+				Description: "Organization ID. This filed is not required during TAS data-plane creation",
 				Optional:    true,
 			},
 			"provider_name": schema.StringAttribute{
 				Description: "Provider name",
-				Computed:    true,
+				Required:    true,
 			},
 			"backup_storage_class": schema.StringAttribute{
-				Description: "Backup Storage Class will be used to create all backups on this data plane. Please note this cannot be changed in future.",
-				Required:    true,
+				MarkdownDescription: "Backup Storage Class will be used to create all backups on this data plane. Please note this cannot be changed in future.\n Note: This field is non-mandatory during the TAS data plane creation. \n It is a mandatory field during  Non TAS (i.e `tkgm`, `tkgs`, `openshift`) data plane creation.",
+				Required:            false,
+				Optional:            true,
 			},
 			"data_plane_release_id": schema.StringAttribute{
-				MarkdownDescription: "ID of the Helm Release. Please use datasource `tdh_data_plane_helm_releases` to get this.",
-				Required:            true,
+				MarkdownDescription: "ID of the Helm Release. Please use datasource `tdh_data_plane_helm_releases` to get this.\n Note: This field is non-mandatory during the TAS data plane creation. \n It is a mandatory field during  Non TAS (i.e `tkgm`, `tkgs`, `openshift`) data plane creation.",
+				Required:            false,
+				Optional:            true,
 			},
 			"storage_classes": schema.SetAttribute{
-				Description: "Storage Classes on the data plane",
-				ElementType: types.StringType,
-				Required:    true,
+				MarkdownDescription: "Storage Classes on the data plane. \n Note: This field is non-mandatory during the TAS data plane creation . \n It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	 data plane creation.",
+				ElementType:         types.StringType,
+				Required:            false,
+				Optional:            true,
 			},
 			"tags": schema.SetAttribute{
 				Description: "Tags",
@@ -140,9 +147,17 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				Optional:    true,
 			},
 			"services": schema.SetAttribute{
-				Description: "Services",
-				ElementType: types.StringType,
-				Required:    true,
+				MarkdownDescription: "Services. \n Note: TAS data-plane creation supports `postgres` only",
+				ElementType:         types.StringType,
+				Required:            true,
+			},
+			"network": schema.StringAttribute{
+				Description: "Network Details. It's a mandatory field during TAS data-plane creation.",
+				Optional:    true,
+			},
+			"az": schema.StringAttribute{
+				Description: "Availability Zone. It's a mandatory field during TAS data-plane creation.",
+				Optional:    true,
 			},
 		},
 	}
@@ -166,18 +181,15 @@ func (r *dataPlaneResource) Create(ctx context.Context, req resource.CreateReque
 	dataPlaneRequest := infra_connector.DataPlaneCreateRequest{
 		AccountId:             plan.AccountId.ValueString(),
 		DataplaneName:         plan.Name.ValueString(),
-		K8sClusterName:        plan.K8sClusterName.ValueString(),
 		DataplaneType:         "regular",
-		BackupStorageClass:    plan.BackupStorageClass.ValueString(),
 		ManagedDns:            true,
-		DataPlaneReleaseId:    plan.DataPlaneReleaseId.ValueString(),
-		Shared:                plan.Shared.ValueBool(),
-		AutoUpgrade:           plan.AutoUpgrade.ValueBool(),
-		CpBootstrappedCluster: plan.CpBootstrappedCluster.ValueBool(),
-		ConfigureCoreDns:      plan.ConfigureCoreDns.ValueBool(),
+		Shared:                true,
+		AutoUpgrade:           false,
+		CpBootstrappedCluster: false,
+		ConfigureCoreDns:      true,
 	}
 
-	if !plan.OrgId.IsNull() {
+	if !plan.OrgId.IsNull() && plan.ProviderName.ValueString() != "tas" {
 		dataPlaneRequest.OrgId = plan.OrgId.ValueString()
 	}
 	query := &infra_connector.DNSQuery{}
@@ -218,11 +230,35 @@ func (r *dataPlaneResource) Create(ctx context.Context, req resource.CreateReque
 
 	certDto := *certificates.Get()
 	tflog.Debug(ctx, "Certificate page response", map[string]interface{}{"cert-page": certificates})
-	dataPlaneRequest.CertificateId = certDto[0].Id
+
+	if plan.ProviderName.ValueString() != "tas" {
+		dataPlaneRequest.K8sClusterName = plan.K8sClusterName.ValueString()
+		dataPlaneRequest.BackupStorageClass = plan.BackupStorageClass.ValueString()
+		dataPlaneRequest.CertificateId = certDto[0].Id
+		dataPlaneRequest.DataPlaneReleaseId = plan.DataPlaneReleaseId.ValueString()
+		dataPlaneRequest.Shared = plan.Shared.ValueBool()
+		dataPlaneRequest.AutoUpgrade = plan.AutoUpgrade.ValueBool()
+		dataPlaneRequest.CpBootstrappedCluster = plan.CpBootstrappedCluster.ValueBool()
+		dataPlaneRequest.ConfigureCoreDns = plan.ConfigureCoreDns.ValueBool()
+		plan.Services.ElementsAs(ctx, &dataPlaneRequest.Services, true)
+		plan.StorageClasses.ElementsAs(ctx, &dataPlaneRequest.StorageClasses, true)
+	} else {
+		dataPlaneRequest.Services = append(dataPlaneRequest.Services, "postgres")
+		dataPlaneRequest.Network = plan.Network.ValueString()
+		dataPlaneRequest.AvailabilityZone = plan.AvailabilityZone.ValueString()
+	}
+
 	plan.Tags.ElementsAs(ctx, &dataPlaneRequest.Tags, true)
-	plan.StorageClasses.ElementsAs(ctx, &dataPlaneRequest.StorageClasses, true)
-	plan.Services.ElementsAs(ctx, &dataPlaneRequest.Services, true)
+
 	tflog.Debug(ctx, "Create data-plane DTO", map[string]interface{}{"request-payload": dataPlaneRequest})
+
+	if msg := r.validateDpCreateRequest(&plan); msg != "OK" {
+		resp.Diagnostics.AddError(
+			"Error Creating Data plane", msg,
+		)
+		return
+	}
+
 	taskResponse, err := r.client.InfraConnector.CreateDataPlane(&dataPlaneRequest)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -417,4 +453,22 @@ func saveFromDataPlaneResponse(ctx *context.Context, diagnostics *diag.Diagnosti
 	}
 	state.Tags = list
 	return 0
+}
+
+func (r *dataPlaneResource) validateDpCreateRequest(plan *dataPlaneResourceModel) string {
+	if plan.ProviderName.ValueString() == "tas" {
+		if plan.Network.IsNull() || plan.AvailabilityZone.IsNull() {
+			return `Mandatory Fields for Tas data plane creations are missing. Please verify the request body with the schema `
+		} else if plan.Shared.ValueBool() == false {
+			return `Cannot create dedicated data plane for the tas provider`
+		}
+	} else {
+		if plan.Services.IsNull() || plan.StorageClasses.IsNull() || plan.DataPlaneReleaseId.IsNull() || plan.BackupStorageClass.IsNull() ||
+			plan.CpBootstrappedCluster.IsNull() || plan.ConfigureCoreDns.IsNull() || plan.AutoUpgrade.IsNull() || plan.K8sClusterName.IsNull() {
+			return `Mandatory Fields are missing. Please verify the request body with the schema `
+		} else if plan.Shared.ValueBool() == false && plan.OrgId.IsNull() {
+			return `Org Id is mandatory for creating dedicated data plane`
+		}
+	}
+	return "OK"
 }
