@@ -3,12 +3,12 @@
 page_title: "tdh_service_accounts Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch all service accounts on TDH for an Org (determined by the token used for provider).
+  Used to fetch all service accounts on TDH for an Org (determined by the auth used for provider).
 ---
 
 # tdh_service_accounts (Data Source)
 
-Used to fetch all service accounts on TDH for an Org (determined by the token used for provider).
+Used to fetch all service accounts on TDH for an Org *(determined by the auth used for provider)*.
 
 ## Example Usage
 

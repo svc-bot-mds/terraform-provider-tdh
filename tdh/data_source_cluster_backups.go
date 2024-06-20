@@ -161,7 +161,7 @@ func (d *backupDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 									ElementType: types.StringType,
 								},
 								"extensions": schema.SetNestedAttribute{
-									MarkdownDescription: "List of extensions part of backup. Specific to service `POSTGRES`.",
+									MarkdownDescription: "List of extensions part of backup. *(Specific to service `POSTGRES`)*",
 									Computed:            true,
 									NestedObject: schema.NestedAttributeObject{
 										Attributes: map[string]schema.Attribute{

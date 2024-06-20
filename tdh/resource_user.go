@@ -96,7 +96,6 @@ func (r *userResource) Schema(ctx context.Context, _ resource.SchemaRequest, res
 			"status": schema.StringAttribute{
 				Description: "Active status of user on TDH.",
 				Computed:    true,
-				//Default:     stringdefault.StaticString("INVITED"),
 			},
 			"username": schema.StringAttribute{
 				Description: "Short name of user.",

@@ -38,7 +38,7 @@ func (d *clusterTargetVersionsDataSource) Metadata(_ context.Context, req dataso
 
 func (d *clusterTargetVersionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Used to fetch target versions for a given service cluster. Can be used while upgrading resource `tdh_cluster`.",
+		MarkdownDescription: "Used to fetch target versions for a given service cluster. *(Can be used while upgrading resource `tdh_cluster`)*",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Required:            true,

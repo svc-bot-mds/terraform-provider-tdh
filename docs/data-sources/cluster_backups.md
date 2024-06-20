@@ -62,7 +62,7 @@ Read-Only:
 - `cluster_name` (String) Name of the cluster.
 - `cluster_size` (String) Size of the Instance Type.
 - `databases` (Set of String) List of databases part of backup.
-- `extensions` (Attributes Set) List of extensions part of backup. Specific to service `POSTGRES`. (see [below for nested schema](#nestedatt--list--metadata--extensions))
+- `extensions` (Attributes Set) List of extensions part of backup. *(Specific to service `POSTGRES`)* (see [below for nested schema](#nestedatt--list--metadata--extensions))
 
 <a id="nestedatt--list--metadata--extensions"></a>
 ### Nested Schema for `list.metadata.extensions`

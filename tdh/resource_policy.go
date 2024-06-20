@@ -87,11 +87,11 @@ func (r *policyResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "Name of the policy",
+				Description: "Name of the policy.",
 				Required:    true,
 			},
 			"description": schema.StringAttribute{
-				Description: "Description of the policy",
+				Description: "Description of the policy.",
 				Optional:    true,
 				Computed:    true,
 			},
@@ -120,8 +120,13 @@ func (r *policyResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 							Required:            true,
 						},
 						"resource": schema.StringAttribute{
-							MarkdownDescription: "Name of the cluster/instance. Please make use of datasource `tdh_clusters` to get the names & . Format of this field is: `cluster:<NAME>[/database:<DB_NAME>[/schema:<SCHEMA>[/table:<TABLE>]]]`.",
-							Required:            true,
+							MarkdownDescription: "Name of the cluster/instance. Please make use of datasource `tdh_clusters` to get the names & `tdh_cluster_metadata` to get cluster service specific resources like databases, schemas, vhosts etc.<br>" +
+								"Format of this field is:<br>" +
+								"- `cluster:<NAME>[/database:<DB_NAME>[/schema:<SCHEMA>[/table:<TABLE>]]]` for `POSTGRES`" +
+								"- `cluster:<NAME>[/database:<DB_NAME>[/table:<TABLE>[/columns:<COMMA_SEPARATED_COLUMNS>]]]` for `MYSQL`" +
+								"- `cluster:<NAME>[/vhost:<VHOST>[/queue:<QUEUE>]]` for `RABBITMQ`" +
+								"- `cluster:<NAME>` for `REDIS`",
+							Required: true,
 						},
 						"permissions": schema.SetAttribute{
 							MarkdownDescription: "Name of the permission, usually same as role name. Please make use of datasource `tdh_service_roles` to get the relevant values.",
