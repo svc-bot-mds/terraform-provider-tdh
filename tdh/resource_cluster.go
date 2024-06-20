@@ -26,6 +26,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/core"
 	upgrade_service "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/upgrade-service"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -73,7 +74,6 @@ type clusterMetadataModel struct {
 	Username      types.String `tfsdk:"username"`
 	Password      types.String `tfsdk:"password"`
 	Database      types.String `tfsdk:"database"`
-	RestoreFrom   types.String `tfsdk:"restore_from"`
 	Extensions    types.Set    `tfsdk:"extensions"`
 	ObjectStoreId types.String `tfsdk:"object_storage_id"`
 }
@@ -316,43 +316,30 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 						Required:    false,
 						Optional:    true,
 					},
-					"restore_from": schema.StringAttribute{
-						Description: "Restore from a specific backup.",
-						Optional:    true,
-					},
 					"extensions": schema.SetAttribute{
-						Description: "Set of extensions to be enabled on the cluster.",
+						Description: "Set of extensions to be enabled on the cluster. Specific to service: `POSTGRES`, available values can be fetched using datasource `tdh_service_extensions`.",
 						Optional:    true,
 						ElementType: types.StringType,
 					},
 					"object_storage_id": schema.StringAttribute{
-						MarkdownDescription: "ID of the object storage for backup operations.",
+						MarkdownDescription: "ID of the object storage for backup operations. Can be fetched using datasource `tdh_object_storages`.",
 						Optional:            true,
 					},
 				},
 			},
 			"upgrade": schema.SingleNestedAttribute{
-				Description: "To create the backup or not while upgrading",
+				Description: "Use this to upgrade cluster version.",
 				Required:    false,
 				Optional:    true,
 				Attributes: map[string]schema.Attribute{
 					"target_version": schema.StringAttribute{
-						Description: "To Upgrade version",
-						Optional:    true,
+						MarkdownDescription: "Target version to upgrade to. Use datasource `tdh_cluster_target_versions` to get available versions.",
+						Required:            true,
 					},
 					"omit_backup": schema.BoolAttribute{
-						Description: "set to take backup before upgrade",
+						Description: "Whether to take backup before upgrade process.",
 						Optional:    true,
 					},
-				},
-			},
-			"restore_from_backup": schema.StringAttribute{
-				MarkdownDescription: "ID of the Cluster Backup to restore.\n**NOTE**:\n" +
-					"1. Using this option will overwrite the existing attributes with that of cluster backup.\n" +
-					"2. Using this option makes only these fields mandatory: `name`, `storage_policy_name`, `network_policy_ids`.",
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 		},
@@ -544,13 +531,11 @@ func (r *clusterResource) Update(ctx context.Context, req resource.UpdateRequest
 			Id:            state.ID.ValueString(),
 			TargetVersion: plan.Upgrade.TargetVersion.ValueString(),
 			RequestType:   "SERVICE",
-			Metadata:      upgrade_service.UpdateClusterVersionRequestMetadata{OmitBackup: omitBackup},
+			Metadata:      upgrade_service.UpdateClusterVersionRequestMetadata{OmitBackup: strconv.FormatBool(omitBackup)},
 		}
 
-		fmt.Println(versionUpdateRequest)
-
 		// Call the API to update the version
-		_, err := r.client.UpgradeService.UpdateClusterVersion(state.ID.ValueString(), &versionUpdateRequest)
+		_, err := r.client.UpgradeService.UpdateClusterVersion(&versionUpdateRequest)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Updating Cluster Version",

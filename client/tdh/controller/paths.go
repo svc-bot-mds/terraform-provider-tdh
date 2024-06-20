@@ -18,4 +18,5 @@ const (
 	Backup            = "backup"
 	Restore           = "restore"
 	Versions          = "versions"
+	Extensions        = "extensions"
 )

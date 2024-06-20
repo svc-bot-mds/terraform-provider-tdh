@@ -10,5 +10,5 @@ type UpdateClusterVersionRequest struct {
 
 // UpdateClusterVersionRequestMetadata represents the metadata for the version update request
 type UpdateClusterVersionRequestMetadata struct {
-	OmitBackup bool `json:"omitBackup"`
+	OmitBackup string `json:"omitBackup"`
 }
