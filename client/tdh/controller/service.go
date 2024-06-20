@@ -108,6 +108,19 @@ func (s *Service) GetServiceVersions(query *ServiceVersionsQuery) ([]string, err
 	return response.Versions, nil
 }
 
+// GetServiceExtensions - Returns all the extensions available
+func (s *Service) GetServiceExtensions(query *ServiceExtensionsQuery) (model.Paged[model.Extension], error) {
+	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Services, Extensions)
+	var response model.Paged[model.Extension]
+
+	_, err := s.Api.Get(&urlPath, query, &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, nil
+}
+
 // GetAllClusters - Returns list of all clusters
 func (s *Service) GetAllClusters(query *ClustersQuery) ([]model.Cluster, error) {
 	var clusters []model.Cluster

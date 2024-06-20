@@ -76,7 +76,7 @@ resource "tdh_cluster" "test" {
   data_plane_id       = "DP_ID"       # can get using datasource "tdh_regions" based on instance size selected there
   network_policy_ids  = [tdh_network_policy.network.id]
   tags                = ["tdh-tf", "new-tag"]
-  version             = local.version
+  version             = local.version             # available values can be fetched using datasource "tdh_service_versions"
   storage_policy_name = local.storage_policy_name # complete list can be got using datasource "tdh_eligible_data_planes"
   cluster_metadata = {
     username      = "test"
@@ -110,15 +110,11 @@ Please make use of datasource `tdh_network_ports` to decide on a size based on r
 
 - `cluster_metadata` (Attributes) Additional info for the cluster. Required for services: `POSTGRES`, `MYSQL`, `REDIS`. (see [below for nested schema](#nestedatt--cluster_metadata))
 - `dedicated` (Boolean) If present and set to `true`, the cluster will get deployed on a dedicated data-plane in current Org.
-- `restore_from_backup` (String) ID of the Cluster Backup to restore.
-**NOTE**:
-1. Using this option will overwrite the existing attributes with that of cluster backup.
-2. Using this option makes only these fields mandatory: `name`, `storage_policy_name`, `network_policy_ids`.
 - `service_type` (String) Type of TDH Cluster to be created. Supported values: `POSTGRES`, `MYSQL`, `RABBITMQ`, `REDIS` .
  Default is `POSTGRES`.
 - `shared` (Boolean) If present and set to `true`, the cluster will get deployed on a shared data-plane in current Org.
 - `tags` (Set of String) Set of tags or labels to categorise the cluster.
-- `upgrade` (Attributes) To create the backup or not while upgrading (see [below for nested schema](#nestedatt--upgrade))
+- `upgrade` (Attributes) Use this to upgrade cluster version. (see [below for nested schema](#nestedatt--upgrade))
 
 ### Read-Only
 
@@ -140,18 +136,20 @@ Required:
 Optional:
 
 - `database` (String) Database name in the cluster. Required for services: `POSTGRES` & `MYSQL`.
-- `extensions` (Set of String) Set of extensions to be enabled on the cluster.
-- `object_storage_id` (String) ID of the object storage for backup operations.
-- `restore_from` (String) Restore from a specific backup.
+- `extensions` (Set of String) Set of extensions to be enabled on the cluster. Specific to service: `POSTGRES`, available values can be fetched using datasource `tdh_service_extensions`.
+- `object_storage_id` (String) ID of the object storage for backup operations. Can be fetched using datasource `tdh_object_storages`.
 
 
 <a id="nestedatt--upgrade"></a>
 ### Nested Schema for `upgrade`
 
+Required:
+
+- `target_version` (String) Target version to upgrade to. Use datasource `tdh_cluster_target_versions` to get available versions.
+
 Optional:
 
-- `omit_backup` (Boolean) set to take backup before upgrade
-- `target_version` (String) To Upgrade version
+- `omit_backup` (Boolean) Whether to take backup before upgrade process.
 
 
 <a id="nestedatt--metadata"></a>
