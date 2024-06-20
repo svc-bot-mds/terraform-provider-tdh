@@ -19,6 +19,14 @@ terraform {
 
 provider "tdh" {
   host      = "https://tdh-console.example.com" # (required) the URL of hosted TDH
-  api_token = "XXXXXX__API_TOKEN__XXXXXX"       # (required) can be generated from CSP > Accounts page
+  type      = "user_creds" # (required) 'user_creds' or 'client_credentials'
+  username  = "TDH_USERNAME"
+  password  = "TDH_PASSWORD"
+  org_id    = "TDH_ORG_ID"
 }
 ```
+
+## Development
+
+Run `make hooks` after cloning or before making any change/commit.
+<br>If there is any change in resource/datasource .go files, make sure to run `make generate`.

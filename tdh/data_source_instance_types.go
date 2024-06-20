@@ -24,7 +24,6 @@ type instanceTypesDataSourceModel struct {
 	InstanceTypes []instanceTypesModel `tfsdk:"instance_types"`
 	ServiceType   types.String         `tfsdk:"service_type"`
 	Id            types.String         `tfsdk:"id"`
-	//Type          types.String         `tfsdk:"type"`
 }
 
 // instanceTypesModel maps coffees schema data.

@@ -3,16 +3,12 @@
 page_title: "tdh_fleet_health Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch Fleet Health Details for SRE.
-   ## Note:
-  - For SRE only.
+  Used to fetch Fleet Health Details for SRE.Note: For SRE only.
 ---
 
 # tdh_fleet_health (Data Source)
 
-Used to fetch Fleet Health Details for SRE.
- ## Note:
-- For SRE only.
+Used to fetch Fleet Health Details for SRE.<br>**Note:** For SRE only.
 
 ## Example Usage
 

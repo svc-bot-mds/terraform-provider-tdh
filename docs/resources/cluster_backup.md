@@ -3,12 +3,12 @@
 page_title: "tdh_cluster_backup Resource - tdh"
 subcategory: ""
 description: |-
-  This is used to create backup (and restore a backup) of a database service cluster like POSTGRES, MYSQL, REDIS. To restore a backup, either create a backup or import by ID.
+  This is used to create backup (and restore a backup) of a database service cluster like POSTGRES, MYSQL, REDIS.NOTE: To restore a backup, either create a backup or import by ID.
 ---
 
 # tdh_cluster_backup (Resource)
 
-This is used to create backup (and restore a backup) of a database service cluster like `POSTGRES`, `MYSQL`, `REDIS`. To restore a backup, either create a backup or import by ID.
+This is used to create backup (and restore a backup) of a database service cluster like `POSTGRES`, `MYSQL`, `REDIS`.<br>**NOTE:** To restore a backup, either create a backup or import by ID.
 
 ## Example Usage
 
@@ -31,12 +31,13 @@ resource "tdh_cluster_backup" "example" {
   cluster_id = "CLUSTER_ID"     # if importing, ID has to match with existing state
 
   restore = {
-    cluster_name = "tf-restore-6"
+    cluster_name       = "tf-restore-6"
     # this will be the name of cluster that will be created with this restore. Not Applicable for "REDIS"
-    storage_policy = "tdh-k8s-cluster-policy"
+    storage_policy     = "tdh-k8s-cluster-policy"
     # can get using datasource "tdh_storage_policies". Not Applicable for "REDIS"
     network_policy_ids = [
       # can get using datasource "tdh_network_policies"
+      # Not Applicable for "REDIS"
       "6ad0cf49-81be-48e3-bab4-2a13b9de0c95"
     ]
   }
@@ -87,7 +88,7 @@ Read-Only:
 - `cluster_name` (String) Name of the cluster.
 - `cluster_size` (String) Size of the Instance Type.
 - `databases` (Set of String) List of databases part of backup.
-- `extensions` (Attributes Set) List of extensions part of backup. Specific to service `POSTGRES`. (see [below for nested schema](#nestedatt--metadata--extensions))
+- `extensions` (Attributes Set) List of extensions part of backup. *(Specific to service `POSTGRES`)* (see [below for nested schema](#nestedatt--metadata--extensions))
 
 <a id="nestedatt--metadata--extensions"></a>
 ### Nested Schema for `metadata.extensions`

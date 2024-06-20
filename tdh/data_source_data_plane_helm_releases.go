@@ -47,14 +47,15 @@ func (d *dataPlaneHelmReleaseDatasource) Metadata(_ context.Context, req datasou
 // Schema defines the schema for the data source.
 func (d *dataPlaneHelmReleaseDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Used to fetch all Helm Releases for the data plane.",
+		MarkdownDescription: "Used to fetch all Helm Releases for the data plane.<br>" +
+			"**Note:** For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "The testing framework requires an id attribute to be present in every data source and resource",
 			},
 			"list": schema.ListNestedAttribute{
-				MarkdownDescription: "List of Helm Releases / Data plane Versions. Please use the list item which has `enabled` set to true",
+				MarkdownDescription: "List of Helm Releases / Data plane Versions. Please use the list item which has `enabled` set to true.",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -72,7 +73,7 @@ func (d *dataPlaneHelmReleaseDatasource) Schema(_ context.Context, _ datasource.
 						},
 						"services": schema.SetAttribute{
 							Computed:    true,
-							Description: "Services available for the Helm Release",
+							Description: "Services available for the Helm Release.",
 							ElementType: types.StringType,
 						},
 					},

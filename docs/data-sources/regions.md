@@ -3,22 +3,18 @@
 page_title: "tdh_regions Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch the regions having data-planes by desired amount of resources available.
-  Note:
-  At a time, either instance_size or all of (cpu, memory, storage, node_count) can be passed.
+  Used to fetch the regions having data-planes by desired amount of resources available.Note: At a time, either instance_size or all of (cpu, memory, storage, node_count) can be passed.
 ---
 
 # tdh_regions (Data Source)
 
-Used to fetch the regions having data-planes by desired amount of resources available.
-## Note:
-- At a time, either `instance_size` or all of (`cpu`, `memory`, `storage`, `node_count`) can be passed.
+Used to fetch the regions having data-planes by desired amount of resources available.<br>**Note:** At a time, either `instance_size` or all of (`cpu`, `memory`, `storage`, `node_count`) can be passed.
 
 ## Example Usage
 
 ```terraform
 # pass valid data with respect to the instance type selected
-data "tdh_regions" "dedicated_aws" {
+data "tdh_regions" "dedicated_dp" {
   instance_size        = "XX-SMALL"
   dedicated_data_plane = true
 }
@@ -29,12 +25,12 @@ data "tdh_regions" "dedicated_aws" {
 
 ### Required
 
-- `provider_type` (String) Shortname of cloud provider platform where data-plane lives. Ex: `aws`, `gcp` .
+- `provider_type` (String) Shortname of cloud provider platform where data-plane lives. Ex: `tkgs`, `tkgm` .
 
 ### Optional
 
 - `cpu` (String) K8s CPU units required. Ex: `500m`, `1` (1000m) .
-- `dedicated_data_plane` (Boolean) If set to `true`, only data-planes that are exclusive to current Org (determined by API token used) are queried. Else only shared ones.
+- `dedicated_data_plane` (Boolean) If set to `true`, only data-planes that are exclusive to current Org *(determined by auth identity)* are queried. Else only shared ones.
 - `instance_size` (String) Type of instance size. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`.
 - `memory` (String) K8s memory units required. Ex: `800Mi`, `2Gi` .
 - `node_count` (String) Count of worker nodes that must be present in a data-plane. Ex: `3` .

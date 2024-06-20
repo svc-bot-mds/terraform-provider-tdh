@@ -2,7 +2,6 @@ package tdh
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -23,9 +22,8 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
-	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/core"
 	upgrade_service "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/upgrade-service"
-	"net/http"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
 	"strconv"
 	"time"
 )
@@ -117,7 +115,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`, `cluster_metadata`." +
-			"\nChanging only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: " +
+			"<br>Changing only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: " +
 			"`tdh_cluster_network_policies_association`.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -145,10 +143,11 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"service_type": schema.StringAttribute{
-				MarkdownDescription: fmt.Sprintf("Type of TDH Cluster to be created. Supported values: %s .\n Default is `POSTGRES`.", supportedServiceTypesMarkdown()),
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString(service_type.POSTGRES),
+				MarkdownDescription: fmt.Sprintf("Type of TDH Cluster to be created. Supported values: %s.\n"+
+					"Default is `POSTGRES`.", supportedServiceTypesMarkdown()),
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString(service_type.POSTGRES),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -312,14 +311,14 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 						Required:    true,
 					},
 					"database": schema.StringAttribute{
-						Description: "Database name in the cluster. Required for services: `POSTGRES` & `MYSQL`.",
-						Required:    false,
-						Optional:    true,
+						MarkdownDescription: "Database name in the cluster. **Required for services:** `POSTGRES` & `MYSQL`.",
+						Required:            false,
+						Optional:            true,
 					},
 					"extensions": schema.SetAttribute{
-						Description: "Set of extensions to be enabled on the cluster. Specific to service: `POSTGRES`, available values can be fetched using datasource `tdh_service_extensions`.",
-						Optional:    true,
-						ElementType: types.StringType,
+						MarkdownDescription: "Set of extensions to be enabled on the cluster *(Specific to service: `POSTGRES`)*. Available values can be fetched using datasource `tdh_service_extensions`.",
+						Optional:            true,
+						ElementType:         types.StringType,
 					},
 					"object_storage_id": schema.StringAttribute{
 						MarkdownDescription: "ID of the object storage for backup operations. Can be fetched using datasource `tdh_object_storages`.",
@@ -601,7 +600,7 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 	}
 
 	// Submit request to delete TDH Cluster
-	_, err := r.client.Controller.DeleteCluster(state.ID.ValueString())
+	response, err := r.client.Controller.DeleteCluster(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Deleting TDH Cluster",
@@ -609,21 +608,11 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 		)
 		return
 	}
-
-	for {
-		time.Sleep(10 * time.Second)
-		if _, err := r.client.Controller.GetCluster(state.ID.ValueString()); err != nil {
-			if err != nil {
-				var apiError core.ApiError
-				if errors.As(err, &apiError) && apiError.StatusCode == http.StatusNotFound {
-					break
-				}
-				resp.Diagnostics.AddError("Fetching cluster",
-					fmt.Sprintf("Could not fetch cluster by id [%v], unexpected error: %s", state.ID, err.Error()),
-				)
-				return
-			}
-		}
+	if err = utils.WaitForTask(r.client, response.TaskId); err != nil {
+		resp.Diagnostics.AddError("Creating cluster network policies association",
+			"Task responsible for this operation failed, error: "+err.Error(),
+		)
+		return
 	}
 
 	tflog.Info(ctx, "END__Delete")

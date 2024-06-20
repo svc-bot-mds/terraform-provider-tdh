@@ -97,7 +97,8 @@ func (r *clusterBackupResource) Configure(_ context.Context, req resource.Config
 func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	tflog.Info(ctx, "INIT__Schema")
 	resp.Schema = schema.Schema{
-		Description: "This is used to create backup (and restore a backup) of a database service cluster like `POSTGRES`, `MYSQL`, `REDIS`. To restore a backup, either create a backup or import by ID.",
+		MarkdownDescription: "This is used to create backup (and restore a backup) of a database service cluster like `POSTGRES`, `MYSQL`, `REDIS`.<br>" +
+			"**NOTE:** To restore a backup, either create a backup or import by ID.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "ID of the backup.",
@@ -217,7 +218,7 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 						ElementType: types.StringType,
 					},
 					"extensions": schema.SetNestedAttribute{
-						MarkdownDescription: "List of extensions part of backup. Specific to service `POSTGRES`.",
+						MarkdownDescription: "List of extensions part of backup. *(Specific to service `POSTGRES`)*",
 						Computed:            true,
 						NestedObject: schema.NestedAttributeObject{
 							Attributes: map[string]schema.Attribute{

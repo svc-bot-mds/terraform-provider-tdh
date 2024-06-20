@@ -22,6 +22,7 @@ resource "tdh_cluster_backup" "example" {
     # can get using datasource "tdh_storage_policies". Not Applicable for "REDIS"
     network_policy_ids = [
       # can get using datasource "tdh_network_policies"
+      # Not Applicable for "REDIS"
       "6ad0cf49-81be-48e3-bab4-2a13b9de0c95"
     ]
   }

@@ -110,7 +110,7 @@ func (r *localUserResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				Sensitive:           true,
 				Attributes: map[string]schema.Attribute{
 					"current": schema.StringAttribute{
-						Description: "Current password of this local user. (Required for changing password)",
+						Description: "Current password of this local user. **(Required for changing password)**",
 						Optional:    true,
 						Validators: []validator.String{
 							stringvalidator.AlsoRequires(path.Expressions{
@@ -121,7 +121,7 @@ func (r *localUserResource) Schema(ctx context.Context, _ resource.SchemaRequest
 						},
 					},
 					"new": schema.StringAttribute{
-						Description: "Password to set for this local user. (Required for creation)",
+						Description: "Password to set for this local user. **(Required for creation)**",
 						Required:    true,
 						Validators: []validator.String{
 							stringvalidator.AlsoRequires(path.Expressions{
@@ -131,7 +131,7 @@ func (r *localUserResource) Schema(ctx context.Context, _ resource.SchemaRequest
 						},
 					},
 					"confirm": schema.StringAttribute{
-						MarkdownDescription: "Confirm the password to match `new`. (Required for creation & password reset)",
+						MarkdownDescription: "Confirm the password to match `new`. **(Required for creation & password reset)**",
 						Required:            true,
 						Validators: []validator.String{
 							stringvalidator.AlsoRequires(path.Expressions{
