@@ -45,7 +45,7 @@ resource "tdh_data_plane" "example" {
   backup_storage_class  = data.tdh_storage_policies.all.list[0].name # name of the storage class to use for backups
   data_plane_release_id = data.tdh_data_plane_helm_releases.all.list[0].id
   # use datasource "tdh_data_plane_helm_releases" to select one of the IDs
-  shared       = true
+  shared       = false
   org_id       = null # setting this to particular Org ID will make it available to only that Org
   tags         = ["dev-dp-terraform"]
   auto_upgrade = true
@@ -55,9 +55,9 @@ resource "tdh_data_plane" "example" {
   # set to true to Onboard Data Plane on TDH Control Plane
   configure_core_dns = true
 
-  #for tas data plane creation
-  az = "test"
-  network = "test"
+  # for tas data plane creation
+    az = "test"
+    network = "test"
 
   // non editable fields, edit is not allowed
   lifecycle {

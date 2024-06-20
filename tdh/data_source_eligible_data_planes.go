@@ -70,7 +70,7 @@ func (d *eligibleDataPlanesDatasource) Schema(_ context.Context, _ datasource.Sc
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
-							Description: "ID of the data plane.This is used during service cluster creation.",
+							Description: "ID of the data plane. This is used during service cluster creation.",
 							Computed:    true,
 						},
 						"data_plane_name": schema.StringAttribute{

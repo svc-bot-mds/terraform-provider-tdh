@@ -62,19 +62,19 @@ resource "tdh_data_plane" "example" {
   backup_storage_class  = data.tdh_storage_policies.all.list[0].name # name of the storage class to use for backups
   data_plane_release_id = data.tdh_data_plane_helm_releases.all.list[0].id
   # use datasource "tdh_data_plane_helm_releases" to select one of the IDs
-  shared       = true
+  shared       = false
   org_id       = null # setting this to particular Org ID will make it available to only that Org
   tags         = ["dev-dp-terraform"]
   auto_upgrade = true
   services     = data.tdh_data_plane_helm_releases.all.list[0].services
   # can be fetched from the response of "tdh_data_plane_helm_releases" services field
-  cp_bootstrapped_cluster = false
+  cp_bootstrapped_cluster = true
   # set to true to Onboard Data Plane on TDH Control Plane
   configure_core_dns = true
 
-  #for tas data plane creation
-  az = "test"
-  network = "test"
+  # for tas data plane creation
+    az = "test"
+    network = "test"
 
   // non editable fields, edit is not allowed
   lifecycle {
@@ -95,34 +95,34 @@ resource "tdh_data_plane" "example" {
 - `name` (String) Name of the Data Plane
 - `provider_name` (String) Provider name
 - `services` (Set of String) Services. 
- Note: TAS data-plane creation supports postgres only
+ Note: TAS data-plane creation supports `postgres` only
 - `shared` (Boolean) Shared Data Plane.
  Note: This field should be set to true during the TAS data plane creation . 
- It can be set to true/false during Non TAS (i.e tkgm, tkgs, openshift) data plane creation.
+ It can be set to true/false during Non TAS (i.e `tkgm`, `tkgs`, `openshift`) data plane creation.
 
 ### Optional
 
 - `auto_upgrade` (Boolean) Whether to enable auto-upgrade on Data plane.
  Note: This field should be set to false for TAS data-plane creation
-- `az` (String) Availability Zone. It's a mandatory filed during TAS data-plane creation.
+- `az` (String) Availability Zone. It's a mandatory field during TAS data-plane creation.
 - `backup_storage_class` (String) Backup Storage Class will be used to create all backups on this data plane. Please note this cannot be changed in future.
- Note: This field is non mandatory during the TAS data plane creation. 
- It is a mandatory field during  Non TAS (i.e tkgm, tkgs, openshift) data plane creation.
+ Note: This field is non-mandatory during the TAS data plane creation. 
+ It is a mandatory field during  Non TAS (i.e `tkgm`, `tkgs`, `openshift`) data plane creation.
 - `configure_core_dns` (Boolean) Turn on publishing the TDH's DNS to core DNS of the K8S cluster. This will enable communication between pods of the control plane and the data plane with control plane pods. Disable this only when the TDH base URL has a forwarder set in corporate DNS or for some specific use case.
 Please note that TDH needs these communications between the pods to function.
 - `cp_bootstrapped_cluster` (Boolean) Whether to onboard Data Plane on a K8s cluster running TDH Control Plane 
  Note: Not a required field during TAS data-plane creation
 - `data_plane_release_id` (String) ID of the Helm Release. Please use datasource `tdh_data_plane_helm_releases` to get this.
- Note: This field is non mandatory during the TAS data plane creation. 
- It is a mandatory field during  Non TAS (i.e tkgm, tkgs, openshift) data plane creation.
+ Note: This field is non-mandatory during the TAS data plane creation. 
+ It is a mandatory field during  Non TAS (i.e `tkgm`, `tkgs`, `openshift`) data plane creation.
 - `k8s_cluster_name` (String) Name of Kubernetes Cluster. Please use datasource `tdh_k8s_clusters` to get the list of available clusters from an account.
- Note: This field is non mandatory during the TAS data plane creation . 
- It is a mandatory field during Non TAS (i.e tkgm, tkgs, openshift) data plane creation.
-- `network` (String) Network Details. It's a mandatory filed during TAS data-plane creation.
+ Note: This field is non-mandatory during the TAS data plane creation . 
+ It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`) data plane creation.
+- `network` (String) Network Details. It's a mandatory field during TAS data-plane creation.
 - `org_id` (String) Organization ID. This filed is not required during TAS data-plane creation
 - `storage_classes` (Set of String) Storage Classes on the data plane. 
- Note: This field is non mandatory during the TAS data plane creation . 
- It is a mandatory field during Non TAS (i.e tkgm, tkgs, openshift) data plane creation.
+ Note: This field is non-mandatory during the TAS data plane creation . 
+ It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	 data plane creation.
 - `tags` (Set of String) Tags
 
 ### Read-Only
