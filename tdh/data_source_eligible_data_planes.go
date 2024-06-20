@@ -50,7 +50,7 @@ func (d *eligibleDataPlanesDatasource) Metadata(_ context.Context, req datasourc
 // Schema defines the schema for the data source.
 func (d *eligibleDataPlanesDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Used to fetch all Data planes for Admin User",
+		Description: "Used to fetch all Data planes. This datasource is using during the service cluster creation",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
