@@ -52,9 +52,9 @@ EOF
 - `certificate` (String) Certificate details
 - `certificate_ca` (String) Certificate CA details
 - `certificate_key` (String) Certificate Key details
-- `domain_name` (String) Domain Name of the certificate on TDH. It is a readonly field while updating the certificate.
-- `name` (String) Name is readonly field while updating the certificate.
-- `provider_type` (String) Provider Type of certificate on TDH. It is a readonly field while updating the certificate.
+- `domain_name` (String) Domain Name of the certificate on TDH.
+- `name` (String) Name of the certificate.
+- `provider_type` (String) Provider Type of certificate on TDH.
 
 ### Read-Only
 

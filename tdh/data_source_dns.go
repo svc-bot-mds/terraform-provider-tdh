@@ -56,7 +56,9 @@ func (d *dnsDatasource) Metadata(_ context.Context, req datasource.MetadataReque
 // Schema defines the schema for the data source.
 func (d *dnsDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Used to fetch DNS configurations available on TDH.\n ## Note: For SRE only.",
+		MarkdownDescription: "Used to fetch DNS configurations available on TDH.\n" +
+			"## Note: \n" +
+			"- For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,

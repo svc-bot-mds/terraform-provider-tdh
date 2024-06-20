@@ -82,15 +82,15 @@ func (r *certificateResource) Schema(ctx context.Context, _ resource.SchemaReque
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "Name is readonly field while updating the certificate.",
+				Description: "Name of the certificate.",
 				Required:    true,
 			},
 			"provider_type": schema.StringAttribute{
-				Description: "Provider Type of certificate on TDH. It is a readonly field while updating the certificate.",
+				Description: "Provider Type of certificate on TDH.",
 				Required:    true,
 			},
 			"domain_name": schema.StringAttribute{
-				Description: "Domain Name of the certificate on TDH. It is a readonly field while updating the certificate.",
+				Description: "Domain Name of the certificate on TDH.",
 				Required:    true,
 			},
 			"expiration_time": schema.StringAttribute{
