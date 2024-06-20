@@ -17,7 +17,7 @@ func TestAccClusterResource(t *testing.T) {
 				Config: providerConfig + `
 					locals {
 						service_type  = "RABBITMQ"
-						provider      = "aws"
+						provider      = "tkgs"
 						instance_type      = "XX-SMALL"
 						region             = "eu-west-1"
 					}
@@ -50,7 +50,7 @@ er						name               = "testing-from-tf-instance4"
 				Config: providerConfig + `
 			locals {
 						service_type  = "RABBITMQ"
-						provider      = "aws"
+						provider      = "tkgs"
 						policy_with_create = ["open-to-all"]
 						instance_type      = "XX-SMALL"
 						region             = "eu-west-1"
