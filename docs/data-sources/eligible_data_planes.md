@@ -3,12 +3,16 @@
 page_title: "tdh_eligible_data_planes Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch all Data planes. This datasource is using during the service cluster creation
+  Used to fetch all Data planes.
+  Note:
+  This datasource is using during the service cluster creation
 ---
 
 # tdh_eligible_data_planes (Data Source)
 
-Used to fetch all Data planes. This datasource is using during the service cluster creation
+Used to fetch all Data planes.
+## Note:
+- This datasource is using during the service cluster creation
 
 ## Example Usage
 
