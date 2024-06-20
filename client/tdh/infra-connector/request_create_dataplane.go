@@ -18,6 +18,8 @@ type DataPlaneCreateRequest struct {
 	CpBootstrappedCluster bool     `json:"cpBootstrappedCluster"`
 	ConfigureCoreDns      bool     `json:"configureCoreDns"`
 	DnsConfigId           string   `json:"dnsConfigId"`
+	AvailabilityZone      string   `json:"az,omitempty"`
+	Network               string   `json:"network,omitempty"`
 }
 
 type DataPlaneUpdateRequest struct {

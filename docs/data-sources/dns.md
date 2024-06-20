@@ -4,13 +4,15 @@ page_title: "tdh_dns Data Source - tdh"
 subcategory: ""
 description: |-
   Used to fetch DNS configurations available on TDH.
-   ## Note: For SRE only.
+  Note:
+  For SRE only.
 ---
 
 # tdh_dns (Data Source)
 
 Used to fetch DNS configurations available on TDH.
- ## Note: For SRE only.
+## Note: 
+- For SRE only.
 
 ## Example Usage
 
