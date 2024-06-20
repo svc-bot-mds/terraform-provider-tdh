@@ -38,9 +38,9 @@ func (s *Service) GetClusterTargetVersions(clusterId string) (*model.ClusterTarg
 }
 
 // UpdateClusterVersion updates the version of the TDH cluster
-func (s *Service) UpdateClusterVersion(requestBody *UpdateClusterVersionRequest) (*model.UpdateClusterVersionResponse, error) {
+func (s *Service) UpdateClusterVersion(requestBody *UpdateClusterVersionRequest) (*model.TaskResponse, error) {
 	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Upgrade)
-	var response model.UpdateClusterVersionResponse
+	var response model.TaskResponse
 
 	_, err := s.Api.Post(&urlPath, requestBody, &response)
 	if err != nil {
