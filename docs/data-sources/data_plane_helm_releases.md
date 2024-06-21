@@ -3,12 +3,12 @@
 page_title: "tdh_data_plane_helm_releases Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch all Helm Releases for the data plane.
+  Used to fetch all Helm Releases for the data plane.Note: For SRE only.
 ---
 
 # tdh_data_plane_helm_releases (Data Source)
 
-Used to fetch all Helm Releases for the data plane.
+Used to fetch all Helm Releases for the data plane.<br>**Note:** For SRE only.
 
 ## Example Usage
 
@@ -26,7 +26,7 @@ output "resp" {
 ### Read-Only
 
 - `id` (String) The testing framework requires an id attribute to be present in every data source and resource
-- `list` (Attributes List) List of Helm Releases / Data plane Versions. Please use the list item which has `enabled` set to true (see [below for nested schema](#nestedatt--list))
+- `list` (Attributes List) List of Helm Releases / Data plane Versions. Please use the list item which has `enabled` set to true. (see [below for nested schema](#nestedatt--list))
 
 <a id="nestedatt--list"></a>
 ### Nested Schema for `list`
@@ -36,6 +36,6 @@ Read-Only:
 - `enabled` (Boolean) Denotes if the helm release is enabled/not. Use the helm release with the flag set to true while onboarding the data plane.
 - `id` (String) ID of the Helm Release. Can be used while onboarding data plane.
 - `name` (String) Name of the Helm Release.
-- `services` (Set of String) Services available for the Helm Release
+- `services` (Set of String) Services available for the Helm Release.
 
 

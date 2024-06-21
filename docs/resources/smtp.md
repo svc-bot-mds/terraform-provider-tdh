@@ -3,14 +3,12 @@
 page_title: "tdh_smtp Resource - tdh"
 subcategory: ""
 description: |-
-  Represents SMTP details. We can only edit the smtp details.
-   ## Note: For SRE only.
+  Represents SMTP details. We can only edit the smtp details.Note: For SRE only.
 ---
 
 # tdh_smtp (Resource)
 
-Represents SMTP details. We can only edit the smtp details.
- ## Note: For SRE only.
+Represents SMTP details. We can only edit the smtp details.<br>**Note:** For SRE only.
 
 ## Example Usage
 
@@ -40,7 +38,7 @@ resource "tdh_smtp" "custom" {
 - `tls` (String) Whether TLS is enabled or not
 - `user_name` (String) SMTP - User name
 
-### Optional
+### Read-Only
 
 - `id` (String) ID for this SMTP
 

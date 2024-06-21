@@ -3,14 +3,12 @@
 page_title: "tdh_cluster Resource - tdh"
 subcategory: ""
 description: |-
-  Represents a service instance or cluster. Some attributes are used only once for creation, they are: dedicated, network_policy_ids, cluster_metadata.
-  Changing only tags is supported at the moment. If you wish to update network policies associated with it, please refer resource: tdh_cluster_network_policies_association.
+  Represents a service instance or cluster. Some attributes are used only once for creation, they are: dedicated, network_policy_ids, cluster_metadata.Changing only tags is supported at the moment. If you wish to update network policies associated with it, please refer resource: tdh_cluster_network_policies_association.
 ---
 
 # tdh_cluster (Resource)
 
-Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`, `cluster_metadata`.
-Changing only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: `tdh_cluster_network_policies_association`.
+Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`, `cluster_metadata`.<br>Changing only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: `tdh_cluster_network_policies_association`.
 
 ## Example Usage
 
@@ -58,9 +56,9 @@ output "data" {
 }
 
 resource "tdh_network_policy" "network" {
-  name = "tf-pg-nw-policy"
+  name         = "tf-pg-nw-policy"
   network_spec = {
-    cidr = "0.0.0.0/32",
+    cidr             = "0.0.0.0/32",
     network_port_ids = [
       for port in data.tdh_network_ports.all.list : port.id if strcontains(port.id, "postgres")
     ]
@@ -76,9 +74,9 @@ resource "tdh_cluster" "test" {
   data_plane_id       = "DP_ID"       # can get using datasource "tdh_regions" based on instance size selected there
   network_policy_ids  = [tdh_network_policy.network.id]
   tags                = ["tdh-tf", "new-tag"]
-  version             = local.version             # available values can be fetched using datasource "tdh_service_versions"
+  version             = local.version# available values can be fetched using datasource "tdh_service_versions"
   storage_policy_name = local.storage_policy_name # complete list can be got using datasource "tdh_eligible_data_planes"
-  cluster_metadata = {
+  cluster_metadata    = {
     username      = "test"
     password      = "Admin!23"
     database      = "test"
@@ -110,8 +108,8 @@ Please make use of datasource `tdh_network_ports` to decide on a size based on r
 
 - `cluster_metadata` (Attributes) Additional info for the cluster. Required for services: `POSTGRES`, `MYSQL`, `REDIS`. (see [below for nested schema](#nestedatt--cluster_metadata))
 - `dedicated` (Boolean) If present and set to `true`, the cluster will get deployed on a dedicated data-plane in current Org.
-- `service_type` (String) Type of TDH Cluster to be created. Supported values: `POSTGRES`, `MYSQL`, `RABBITMQ`, `REDIS` .
- Default is `POSTGRES`.
+- `service_type` (String) Type of TDH Cluster to be created. Supported values: `POSTGRES`, `MYSQL`, `RABBITMQ`, `REDIS`.
+Default is `POSTGRES`.
 - `shared` (Boolean) If present and set to `true`, the cluster will get deployed on a shared data-plane in current Org.
 - `tags` (Set of String) Set of tags or labels to categorise the cluster.
 - `upgrade` (Attributes) Use this to upgrade cluster version. (see [below for nested schema](#nestedatt--upgrade))
@@ -135,8 +133,8 @@ Required:
 
 Optional:
 
-- `database` (String) Database name in the cluster. Required for services: `POSTGRES` & `MYSQL`.
-- `extensions` (Set of String) Set of extensions to be enabled on the cluster. Specific to service: `POSTGRES`, available values can be fetched using datasource `tdh_service_extensions`.
+- `database` (String) Database name in the cluster. **Required for services:** `POSTGRES` & `MYSQL`.
+- `extensions` (Set of String) Set of extensions to be enabled on the cluster *(Specific to service: `POSTGRES`)*. Available values can be fetched using datasource `tdh_service_extensions`.
 - `object_storage_id` (String) ID of the object storage for backup operations. Can be fetched using datasource `tdh_object_storages`.
 
 

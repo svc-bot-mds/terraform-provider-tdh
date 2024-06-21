@@ -4,13 +4,13 @@ page_title: "tdh_smtp Data Source - tdh"
 subcategory: ""
 description: |-
   Used to fetch SMTP details.
-   ## Note: For SRE only.
+  Note: For SRE only.
 ---
 
 # tdh_smtp (Data Source)
 
 Used to fetch SMTP details.
- ## Note: For SRE only.
+## Note: For SRE only.
 
 ## Example Usage
 

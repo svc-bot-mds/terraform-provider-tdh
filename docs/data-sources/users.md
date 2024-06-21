@@ -8,7 +8,7 @@ description: |-
 
 # tdh_users (Data Source)
 
-Used to fetch all users registered on TDH in an Org (determined by the token used for provider).
+Used to fetch all users registered on TDH in an Org *(determined by the token used for provider)*.
 
 ## Example Usage
 

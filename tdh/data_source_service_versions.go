@@ -42,7 +42,7 @@ func (d *clusterVersionsDataSource) Metadata(_ context.Context, req datasource.M
 
 func (d *clusterVersionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Used to fetch versions for service cluster supported by TDH. Can be used while creating resource `tdh_cluster`.",
+		MarkdownDescription: "Used to fetch versions for service cluster supported by TDH. *(Can be used while creating resource `tdh_cluster`)*",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,

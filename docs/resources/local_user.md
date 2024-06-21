@@ -53,12 +53,12 @@ resource "tdh_local_user" "example" {
 
 Required:
 
-- `confirm` (String) Confirm the password to match `new`. (Required for creation & password reset)
-- `new` (String) Password to set for this local user. (Required for creation)
+- `confirm` (String) Confirm the password to match `new`. **(Required for creation & password reset)**
+- `new` (String) Password to set for this local user. **(Required for creation)**
 
 Optional:
 
-- `current` (String) Current password of this local user. (Required for changing password)
+- `current` (String) Current password of this local user. **(Required for changing password)**
 
 ## Import
 
