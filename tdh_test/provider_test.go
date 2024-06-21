@@ -12,7 +12,9 @@ const (
 	providerConfig = `
 provider "tdh" {
    host     = "TDH_HOST_URL"
-   api_token = "API_TOKEN"
+   username = "TDH_USERNAME"
+   password = "TDH_PASSWORD"
+   org_id   = "TDH_ORG_ID"
 }
 `
 )

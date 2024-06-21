@@ -7,8 +7,8 @@ terraform {
 }
 
 provider "tdh" {
-  host     = "TDH_HOST"
-  type     = "user_creds" # Authentication using username and password
+  host = "TDH_HOST"
+  # Authentication using username and password
   username = "TDH_USERNAME"
   password = "TDH_PASSWORD"
   org_id   = "TDH_ORG_ID"
