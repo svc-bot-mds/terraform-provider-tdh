@@ -3,14 +3,12 @@
 page_title: "tdh_cluster_network_policies_association Resource - tdh"
 subcategory: ""
 description: |-
-  Represents the association between a service instance/cluster and network policies.
-  NOTE: Make sure to first import the existing associations that may have been created during cluster creation, since this is an overwrite operation.
+  Represents the association between a service instance/cluster and network policies.Note: Make sure to first import the existing associations that may have been created during cluster creation, since this is an overwrite operation.
 ---
 
 # tdh_cluster_network_policies_association (Resource)
 
-Represents the association between a service instance/cluster and network policies.
-NOTE: Make sure to first import the existing associations that may have been created during cluster creation, since this is an overwrite operation.
+Represents the association between a service instance/cluster and network policies.<br>**Note:** Make sure to first import the existing associations that may have been created during cluster creation, since this is an overwrite operation.
 
 ## Example Usage
 
@@ -27,11 +25,11 @@ output "data" {
 
 # It is a good idea to first import the existing associations that may have been created during cluster creation.
 resource "tdh_cluster_network_policies_association" "pg" {
-  id = "df4b263e-86e6-40c2-8705-350906ddafda"
+  id         = "df4b263e-86e6-40c2-8705-350906ddafda"
   policy_ids = [
     "EXISTING_POLICY_ID",
     "ANOTHER_POLICY_ID",
-  ]
+  ] # use datasource "tdh_network_policies" to see what all policies are available
 }
 ```
 

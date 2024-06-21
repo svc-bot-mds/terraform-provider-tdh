@@ -31,6 +31,7 @@ type smtpResource struct {
 }
 
 type SmtpResourceModal struct {
+	ID         types.String `tfsdk:"id"`
 	Host       types.String `tfsdk:"host"`
 	Port       types.String `tfsdk:"port"`
 	From       types.String `tfsdk:"from"`
@@ -67,14 +68,19 @@ func (r *smtpResource) Schema(ctx context.Context, _ resource.SchemaRequest, res
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents SMTP details. We can only edit the smtp details",
+		MarkdownDescription: "Represents SMTP details. We can only edit the smtp details.<br>" +
+			"**Note:** For SRE only.",
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Description: "ID for this SMTP",
+				Computed:    true,
+			},
 			"host": schema.StringAttribute{
 				Description: "SMTP - Host Name",
 				Required:    true,
 			},
 			"port": schema.StringAttribute{
-				Description: "SMTP - port details. Can be passed to import an existing smtp details from TDH to terraform state during teh update.",
+				Description: "SMTP - Port. Can be passed to import an existing smtp details from TDH to terraform state during the update.",
 				Required:    true,
 			},
 			"from": schema.StringAttribute{
@@ -82,19 +88,19 @@ func (r *smtpResource) Schema(ctx context.Context, _ resource.SchemaRequest, res
 				Required:    true,
 			},
 			"user_name": schema.StringAttribute{
-				MarkdownDescription: "SMTP- User name",
+				MarkdownDescription: "SMTP - User name",
 				Required:            true,
 			},
 			"password": schema.StringAttribute{
-				MarkdownDescription: "SMTP- passowrd",
+				MarkdownDescription: "SMTP - Password",
 				Required:            true,
 			},
 			"tls": schema.StringAttribute{
-				MarkdownDescription: "TLS Enabled",
+				MarkdownDescription: "Whether TLS is enabled or not",
 				Required:            true,
 			},
 			"auth": schema.StringAttribute{
-				MarkdownDescription: "Authentication enabled flag",
+				MarkdownDescription: "Whether authentication is enabled or not",
 				Required:            true,
 			},
 		},
@@ -197,7 +203,7 @@ func (r *smtpResource) Delete(ctx context.Context, request resource.DeleteReques
 
 func (r *smtpResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("port"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 func (r *smtpResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Info(ctx, "INIT__Read")

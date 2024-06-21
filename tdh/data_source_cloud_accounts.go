@@ -19,8 +19,8 @@ var (
 
 // instanceTypesDataSourceModel maps the data source schema data.
 type cloudAccountsDatasourceModel struct {
-	Id            types.String        `tfsdk:"id"`
-	CloudAccounts []cloudAccountModel `tfsdk:"cloud_accounts"`
+	Id   types.String        `tfsdk:"id"`
+	List []cloudAccountModel `tfsdk:"list"`
 }
 
 type cloudAccountModel struct {
@@ -57,13 +57,14 @@ func (d *cloudAccountsDatasource) Metadata(_ context.Context, req datasource.Met
 // Schema defines the schema for the data source.
 func (d *cloudAccountsDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Used to fetch all cloud accounts on TDH.",
+		MarkdownDescription: "Used to fetch all cloud accounts on TDH.<br>" +
+			"**Note:** For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "The testing framework requires an id attribute to be present in every data source and resource",
 			},
-			"cloud_accounts": schema.ListNestedAttribute{
+			"list": schema.ListNestedAttribute{
 				Computed: true,
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
@@ -168,7 +169,7 @@ func (d *cloudAccountsDatasource) Read(ctx context.Context, req datasource.ReadR
 		}
 
 		tflog.Debug(ctx, "cloud accounts dto", map[string]interface{}{"dto": cloudAccountList})
-		state.CloudAccounts = append(state.CloudAccounts, cloudAccountList...)
+		state.List = append(state.List, cloudAccountList...)
 	} else {
 		for _, cloudAccountDto := range *cloudAccounts.Get() {
 			tflog.Info(ctx, "Converting cloud account dto")
@@ -177,7 +178,7 @@ func (d *cloudAccountsDatasource) Read(ctx context.Context, req datasource.ReadR
 				return
 			}
 			tflog.Debug(ctx, "converted cloud Account dto", map[string]interface{}{"dto": cloudAccount})
-			state.CloudAccounts = append(state.CloudAccounts, cloudAccount)
+			state.List = append(state.List, cloudAccount)
 		}
 	}
 	state.Id = types.StringValue(common.DataSource + common.CloudAccountsId)

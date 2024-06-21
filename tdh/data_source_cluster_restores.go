@@ -2,6 +2,7 @@ package tdh
 
 import (
 	"context"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -14,30 +15,31 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource              = &restoreDataSource{}
-	_ datasource.DataSourceWithConfigure = &restoreDataSource{}
+	_ datasource.DataSource              = &restoresDataSource{}
+	_ datasource.DataSourceWithConfigure = &restoresDataSource{}
 )
 
 // NewRestoresDataSource is a helper function to simplify the provider implementation.
-func NewRestoreDataSource() datasource.DataSource {
-	return &restoreDataSource{}
+func NewRestoresDataSource() datasource.DataSource {
+	return &restoresDataSource{}
 }
 
-// restoreDataSource is the data source implementation.
-type restoreDataSource struct {
+// restoresDataSource is the data source implementation.
+type restoresDataSource struct {
 	client *tdh.Client
 }
 
-// localUsersDataSourceModel maps the datasource schema
-type restoreDataSourceModel struct {
-	Id   types.String           `tfsdk:"id"`
-	List []restoreResponseModel `tfsdk:"list"`
+// restoresDataSourceModel maps the datasource schema
+type restoresDataSourceModel struct {
+	Id          types.String           `tfsdk:"id"`
+	ServiceType types.String           `tfsdk:"service_type"`
+	List        []restoreResponseModel `tfsdk:"list"`
 }
 
 type restoreResponseModel struct {
 	Id                 types.String `tfsdk:"id"`
 	Name               types.String `tfsdk:"name"`
-	DataPlaneId        types.String `tfsdk:"dataplane_id"`
+	DataPlaneId        types.String `tfsdk:"data_plane_id"`
 	ServiceType        types.String `tfsdk:"service_type"`
 	BackupId           types.String `tfsdk:"backup_id"`
 	BackupName         types.String `tfsdk:"backup_name"`
@@ -45,18 +47,25 @@ type restoreResponseModel struct {
 	TargetInstanceName types.String `tfsdk:"target_instance_name"`
 }
 
-// restoreResourceMode maps the resource schema data.
-func (d restoreDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_restores"
+// Metadata restoreResourceMode maps the resource schema data.
+func (d *restoresDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cluster_restores"
 }
 
-func (d restoreDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *restoresDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Used to fetch all the backups available for the service type on TDH.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
+				MarkdownDescription: "ID of the restore.",
 				Computed:            true,
-				MarkdownDescription: "Restore of the ID",
+			},
+			"service_type": schema.StringAttribute{
+				MarkdownDescription: fmt.Sprintf("Type of the service. Supported values: %s .", supportedDataServiceTypesMarkdown()),
+				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("POSTGRES", "MYSQL", "REDIS"),
+				},
 			},
 			"list": schema.ListNestedAttribute{
 				Description: "List of restores.",
@@ -78,8 +87,8 @@ func (d restoreDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 							Description: "Name of the Backup.",
 							Computed:    true,
 						},
-						"dataplane_id": schema.StringAttribute{
-							Description: "Dataplane ID",
+						"data_plane_id": schema.StringAttribute{
+							Description: "Data plane ID",
 							Computed:    true,
 						},
 						"backup_name": schema.StringAttribute{
@@ -105,9 +114,8 @@ func (d restoreDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 	}
 }
 
-func (d restoreDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	//TODO implement me
-	var state restoreDataSourceModel
+func (d *restoresDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state restoresDataSourceModel
 	var restoreList []restoreResponseModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 
@@ -182,7 +190,7 @@ func (d restoreDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 }
 
 // Configure adds the provider configured client to the data source.
-func (d *restoreDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+func (d *restoresDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

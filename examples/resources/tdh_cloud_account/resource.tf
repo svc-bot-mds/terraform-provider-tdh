@@ -1,3 +1,4 @@
+# Credential format for 'tkgs' provider
 variable "tkgs_cred" {
   description = "TKGs CRED JSON"
   type        = string
@@ -7,6 +8,46 @@ variable "tkgs_cred" {
     "password": "REPLACE",
     "supervisorManagementIP": "SOME_IP",
     "vsphereNamespace": "NAMESPACE"
+  }
+EOF
+}
+
+# Credential format for 'tkgm' provider
+variable "tkgm_cred" {
+  description = "TKGM CRED JSON"
+  type        = string
+  default     = <<EOF
+  {
+    "kubeconfigBase64": "REPLACE"
+  }
+EOF
+}
+
+# Credential format for 'openshift' provider
+variable "openshift_cred" {
+  description = "OPENSHIFT CRED JSON"
+  type        = string
+  default     = <<EOF
+  {
+    "domain" : "<<domain>>",
+    "userName" : "<<user name>>",
+    "password" : "<<password>>"
+  }
+EOF
+}
+
+# Credential format for 'tas' provider
+variable "tas_cred" {
+  description = "TAS CRED JSON"
+  type        = string
+  default     = <<EOF
+  {
+    "operationManagerIp":"",
+    "userName":"",
+    "password":"",
+    "cfUserName":"",
+    "cfPassword":"",
+    "cfApiHost":""
   }
 EOF
 }
@@ -28,7 +69,7 @@ resource "tdh_cloud_account" "example" {
 
   //non editable fields during the update
   lifecycle {
-    ignore_changes = [name]
+    ignore_changes = [name, provider_type, org_id, shared]
   }
 }
 

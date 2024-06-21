@@ -4,11 +4,13 @@ page_title: "tdh_smtp Data Source - tdh"
 subcategory: ""
 description: |-
   Used to fetch SMTP details.
+  Note: For SRE only.
 ---
 
 # tdh_smtp (Data Source)
 
 Used to fetch SMTP details.
+## Note: For SRE only.
 
 ## Example Usage
 
@@ -25,17 +27,10 @@ output "resp" {
 
 ### Read-Only
 
-- `id` (String) The testing framework requires an id attribute to be present in every data source and resource
-- `smtp` (Attributes List) SMTP Details (see [below for nested schema](#nestedatt--smtp))
-
-<a id="nestedatt--smtp"></a>
-### Nested Schema for `smtp`
-
-Read-Only:
-
 - `auth` (String) Authentication Enabled ?
 - `from_email` (String) SMTP email address
 - `host` (String) SMTP Host
+- `id` (String) The testing framework requires an id attribute to be present in every data source and resource
 - `port` (String) SMTP Port
 - `tls` (String) TLS Enabled
 - `user_name` (String) SMTP user name

@@ -3,12 +3,12 @@
 page_title: "tdh_dns Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch DNS configurations available on TDH.
+  Used to fetch DNS configurations available on TDH.Note: For SRE only.
 ---
 
 # tdh_dns (Data Source)
 
-Used to fetch DNS configurations available on TDH.
+Used to fetch DNS configurations available on TDH.<br>**Note:** For SRE only.
 
 ## Example Usage
 
@@ -33,10 +33,10 @@ output "resp" {
 
 Read-Only:
 
-- `domain` (String) Domain of the DNS Config
+- `domain` (String) Domain of the DNS Config.
 - `id` (String) ID of the DNS config
-- `name` (String) Name of the DNS Config
-- `provider` (String) Provider of the DNS Config
+- `name` (String) Name of the DNS Config.
+- `provider` (String) Provider of the DNS Config.
 - `servers` (Attributes List) List of servers. (see [below for nested schema](#nestedatt--list--servers))
 
 <a id="nestedatt--list--servers"></a>
@@ -45,7 +45,7 @@ Read-Only:
 Read-Only:
 
 - `host` (String) Host of the server.
-- `port` (String) Port of the server
+- `port` (Number) Port of the server.
 - `protocol` (String) Protocol of the server.
 - `server_type` (String) Type of the server.
 

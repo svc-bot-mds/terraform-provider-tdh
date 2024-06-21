@@ -72,7 +72,8 @@ func (r *certificateResource) Schema(ctx context.Context, _ resource.SchemaReque
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents a certificate created on TDH, can be used to create/update/delete/import a certificate.",
+		MarkdownDescription: "Represents a certificate created on TDH, can be used to create/update/delete/import a certificate.<br>" +
+			"**Note:** For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Auto-generated ID after creating a certificate, and can be passed to import an existing user from TDH to terraform state.",
@@ -82,15 +83,15 @@ func (r *certificateResource) Schema(ctx context.Context, _ resource.SchemaReque
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "Name is readonly field while updating the certificate.",
+				Description: "Name of the certificate.",
 				Required:    true,
 			},
 			"provider_type": schema.StringAttribute{
-				Description: "Provider Type of certificate on TDH. It is a readonly field while updating the certificate.",
+				Description: "Provider Type of certificate on TDH.",
 				Required:    true,
 			},
 			"domain_name": schema.StringAttribute{
-				Description: "Domain Name of the certificate on TDH. It is a readonly field while updating the certificate.",
+				Description: "Domain Name of the certificate on TDH.",
 				Required:    true,
 			},
 			"expiration_time": schema.StringAttribute{
@@ -134,13 +135,13 @@ func (r *certificateResource) Create(ctx context.Context, req resource.CreateReq
 		Name:           plan.Name.ValueString(),
 		DomainName:     plan.DomainName.ValueString(),
 		Provider:       plan.ProviderType.ValueString(),
-		Certificate:    plan.Certificate.ValueString(),
-		CertificateCA:  plan.CertificateCA.ValueString(),
-		CertificateKey: plan.CertificateKey.ValueString(),
+		Certificate:    url.QueryEscape(plan.Certificate.ValueString()),
+		CertificateCA:  url.QueryEscape(plan.CertificateCA.ValueString()),
+		CertificateKey: url.QueryEscape(plan.CertificateKey.ValueString()),
 		Shared:         true,
 	}
 
-	//tflog.Info(ctx, "req param", map[string]interface{}{"requestbody": certificateRequest})
+	tflog.Info(ctx, "req param", map[string]interface{}{"requestbody": certificateRequest})
 	certificate, err := r.client.InfraConnector.CreateCertificate(certificateRequest)
 	if err != nil {
 		apiErr := core.ApiError{}

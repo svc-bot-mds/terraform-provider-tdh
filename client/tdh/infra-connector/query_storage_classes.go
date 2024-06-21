@@ -1,6 +1,6 @@
 package infra_connector
 
 type StorageClassesQuery struct {
-	AccountId   string `json:"accountId"`
-	ClusterName string `json:"clusterName"`
+	AccountId   string `schema:"accountId,omitempty"`
+	ClusterName string `schema:"clusterName,omitempty"`
 }

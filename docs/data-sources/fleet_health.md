@@ -3,12 +3,12 @@
 page_title: "tdh_fleet_health Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch Fleet Health Details for SRE
+  Used to fetch Fleet Health Details for SRE.Note: For SRE only.
 ---
 
 # tdh_fleet_health (Data Source)
 
-Used to fetch Fleet Health Details for SRE
+Used to fetch Fleet Health Details for SRE.<br>**Note:** For SRE only.
 
 ## Example Usage
 
@@ -25,28 +25,21 @@ output "resp" {
 
 ### Read-Only
 
-- `fleethealth` (Attributes List) Fleet Health Details. (see [below for nested schema](#nestedatt--fleethealth))
+- `cluster_counts` (Attributes List) Cluster Count by Service. (see [below for nested schema](#nestedatt--cluster_counts))
+- `dedicated_data_planes` (Number) Total Count of Dedicated Data planes
+- `fleets` (Attributes List) Organization Details (see [below for nested schema](#nestedatt--fleets))
+- `healthy_data_planes` (Number) Total Count of Healthy Data planes
 - `id` (String) The testing framework requires an id attribute to be present in every data source and resource
-
-<a id="nestedatt--fleethealth"></a>
-### Nested Schema for `fleethealth`
-
-Read-Only:
-
-- `cluster_counts` (Attributes List) Cluster Count by Service. (see [below for nested schema](#nestedatt--fleethealth--cluster_counts))
-- `dedicated_dataplanes` (Number) Total Count of Dedicated Dataplanes
-- `fleets` (Attributes List) Organization Details (see [below for nested schema](#nestedatt--fleethealth--fleets))
-- `healthy_dataplanes` (Number) Total Count of Healthy Dataplanes
-- `resource_by_service` (Attributes List) Resource by Service (see [below for nested schema](#nestedatt--fleethealth--resource_by_service))
-- `shared_dataplanes` (Number) Total Count of Shared Dataplanes
-- `total_dataplanes` (Number) Total Count of Dataplanes
+- `resource_by_service` (Attributes List) Resource by Service (see [below for nested schema](#nestedatt--resource_by_service))
+- `shared_data_planes` (Number) Total Count of Shared Data planes
+- `total_data_planes` (Number) Total Count of Data planes
 - `total_healthy_org_count` (Number) Total Count of Healthy Organizations
 - `total_org_count` (Number) Total Count of Organizations
 - `total_unhealthy_org_count` (Number) Total Count of UnHealthy Organizations
-- `unhealthy_dataplanes` (Number) Total Count of UnHealthy Dataplnes
+- `unhealthy_data_planes` (Number) Total Count of UnHealthy Data planes
 
-<a id="nestedatt--fleethealth--cluster_counts"></a>
-### Nested Schema for `fleethealth.cluster_counts`
+<a id="nestedatt--cluster_counts"></a>
+### Nested Schema for `cluster_counts`
 
 Read-Only:
 
@@ -54,23 +47,23 @@ Read-Only:
 - `service_type` (String) Service Type
 
 
-<a id="nestedatt--fleethealth--fleets"></a>
-### Nested Schema for `fleethealth.fleets`
+<a id="nestedatt--fleets"></a>
+### Nested Schema for `fleets`
 
 Required:
 
-- `cluster_status` (Attributes) Additional info for the cluster. (see [below for nested schema](#nestedatt--fleethealth--fleets--cluster_status))
+- `cluster_status` (Attributes) Additional info for the cluster. (see [below for nested schema](#nestedatt--fleets--cluster_status))
 
 Read-Only:
 
 - `cluster_counts` (Number) Cluster Count
-- `customer_cluster_info` (Attributes List) Organization - Cluster Details (see [below for nested schema](#nestedatt--fleethealth--fleets--customer_cluster_info))
+- `customer_cluster_info` (Attributes List) Organization - Cluster Details (see [below for nested schema](#nestedatt--fleets--customer_cluster_info))
 - `org_name` (String) Organization Name
 - `org_status` (String) Organization Status
 - `sre_org` (Boolean) Flag which denotes if the organization is SRE organization/Default Org of SRE
 
-<a id="nestedatt--fleethealth--fleets--cluster_status"></a>
-### Nested Schema for `fleethealth.fleets.cluster_status`
+<a id="nestedatt--fleets--cluster_status"></a>
+### Nested Schema for `fleets.cluster_status`
 
 Required:
 
@@ -82,8 +75,8 @@ Optional:
 - `healthy` (Number) Healthy - Cluster Count.
 
 
-<a id="nestedatt--fleethealth--fleets--customer_cluster_info"></a>
-### Nested Schema for `fleethealth.fleets.customer_cluster_info`
+<a id="nestedatt--fleets--customer_cluster_info"></a>
+### Nested Schema for `fleets.customer_cluster_info`
 
 Read-Only:
 
@@ -95,13 +88,13 @@ Read-Only:
 
 
 
-<a id="nestedatt--fleethealth--resource_by_service"></a>
-### Nested Schema for `fleethealth.resource_by_service`
+<a id="nestedatt--resource_by_service"></a>
+### Nested Schema for `resource_by_service`
 
 Read-Only:
 
 - `cpu` (String) CPU
-- `dataplane_name` (String) Dataplane Name
+- `data_plane_name` (String) Data plane Name
 - `memory` (String) memory
 - `resource_service_type` (String) Service Type
 - `storage` (String) Storage

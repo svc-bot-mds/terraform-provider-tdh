@@ -17,4 +17,6 @@ const (
 	Mdsfleets         = "mdsfleets"
 	Backup            = "backup"
 	Restore           = "restore"
+	Versions          = "versions"
+	Extensions        = "extensions"
 )

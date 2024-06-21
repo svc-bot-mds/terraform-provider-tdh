@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	service_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/service-metadata"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
@@ -90,9 +91,9 @@ func (d *networkPortsDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
-	var query *service_metadata.NetworkPortsQuery
+	var query = &service_metadata.NetworkPortsQuery{}
 	if !state.ServiceType.IsNull() {
-		query = &service_metadata.NetworkPortsQuery{Type: state.ServiceType.ValueString()}
+		query.Type = state.ServiceType.ValueString()
 	}
 
 	networkPorts, err := d.client.ServiceMetadata.GetNetworkPorts(query)
@@ -103,7 +104,7 @@ func (d *networkPortsDataSource) Read(ctx context.Context, req datasource.ReadRe
 		)
 		return
 	}
-
+	tflog.Debug(ctx, "fetched ports", map[string]interface{}{"ports": networkPorts})
 	// Map networkPorts body to model
 	for _, networkPort := range networkPorts {
 		networkPortsState := networkPortsModel{
@@ -113,6 +114,7 @@ func (d *networkPortsDataSource) Read(ctx context.Context, req datasource.ReadRe
 			Port:        types.Int64Value(networkPort.Port),
 		}
 
+		tflog.Debug(ctx, "converted tfModel", map[string]interface{}{"model": networkPortsState})
 		state.List = append(state.List, networkPortsState)
 	}
 

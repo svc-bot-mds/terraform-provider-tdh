@@ -5,6 +5,7 @@ type CloudAccountCreateRequest struct {
 	Name         string          `json:"name"`
 	Shared       bool            `json:"shared"`
 	Credentials  CredentialModel `json:"credentials"`
+	OrgId        string          `json:"orgId,omitempty"`
 	Tags         []string        `json:"tags"`
 }
 

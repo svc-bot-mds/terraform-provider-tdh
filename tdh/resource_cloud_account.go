@@ -74,7 +74,8 @@ func (r *cloudAccountResource) Schema(ctx context.Context, _ resource.SchemaRequ
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents a cloud account created on TDH, can be used to create/update/delete/import a cloud account.",
+		MarkdownDescription: "Represents a cloud account created on TDH, can be used to create/update/delete/import a cloud account.<br>" +
+			"**Note:** For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Auto-generated ID after creating an cloud account, and can be passed to import an existing user from TDH to terraform state.",
@@ -164,6 +165,7 @@ func (r *cloudAccountResource) Create(ctx context.Context, req resource.CreateRe
 		ProviderType: plan.ProviderType.ValueString(),
 		Credentials:  cred,
 		Shared:       plan.Shared.ValueBool(),
+		OrgId:        plan.OrgId.ValueString(),
 	}
 	plan.Tags.ElementsAs(ctx, &cloudAccountRequest.Tags, true)
 

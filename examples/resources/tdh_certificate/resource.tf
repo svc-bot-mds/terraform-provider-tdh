@@ -1,26 +1,28 @@
-resource "tdh_certificate" "example" {
-  name            = "tf-example-certificate"
-  domain_name     = "*.tdh.my.lab"
-  provider_type   = "openshift"
-  certificate     = <<EOF
-"-----BEGIN CERTIFICATE-----
+data "tdh_provider_types" "create" {
+}
 
------END CERTIFICATE-----"
+output "resp" {
+  value = data.tdh_provider_types.create
+}
+resource "tdh_certificate" "example" {
+  name            = "tf-example-certificate-name"
+  domain_name     = "tdh.domain.com"
+  provider_type   = data.tdh_provider_types.create.list[2] # can be fetched using 'tdh_provider_types' datasource
+  certificate     = <<EOF
+-----BEGIN CERTIFICATE-----
+-----END CERTIFICATE-----
 EOF
   certificate_ca  = <<EOF
-"-----BEGIN PRIVATE KEY-----
-
------END PRIVATE KEY-----"
+-----BEGIN CERTIFICATE-----
+-----END CERTIFICATE-----
 EOF
   certificate_key = <<EOF
-"-----BEGIN CERTIFICATE-----
-
------END CERTIFICATE-----"
+-----BEGIN PRIVATE KEY-----
+-----END PRIVATE KEY-----
 EOF
-
   // non editable fields during the update
   lifecycle {
-    ignore_changes = [name]
+    ignore_changes = [name, domain_name, provider_type, certificate_ca, certificate_key, certificate]
   }
 }
 

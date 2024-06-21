@@ -3,24 +3,35 @@
 page_title: "tdh_service_account Resource - tdh"
 subcategory: ""
 description: |-
-  Represents a service account created on TDH, can be used to create/update/delete/import a service account.
-  Note: 1. Only service accounts with valid oAuthapp can be imported.
-  2. Please make sure you have selected the valid policy with active clusters while creating the service account.
+  Represents a service account created on TDH, can be used to create/update/delete/import a service account.## Notes1. Only service accounts with valid oAuth App can be imported.2. Please make sure you have selected the valid policy with active clusters while creating the service account.
 ---
 
 # tdh_service_account (Resource)
 
-Represents a service account created on TDH, can be used to create/update/delete/import a service account.
-Note: 1. Only service accounts with valid oAuthapp can be imported.
-2. Please make sure you have selected the valid policy with active clusters while creating the service account.
+Represents a service account created on TDH, can be used to create/update/delete/import a service account.<br>## Notes1. Only service accounts with valid oAuth App can be imported.<br>2. Please make sure you have selected the valid policy with active clusters while creating the service account.<br>
 
 ## Example Usage
 
 ```terraform
+data "tdh_roles" "all" {
+}
+
+data "tdh_policies" "all" {
+  identity_type = "SERVICE_ACCOUNT"
+}
+
+output "values" {
+  # view the output to decide on resource values
+  value = {
+    roles    = data.tdh_roles.all
+    policies = data.tdh_policies.all
+  }
+}
+
 resource "tdh_service_account" "example" {
-  name       = "example-acc"
-  tags       = ["temporary", "limited-role"]
-  policy_ids = ["as73i83jnfkw9wr"]
+  name       = "example-acc@vmware.com"
+  tags       = ["new-user", "viewer"]
+  policy_ids = data.tdh_policies.all.list[*].id # filter or select all policies
 
   // non editable fields
   lifecycle {

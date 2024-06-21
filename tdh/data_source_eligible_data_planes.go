@@ -50,7 +50,9 @@ func (d *eligibleDataPlanesDatasource) Metadata(_ context.Context, req datasourc
 // Schema defines the schema for the data source.
 func (d *eligibleDataPlanesDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Used to fetch all Data planes.",
+		Description: "Used to fetch all Data planes.\n" +
+			"## Note:\n" +
+			"- This datasource is using during the service cluster creation",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
@@ -64,13 +66,13 @@ func (d *eligibleDataPlanesDatasource) Schema(_ context.Context, _ datasource.Sc
 				Description: "Org ID, can be left out to filter shared data planes.",
 				Optional:    true,
 			},
-			"data_planes": schema.ListNestedAttribute{
+			"list": schema.ListNestedAttribute{
 				Computed: true,
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
-							Description: "ID of the data plane.",
+							Description: "ID of the data plane. This is used during service cluster creation.",
 							Computed:    true,
 						},
 						"data_plane_name": schema.StringAttribute{
@@ -139,7 +141,6 @@ func (d *eligibleDataPlanesDatasource) Read(ctx context.Context, req datasource.
 		}
 
 		tflog.Debug(ctx, "dp dto", map[string]interface{}{"dto": dataPlaneList})
-		state.List = append(state.List, dataPlaneList...)
 	} else {
 		for _, dpDto := range *dataPlanes.Get() {
 			tflog.Info(ctx, "Converting data plane dto")
@@ -148,9 +149,10 @@ func (d *eligibleDataPlanesDatasource) Read(ctx context.Context, req datasource.
 				return
 			}
 			tflog.Debug(ctx, "converted data plane dto", map[string]interface{}{"dto": dataPlaneModel})
-			state.List = append(state.List, dataPlaneModel)
+			dataPlaneList = append(dataPlaneList, dataPlaneModel)
 		}
 	}
+	state.List = append(state.List, dataPlaneList...)
 	state.Id = types.StringValue(common.DataSource + common.DataplaneId)
 	// Set state
 	diags := resp.State.Set(ctx, &state)

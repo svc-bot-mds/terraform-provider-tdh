@@ -3,38 +3,88 @@
 page_title: "tdh_cluster Resource - tdh"
 subcategory: ""
 description: |-
-  Represents a service instance or cluster. Some attributes are used only once for creation, they are: dedicated, network_policy_ids, cluster_metadata.
-  Changing only tags is supported at the moment. If you wish to update network policies associated with it, please refer resource: tdh_cluster_network_policies_association.
+  Represents a service instance or cluster. Some attributes are used only once for creation, they are: dedicated, network_policy_ids, cluster_metadata.Changing only tags is supported at the moment. If you wish to update network policies associated with it, please refer resource: tdh_cluster_network_policies_association.
 ---
 
 # tdh_cluster (Resource)
 
-Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`, `cluster_metadata`.
-Changing only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: `tdh_cluster_network_policies_association`.
+Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`, `cluster_metadata`.<br>Changing only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: `tdh_cluster_network_policies_association`.
 
 ## Example Usage
 
 ```terraform
-// to get the Storage Policies and Eligible Dataplane for the given Provider
-data "tdh_eligible_shared_dataplanes" "all"{
-  provider_name= "tkgs"
+data "tdh_provider_types" "all" {
+}
+data "tdh_instance_types" "pg" {
+  service_type = local.service_type
+}
+locals {
+  service_type        = "POSTGRES"
+  provider_type       = "tkgs"        # can get using datasource "tdh_provider_types"
+  instance_type       = "XX-SMALL"    # can get using datasource "tdh_instance_types"
+  version             = "postgres-13" # complete list can be got using datasource "tdh_service_versions"
+  storage_policy_name = "tdh-k8s-cluster-policy"
+  # can get using datasource "tdh_eligible_data_planes", in the field 'list'
+}
+data "tdh_regions" "shared" {
+  instance_size = local.instance_type
+  provider_type = local.provider_type
+}
+data "tdh_object_storages" "all" {
+}
+data "tdh_network_ports" "all" {
+}
+# to get the storage policies and eligible data planes for the given provider, although it may not be available if given size doesn't meet resource requirement in this data plane
+data "tdh_eligible_data_planes" "all" {
+  provider_name = local.provider_type
+  org_id        = "ORG_ID" # leave out to filter shared data planes
 }
 
-resource "tdh_cluster" "example" {
-  name               = "test-terraform"
-  cloud_provider     = "aws"
-  service_type       = "RABBITMQ"
-  instance_size      = "XX-SMALL"
-  region             = "eu-west-1"
-  network_policy_ids = ["policy id"]
-  tags               = ["tdh-tf", "example"]
-  dedicated          = false
-  shared             = false
+data "tdh_service_versions" "name" {
+  service_type  = local.service_type
+  provider_type = local.provider_type
+}
+output "data" {
+  value = {
+    providers       = data.tdh_provider_types.all
+    instance_types  = data.tdh_instance_types.pg
+    regions         = data.tdh_regions.shared
+    object_storages = data.tdh_object_storages.all
+    network_ports   = data.tdh_network_ports.all
+    data_planes     = data.tdh_eligible_data_planes.all
+  }
+}
 
-  data_plane_id = "dataplane id"
+resource "tdh_network_policy" "network" {
+  name         = "tf-pg-nw-policy"
+  network_spec = {
+    cidr             = "0.0.0.0/32",
+    network_port_ids = [
+      for port in data.tdh_network_ports.all.list : port.id if strcontains(port.id, "postgres")
+    ]
+  }
+}
+
+resource "tdh_cluster" "test" {
+  name                = "tf-pg-cls"
+  service_type        = local.service_type
+  provider_type       = local.provider_type
+  instance_size       = "XX-SMALL"    # complete list can be got using datasource "tdh_instance_types"
+  region              = "REGION_NAME" # can get using datasource "tdh_regions"
+  data_plane_id       = "DP_ID"       # can get using datasource "tdh_regions" based on instance size selected there
+  network_policy_ids  = [tdh_network_policy.network.id]
+  tags                = ["tdh-tf", "new-tag"]
+  version             = local.version# available values can be fetched using datasource "tdh_service_versions"
+  storage_policy_name = local.storage_policy_name # complete list can be got using datasource "tdh_eligible_data_planes"
+  cluster_metadata    = {
+    username      = "test"
+    password      = "Admin!23"
+    database      = "test"
+    objectStoreId = "OBJECT_STORE_ID" # can be used from datasource "tdh_object_storages"
+  }
   // non editable fields
   lifecycle {
-    ignore_changes = [instance_size, name, cloud_provider, region, service_type]
+    ignore_changes = [instance_size, name, provider_type, region, service_type]
   }
 }
 ```
@@ -44,25 +94,25 @@ resource "tdh_cluster" "example" {
 
 ### Required
 
-- `cluster_metadata` (Attributes) Additional info for the cluster. (see [below for nested schema](#nestedatt--cluster_metadata))
 - `data_plane_id` (String) ID of the data-plane where the cluster is running.
 - `instance_size` (String) Size of instance. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`.
 Please make use of datasource `tdh_network_ports` to decide on a size based on resources it requires.
 - `name` (String) Name of the cluster.
 - `network_policy_ids` (Set of String) IDs of network policies to attach to the cluster.
 - `provider_type` (String) Short-code of provider to use for data-plane. Ex: `tkgs`, `tkgm` . Complete list can be seen using datasource `tdh_provider_types`.
-- `region` (String) Region of data plane. Supported values can be seen using datasource `tdh_regions`.
+- `region` (String) Region of data plane. Available values can be seen using datasource `tdh_regions`.
 - `storage_policy_name` (String) Name of the storage policy for the cluster.
 - `version` (String) Version of the cluster.
 
 ### Optional
 
+- `cluster_metadata` (Attributes) Additional info for the cluster. Required for services: `POSTGRES`, `MYSQL`, `REDIS`. (see [below for nested schema](#nestedatt--cluster_metadata))
 - `dedicated` (Boolean) If present and set to `true`, the cluster will get deployed on a dedicated data-plane in current Org.
-- `service_type` (String) Type of TDH Cluster to be created. Supported values: `POSTGRES`, `MYSQL`, `RABBITMQ`, `REDIS` .
- Default is `POSTGRES`.
+- `service_type` (String) Type of TDH Cluster to be created. Supported values: `POSTGRES`, `MYSQL`, `RABBITMQ`, `REDIS`.
+Default is `POSTGRES`.
 - `shared` (Boolean) If present and set to `true`, the cluster will get deployed on a shared data-plane in current Org.
 - `tags` (Set of String) Set of tags or labels to categorise the cluster.
-- `upgrade` (Attributes) To create the backup or not while upgrading (see [below for nested schema](#nestedatt--upgrade))
+- `upgrade` (Attributes) Use this to upgrade cluster version. (see [below for nested schema](#nestedatt--upgrade))
 
 ### Read-Only
 
@@ -83,19 +133,21 @@ Required:
 
 Optional:
 
-- `database` (String) Database name in the cluster.
-- `extensions` (Set of String) Set of extensions to be enabled on the cluster.
-- `object_storage_id` (String) ID of the object storage for backup operations.
-- `restore_from` (String) Restore from a specific backup.
+- `database` (String) Database name in the cluster. **Required for services:** `POSTGRES` & `MYSQL`.
+- `extensions` (Set of String) Set of extensions to be enabled on the cluster *(Specific to service: `POSTGRES`)*. Available values can be fetched using datasource `tdh_service_extensions`.
+- `object_storage_id` (String) ID of the object storage for backup operations. Can be fetched using datasource `tdh_object_storages`.
 
 
 <a id="nestedatt--upgrade"></a>
 ### Nested Schema for `upgrade`
 
+Required:
+
+- `target_version` (String) Target version to upgrade to. Use datasource `tdh_cluster_target_versions` to get available versions.
+
 Optional:
 
-- `omit_backup` (Boolean) set to take backup before upgrade
-- `target_version` (String) To Upgrade version
+- `omit_backup` (Boolean) Whether to take backup before upgrade process.
 
 
 <a id="nestedatt--metadata"></a>

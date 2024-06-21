@@ -3,39 +3,41 @@
 page_title: "tdh_certificate Resource - tdh"
 subcategory: ""
 description: |-
-  Represents a certificate created on TDH, can be used to create/update/delete/import a certificate.
+  Represents a certificate created on TDH, can be used to create/update/delete/import a certificate.Note: For SRE only.
 ---
 
 # tdh_certificate (Resource)
 
-Represents a certificate created on TDH, can be used to create/update/delete/import a certificate.
+Represents a certificate created on TDH, can be used to create/update/delete/import a certificate.<br>**Note:** For SRE only.
 
 ## Example Usage
 
 ```terraform
-resource "tdh_certificate" "example" {
-  name            = "tf-example-certificate"
-  domain_name     = "*.tdh.my.lab"
-  provider_type   = "openshift"
-  certificate     = <<EOF
-"-----BEGIN CERTIFICATE-----
+data "tdh_provider_types" "create" {
+}
 
------END CERTIFICATE-----"
+output "resp" {
+  value = data.tdh_provider_types.create
+}
+resource "tdh_certificate" "example" {
+  name            = "tf-example-certificate-name"
+  domain_name     = "tdh.domain.com"
+  provider_type   = data.tdh_provider_types.create.list[2] # can be fetched using 'tdh_provider_types' datasource
+  certificate     = <<EOF
+-----BEGIN CERTIFICATE-----
+-----END CERTIFICATE-----
 EOF
   certificate_ca  = <<EOF
-"-----BEGIN PRIVATE KEY-----
-
------END PRIVATE KEY-----"
+-----BEGIN CERTIFICATE-----
+-----END CERTIFICATE-----
 EOF
   certificate_key = <<EOF
-"-----BEGIN CERTIFICATE-----
-
------END CERTIFICATE-----"
+-----BEGIN PRIVATE KEY-----
+-----END PRIVATE KEY-----
 EOF
-
   // non editable fields during the update
   lifecycle {
-    ignore_changes = [name]
+    ignore_changes = [name, domain_name, provider_type, certificate_ca, certificate_key, certificate]
   }
 }
 ```
@@ -48,9 +50,9 @@ EOF
 - `certificate` (String) Certificate details
 - `certificate_ca` (String) Certificate CA details
 - `certificate_key` (String) Certificate Key details
-- `domain_name` (String) Domain Name of the certificate on TDH. It is a readonly field while updating the certificate.
-- `name` (String) Name is readonly field while updating the certificate.
-- `provider_type` (String) Provider Type of certificate on TDH. It is a readonly field while updating the certificate.
+- `domain_name` (String) Domain Name of the certificate on TDH.
+- `name` (String) Name of the certificate.
+- `provider_type` (String) Provider Type of certificate on TDH.
 
 ### Read-Only
 

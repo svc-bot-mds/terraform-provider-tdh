@@ -3,12 +3,12 @@
 page_title: "tdh_object_storage Resource - tdh"
 subcategory: ""
 description: |-
-  Represents a object storage created on TDH, can be used to create/update/delete/import a object storage.
+  Represents a object storage created on TDH, can be used to create/update/delete/import a object storage.Note: For SRE only.
 ---
 
 # tdh_object_storage (Resource)
 
-Represents a object storage created on TDH, can be used to create/update/delete/import a object storage.
+Represents a object storage created on TDH, can be used to create/update/delete/import a object storage.<br>**Note:** For SRE only.
 
 ## Example Usage
 

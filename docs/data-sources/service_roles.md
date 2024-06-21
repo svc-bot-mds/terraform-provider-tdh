@@ -13,8 +13,8 @@ Used to fetch all roles applicable for services on TDH.
 ## Example Usage
 
 ```terraform
-data "tdh_service_roles" "rmq"{
-  type = "RABBITMQ"
+data "tdh_service_roles" "pg" {
+  type = "POSTGRES"
 }
 ```
 

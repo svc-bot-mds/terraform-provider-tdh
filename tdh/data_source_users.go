@@ -46,7 +46,7 @@ func (d *usersDatasource) Metadata(_ context.Context, req datasource.MetadataReq
 // Schema defines the schema for the data source.
 func (d *usersDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Used to fetch all users registered on TDH in an Org (determined by the token used for provider).",
+		MarkdownDescription: "Used to fetch all users registered on TDH in an Org *(determined by the token used for provider)*.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,

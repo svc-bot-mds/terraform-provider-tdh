@@ -3,12 +3,12 @@
 page_title: "tdh_tasks Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch running/completed task(s). At least one of id or resource_name is required; when both are present, preference will be given to id.
+  Used to fetch running/completed task(s).Note: At least one of id or resource_name is required; when both are present, preference will be given to id.
 ---
 
 # tdh_tasks (Data Source)
 
-Used to fetch running/completed task(s). At least one of `id` or `resource_name` is required; when both are present, preference will be given to `id`.
+Used to fetch running/completed task(s).<br>**Note:** At least one of `id` or `resource_name` is required; when both are present, preference will be given to `id`.
 
 ## Example Usage
 

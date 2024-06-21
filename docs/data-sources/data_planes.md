@@ -3,20 +3,20 @@
 page_title: "tdh_data_planes Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch all Data planes
+  Used to fetch all Data planes.Note: For SRE only.
 ---
 
 # tdh_data_planes (Data Source)
 
-Used to fetch all Data planes
+Used to fetch all Data planes.<br>**Note:** For SRE only.
 
 ## Example Usage
 
 ```terraform
-data "tdh_dataplanes" "all" {
+data "tdh_data_planes" "all" {
 }
 output "resp" {
-  value = data.tdh_dataplanes.all
+  value = data.tdh_data_planes.all
 }
 ```
 

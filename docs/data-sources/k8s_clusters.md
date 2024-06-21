@@ -3,18 +3,21 @@
 page_title: "tdh_k8s_clusters Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch all Kubernetes Clusters within an provider account.
+  Used to fetch all Kubernetes Clusters within an provider account.Note: For SRE only.
 ---
 
 # tdh_k8s_clusters (Data Source)
 
-Used to fetch all Kubernetes Clusters within an provider account.
+Used to fetch all Kubernetes Clusters within an provider account.<br>**Note:** For SRE only.
 
 ## Example Usage
 
 ```terraform
+# For onboarding the data plane use the k8s cluster where the attribute "available" is set to true
+# If onboarding data Plane on TDH Control Plane, use the k8s cluster where the attribute "cp_present" is set to true and "dp_present" is set to false
+
 data "tdh_k8s_clusters" "all" {
-  account_id = "CLOUD_ACCOUNT_ID"
+  account_id = "CLOUD_ACCOUNT_ID" # can be fetched using 'tdh_cloud_accounts" datasource
 }
 output "resp" {
   value = data.tdh_k8s_clusters.all
@@ -40,6 +43,7 @@ Read-Only:
 
 - `available` (Boolean) Denotes if the Kubernetes Cluster is available for onboarding or not.
 - `cp_present` (Boolean) Denotes if Control Plane is available. Use the Kubernetes Cluster with this set to `true` while onboarding Data Plane on TDH Control Plane.
+- `dp_present` (Boolean) Denotes if Data Plane is already deployed. Use the Kubernetes Cluster with this set to `false` while onboarding Data Plane on TDH Control Plane.
 - `name` (String) Name of the Kubernetes Cluster.
 
 

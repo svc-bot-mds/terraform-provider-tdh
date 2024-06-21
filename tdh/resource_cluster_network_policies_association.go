@@ -67,7 +67,8 @@ func (r *clusterNetworkPoliciesAssociationResource) Schema(ctx context.Context, 
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents the association between a service instance/cluster and network policies.\nNOTE: Make sure to first import the existing associations that may have been created during cluster creation, since this is an overwrite operation.",
+		MarkdownDescription: "Represents the association between a service instance/cluster and network policies.<br>" +
+			"**Note:** Make sure to first import the existing associations that may have been created during cluster creation, since this is an overwrite operation.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "ID of the cluster.",

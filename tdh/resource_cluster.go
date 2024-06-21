@@ -2,8 +2,9 @@ package tdh
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -14,15 +15,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/service_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
-	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/core"
 	upgrade_service "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/upgrade-service"
-	"net/http"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
+	"strconv"
 	"time"
 )
 
@@ -63,7 +65,6 @@ type clusterResourceModel struct {
 	StoragePolicyName types.String          `tfsdk:"storage_policy_name"`
 	ClusterMetadata   *clusterMetadataModel `tfsdk:"cluster_metadata"`
 	Upgrade           *upgradeMetadata      `tfsdk:"upgrade"`
-	// TODO add upgrade related fields
 }
 
 // clusterMetadataModel maps order item data.
@@ -71,7 +72,6 @@ type clusterMetadataModel struct {
 	Username      types.String `tfsdk:"username"`
 	Password      types.String `tfsdk:"password"`
 	Database      types.String `tfsdk:"database"`
-	RestoreFrom   types.String `tfsdk:"restore_from"`
 	Extensions    types.Set    `tfsdk:"extensions"`
 	ObjectStoreId types.String `tfsdk:"object_storage_id"`
 }
@@ -115,7 +115,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`, `cluster_metadata`." +
-			"\nChanging only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: " +
+			"<br>Changing only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: " +
 			"`tdh_cluster_network_policies_association`.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -138,12 +138,16 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(3),
+				},
 			},
 			"service_type": schema.StringAttribute{
-				MarkdownDescription: fmt.Sprintf("Type of TDH Cluster to be created. Supported values: %s .\n Default is `POSTGRES`.", supportedServiceTypesMarkdown()),
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString(service_type.POSTGRES),
+				MarkdownDescription: fmt.Sprintf("Type of TDH Cluster to be created. Supported values: %s.\n"+
+					"Default is `POSTGRES`.", supportedServiceTypesMarkdown()),
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString(service_type.POSTGRES),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -154,6 +158,9 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"instance_size": schema.StringAttribute{
 				MarkdownDescription: "Size of instance. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`." +
@@ -162,13 +169,19 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(3),
+				},
 			},
 			"region": schema.StringAttribute{
-				MarkdownDescription: "Region of data plane. Supported values can be seen using datasource `tdh_regions`.",
+				MarkdownDescription: "Region of data plane. Available values can be seen using datasource `tdh_regions`.",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(2),
 				},
 			},
 			"dedicated": schema.BoolAttribute{
@@ -194,6 +207,9 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+				},
 			},
 			"status": schema.StringAttribute{
 				Description: "Status of the cluster.",
@@ -202,6 +218,9 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			"data_plane_id": schema.StringAttribute{
 				Description: "ID of the data-plane where the cluster is running.",
 				Required:    true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"last_updated": schema.StringAttribute{
 				Description: "Time when the cluster was last modified.",
@@ -220,12 +239,18 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"storage_policy_name": schema.StringAttribute{
 				Description: "Name of the storage policy for the cluster.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"metadata": schema.SingleNestedAttribute{
@@ -274,8 +299,8 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"cluster_metadata": schema.SingleNestedAttribute{
-				Description: "Additional info for the cluster.",
-				Required:    true,
+				MarkdownDescription: fmt.Sprintf("Additional info for the cluster. Required for services: %s.", supportedDataServiceTypesMarkdown()),
+				Optional:            true,
 				Attributes: map[string]schema.Attribute{
 					"username": schema.StringAttribute{
 						Description: "Username for the cluster.",
@@ -286,36 +311,32 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 						Required:    true,
 					},
 					"database": schema.StringAttribute{
-						Description: "Database name in the cluster.",
-						Required:    false,
-						Optional:    true,
-					},
-					"restore_from": schema.StringAttribute{
-						Description: "Restore from a specific backup.",
-						Optional:    true,
+						MarkdownDescription: "Database name in the cluster. **Required for services:** `POSTGRES` & `MYSQL`.",
+						Required:            false,
+						Optional:            true,
 					},
 					"extensions": schema.SetAttribute{
-						Description: "Set of extensions to be enabled on the cluster.",
-						Optional:    true,
-						ElementType: types.StringType,
+						MarkdownDescription: "Set of extensions to be enabled on the cluster *(Specific to service: `POSTGRES`)*. Available values can be fetched using datasource `tdh_service_extensions`.",
+						Optional:            true,
+						ElementType:         types.StringType,
 					},
 					"object_storage_id": schema.StringAttribute{
-						MarkdownDescription: "ID of the object storage for backup operations.",
+						MarkdownDescription: "ID of the object storage for backup operations. Can be fetched using datasource `tdh_object_storages`.",
 						Optional:            true,
 					},
 				},
 			},
 			"upgrade": schema.SingleNestedAttribute{
-				Description: "To create the backup or not while upgrading",
+				Description: "Use this to upgrade cluster version.",
 				Required:    false,
 				Optional:    true,
 				Attributes: map[string]schema.Attribute{
 					"target_version": schema.StringAttribute{
-						Description: "To Upgrade version",
-						Optional:    true,
+						MarkdownDescription: "Target version to upgrade to. Use datasource `tdh_cluster_target_versions` to get available versions.",
+						Required:            true,
 					},
 					"omit_backup": schema.BoolAttribute{
-						Description: "set to take backup before upgrade",
+						Description: "Whether to take backup before upgrade process.",
 						Optional:    true,
 					},
 				},
@@ -339,6 +360,10 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 	if resp.Diagnostics.Append(diags...); resp.Diagnostics.HasError() {
 		return
 	}
+
+	if r.validateInputs(&ctx, &resp.Diagnostics, &plan); resp.Diagnostics.HasError() {
+		return
+	}
 	tflog.Info(ctx, "INIT__Creating req body")
 
 	// Generate API request body from plan
@@ -353,12 +378,14 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 		DataPlaneId:       plan.DataPlaneId.ValueString(),
 		Version:           plan.Version.ValueString(),
 		StoragePolicyName: plan.StoragePolicyName.ValueString(),
-		ClusterMetadata: controller.ClusterMetadata{
+	}
+	if plan.ServiceType.ValueString() != service_type.RABBITMQ {
+		clusterRequest.ClusterMetadata = controller.ClusterMetadata{
 			Username:      plan.ClusterMetadata.Username.ValueString(),
 			Password:      plan.ClusterMetadata.Password.ValueString(),
 			Database:      plan.ClusterMetadata.Database.ValueString(),
 			ObjectStoreId: plan.ClusterMetadata.ObjectStoreId.ValueString(),
-		},
+		}
 	}
 
 	plan.ClusterMetadata.Extensions.ElementsAs(ctx, &clusterRequest.ClusterMetadata.Extensions, true)
@@ -418,7 +445,7 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 		}
 	}
 	tflog.Info(ctx, "INIT__Saving Response")
-	if saveFromResponse(&ctx, &resp.Diagnostics, &plan, createdCluster) != 0 {
+	if r.saveFromResponse(&ctx, &resp.Diagnostics, &plan, createdCluster) != 0 {
 		return
 	}
 
@@ -457,7 +484,7 @@ func (r *clusterResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	tflog.Debug(ctx, "INIT__Read converting response")
 	// Overwrite items with refreshed state
-	if saveFromResponse(&ctx, &resp.Diagnostics, &state, cluster) != 0 {
+	if r.saveFromResponse(&ctx, &resp.Diagnostics, &state, cluster) != 0 {
 		return
 	}
 
@@ -503,13 +530,11 @@ func (r *clusterResource) Update(ctx context.Context, req resource.UpdateRequest
 			Id:            state.ID.ValueString(),
 			TargetVersion: plan.Upgrade.TargetVersion.ValueString(),
 			RequestType:   "SERVICE",
-			Metadata:      upgrade_service.UpdateClusterVersionRequestMetadata{OmitBackup: omitBackup},
+			Metadata:      upgrade_service.UpdateClusterVersionRequestMetadata{OmitBackup: strconv.FormatBool(omitBackup)},
 		}
 
-		fmt.Println(versionUpdateRequest)
-
 		// Call the API to update the version
-		_, err := r.client.UpgradeService.UpdateClusterVersion(state.ID.ValueString(), &versionUpdateRequest)
+		_, err := r.client.UpgradeService.UpdateClusterVersion(&versionUpdateRequest)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Updating Cluster Version",
@@ -551,7 +576,7 @@ func (r *clusterResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	// Update resource state with updated items and timestamp
-	if saveFromResponse(&ctx, &resp.Diagnostics, &plan, cluster) != 0 {
+	if r.saveFromResponse(&ctx, &resp.Diagnostics, &plan, cluster) != 0 {
 		return
 	}
 
@@ -575,7 +600,7 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 	}
 
 	// Submit request to delete TDH Cluster
-	_, err := r.client.Controller.DeleteCluster(state.ID.ValueString())
+	response, err := r.client.Controller.DeleteCluster(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Deleting TDH Cluster",
@@ -583,21 +608,11 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 		)
 		return
 	}
-
-	for {
-		time.Sleep(10 * time.Second)
-		if _, err := r.client.Controller.GetCluster(state.ID.ValueString()); err != nil {
-			if err != nil {
-				var apiError core.ApiError
-				if errors.As(err, &apiError) && apiError.StatusCode == http.StatusNotFound {
-					break
-				}
-				resp.Diagnostics.AddError("Fetching cluster",
-					fmt.Sprintf("Could not fetch cluster by id [%v], unexpected error: %s", state.ID, err.Error()),
-				)
-				return
-			}
-		}
+	if err = utils.WaitForTask(r.client, response.TaskId); err != nil {
+		resp.Diagnostics.AddError("Creating cluster network policies association",
+			"Task responsible for this operation failed, error: "+err.Error(),
+		)
+		return
 	}
 
 	tflog.Info(ctx, "END__Delete")
@@ -608,7 +623,7 @@ func (r *clusterResource) ImportState(ctx context.Context, req resource.ImportSt
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func saveFromResponse(ctx *context.Context, diagnostics *diag.Diagnostics, state *clusterResourceModel, cluster *model.Cluster) int8 {
+func (r *clusterResource) saveFromResponse(ctx *context.Context, diagnostics *diag.Diagnostics, state *clusterResourceModel, cluster *model.Cluster) int8 {
 	tflog.Info(*ctx, "Saving response to resourceModel state/plan")
 	state.ID = types.StringValue(cluster.ID)
 	state.Name = types.StringValue(cluster.Name)
@@ -636,4 +651,21 @@ func saveFromResponse(ctx *context.Context, diagnostics *diag.Diagnostics, state
 	}
 	state.Tags = list
 	return 0
+}
+
+func (r *clusterResource) validateInputs(ctx *context.Context, diags *diag.Diagnostics, tfPlan *clusterResourceModel) {
+	tflog.Info(*ctx, "validating inputs")
+	if tfPlan.ServiceType.ValueString() == service_type.RABBITMQ {
+		return
+	}
+	if tfPlan.ClusterMetadata == nil {
+		diags.AddAttributeError(path.Root("cluster_metadata"),
+			"Invalid input", fmt.Sprintf("Service \"%s\" requires this attribute.", tfPlan.ServiceType.ValueString()))
+		return
+	}
+	if tfPlan.ServiceType.ValueString() != service_type.REDIS && tfPlan.ClusterMetadata.Database.IsNull() {
+		diags.AddAttributeError(path.Root("cluster_metadata").AtName("database"),
+			"Invalid input", fmt.Sprintf("Service \"%s\" requires this attribute.", tfPlan.ServiceType.ValueString()))
+		return
+	}
 }

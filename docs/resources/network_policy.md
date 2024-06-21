@@ -35,12 +35,12 @@ resource "tdh_network_policy" "pg" {
 
 ### Required
 
-- `name` (String) Name of the policy
+- `name` (String) Name of the policy.
 - `network_spec` (Attributes) Network config to allow access to service resource. (see [below for nested schema](#nestedatt--network_spec))
 
 ### Optional
 
-- `description` (String) Description of the policy
+- `description` (String) Description of the policy.
 
 ### Read-Only
 
