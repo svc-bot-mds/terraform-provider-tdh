@@ -61,7 +61,7 @@ func (d *regionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 			"- At a time, either `instance_size` or all of (`cpu`, `memory`, `storage`, `node_count`) can be passed.",
 		Attributes: map[string]schema.Attribute{
 			"provider_type": schema.StringAttribute{
-				MarkdownDescription: "Shortname of cloud provider platform where data-plane lives. Ex: `tkgs`, `tkgm`,`openshift`,`tas` .",
+				MarkdownDescription: "Shortname of cloud provider platform where data-plane lives. Ex: `tkgs`,`tkgm`,`openshift`,`tas`.",
 				Required:            true,
 			},
 			"cpu": schema.StringAttribute{

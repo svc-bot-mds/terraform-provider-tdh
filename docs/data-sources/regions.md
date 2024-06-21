@@ -29,7 +29,7 @@ data "tdh_regions" "dedicated_aws" {
 
 ### Required
 
-- `provider_type` (String) Shortname of cloud provider platform where data-plane lives. Ex: `tkgs`, `tkgm`,`openshift`,`tas` .
+- `provider_type` (String) Shortname of cloud provider platform where data-plane lives. Ex: `tkgs`,`tkgm`,`openshift`,`tas`.
 
 ### Optional
 
