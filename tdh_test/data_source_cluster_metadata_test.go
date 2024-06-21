@@ -18,7 +18,7 @@ func TestMdsClusterMetadataSource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.tdh_cluster_metadata.metadata", "id", "dummmyid"),
 					resource.TestCheckResourceAttr("data.tdh_cluster_metadata.metadata", "name", "test"),
-					resource.TestCheckResourceAttr("data.tdh_cluster_metadata.metadata", "provider_name", "aws"),
+					resource.TestCheckResourceAttr("data.tdh_cluster_metadata.metadata", "provider_name", "tkgs"),
 					resource.TestCheckResourceAttr("data.tdh_cluster_metadata.metadata", "service_type", "RABBITMQ"),
 					resource.TestCheckResourceAttr("data.tdh_cluster_metadata.metadata", "status", "READY"),
 				),

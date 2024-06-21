@@ -25,7 +25,7 @@ data "tdh_regions" "dedicated_dp" {
 
 ### Required
 
-- `provider_type` (String) Shortname of cloud provider platform where data-plane lives. Ex: `tkgs`, `tkgm` .
+- `provider_type` (String) Shortname of cloud provider platform where data-plane lives. Ex: `tkgs`,`tkgm`,`openshift`,`tas`.
 
 ### Optional
 

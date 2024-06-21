@@ -15,7 +15,7 @@ func TestMdsRegionsDataSource(t *testing.T) {
 			{
 				Config: providerConfig + `data "tdh_regions" "available_regions" {
   cpu                  = "1"
-  cloud_provider       = "aws"
+  cloud_provider       = "tkgs"
   memory               = "4Gi"
   storage              = "4Gi"
   node_count           = "1"
