@@ -15,7 +15,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/policy_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
-	customer_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
 	"time"
 )

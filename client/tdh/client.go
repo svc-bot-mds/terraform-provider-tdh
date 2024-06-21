@@ -31,6 +31,8 @@ type Client struct {
 	TaskService      *task.Service
 }
 
+type TokenGetter func() (*auth.TokenResponse, error)
+
 // NewClient -
 func NewClient(host *string, authInfo *model.ClientAuth) (*Client, error) {
 	hostUrl := HostURL
@@ -47,6 +49,9 @@ func NewClient(host *string, authInfo *model.ClientAuth) (*Client, error) {
 	}
 
 	c := prepareClient(host, root)
+	root.TokenGetter = func() (any, error) {
+		return c.Auth.GetAccessToken()
+	}
 
 	_, err := c.Auth.GetAccessToken()
 	if err != nil {

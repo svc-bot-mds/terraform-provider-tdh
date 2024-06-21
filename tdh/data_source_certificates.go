@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
-	infra_connector "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
 	"reflect"
 )

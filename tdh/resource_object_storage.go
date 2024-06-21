@@ -14,7 +14,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/core"
-	infra_connector "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
 	"net/url"
 )
 

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
-	infra_connector "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
 )
 
@@ -101,8 +101,8 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 					"## Notes" +
 					"- This field is non-mandatory during the TAS data plane creation.<br>" +
 					"- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.",
-				Required:            false,
-				Optional:            true,
+				Required: false,
+				Optional: true,
 			},
 			"shared": schema.BoolAttribute{
 				MarkdownDescription: "Shared Data Plane.<br>" +
@@ -119,13 +119,13 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 			"auto_upgrade": schema.BoolAttribute{
 				MarkdownDescription: "Whether to enable auto-upgrade on Data plane.<br>" +
 					"**Note:** This field should be set to false for TAS data-plane creation.",
-				Optional:            true,
-				Required:            false,
+				Optional: true,
+				Required: false,
 			},
 			"cp_bootstrapped_cluster": schema.BoolAttribute{
 				MarkdownDescription: "Whether to onboard Data Plane on a K8s cluster running TDH Control Plane.<br>" +
 					"**Note:** Not a required field during TAS data-plane creation.",
-				Optional:            true,
+				Optional: true,
 			},
 			"org_id": schema.StringAttribute{
 				Description: "Organization ID. This filed is not required during TAS data-plane creation",
@@ -140,25 +140,25 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 					"## Notes" +
 					"- This field is non-mandatory during the TAS data plane creation.<br>" +
 					"- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.",
-				Required:            false,
-				Optional:            true,
+				Required: false,
+				Optional: true,
 			},
 			"data_plane_release_id": schema.StringAttribute{
 				MarkdownDescription: "ID of the Helm Release. Please use datasource `tdh_data_plane_helm_releases` to get this.<br>" +
 					"## Notes" +
 					"- This field is non-mandatory during the TAS data plane creation.<br>" +
 					"- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.",
-				Required:            false,
-				Optional:            true,
+				Required: false,
+				Optional: true,
 			},
 			"storage_classes": schema.SetAttribute{
 				MarkdownDescription: "Storage Classes on the data plane.<br>" +
 					"## Notes" +
 					"- This field is non-mandatory during the TAS data plane creation.<br>" +
 					"- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.",
-				ElementType:         types.StringType,
-				Required:            false,
-				Optional:            true,
+				ElementType: types.StringType,
+				Required:    false,
+				Optional:    true,
 			},
 			"tags": schema.SetAttribute{
 				Description: "Tags",

@@ -5,7 +5,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/oauth_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
-	customer_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
 )
 
 func main() {
