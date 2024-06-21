@@ -3,12 +3,12 @@
 page_title: "tdh_service_versions Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch versions for service cluster supported by TDH. Can be used while creating resource tdh_cluster.
+  Used to fetch versions for service cluster supported by TDH. (Can be used while creating resource tdh_cluster)
 ---
 
 # tdh_service_versions (Data Source)
 
-Used to fetch versions for service cluster supported by TDH. Can be used while creating resource `tdh_cluster`.
+Used to fetch versions for service cluster supported by TDH. *(Can be used while creating resource `tdh_cluster`)*
 
 ## Example Usage
 

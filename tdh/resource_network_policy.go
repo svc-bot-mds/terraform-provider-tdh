@@ -84,11 +84,11 @@ func (r *networkPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "Name of the policy",
+				Description: "Name of the policy.",
 				Required:    true,
 			},
 			"description": schema.StringAttribute{
-				Description: "Description of the policy",
+				Description: "Description of the policy.",
 				Optional:    true,
 				Computed:    true,
 			},

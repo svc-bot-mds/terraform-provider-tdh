@@ -3,12 +3,12 @@
 page_title: "tdh_cluster_target_versions Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch target versions for a given service cluster. Can be used while upgrading resource tdh_cluster.
+  Used to fetch target versions for a given service cluster. (Can be used while upgrading resource tdh_cluster)
 ---
 
 # tdh_cluster_target_versions (Data Source)
 
-Used to fetch target versions for a given service cluster. Can be used while upgrading resource `tdh_cluster`.
+Used to fetch target versions for a given service cluster. *(Can be used while upgrading resource `tdh_cluster`)*
 
 ## Example Usage
 

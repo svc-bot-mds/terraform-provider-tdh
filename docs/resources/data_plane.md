@@ -8,7 +8,7 @@ description: |-
 
 # tdh_data_plane (Resource)
 
-Represents a TDH Data Plane.**Note**: For SRE only.
+Represents a TDH Data Plane.<br>**Note:** For SRE only.
 
 ## Example Usage
 
@@ -92,33 +92,21 @@ resource "tdh_data_plane" "example" {
 - `account_id` (String) ID of the account to use for data plane operations. Please use datasource `tdh_cloud_accounts` to get the list of available accounts.
 - `name` (String) Name of the Data Plane
 - `provider_name` (String) Provider name
-- `services` (Set of String) Services. **Note**: TAS data-plane creation supports `postgres` only
-- `shared` (Boolean) Shared Data Plane.
- **Note**: This field should be set to true during the TAS data plane creation. 
-It can be set to true/false during Non TAS (i.e `tkgm`, `tkgs`, `openshift`) data plane creation.
+- `services` (Set of String) Services. **Note**: TAS data-plane creation supports `postgres` only.
+- `shared` (Boolean) Shared Data Plane.<br>## Notes<br>- This field should be set to true during the TAS data plane creation.<br>- It can be set to true/false during Non TAS (i.e `tkgm`, `tkgs`, `openshift`) data plane creation.
 
 ### Optional
 
-- `auto_upgrade` (Boolean) Whether to enable auto-upgrade on Data plane.
- **Note**: This field should be set to false for TAS data-plane creation
+- `auto_upgrade` (Boolean) Whether to enable auto-upgrade on Data plane.<br>**Note:** This field should be set to false for TAS data-plane creation.
 - `az` (String) Availability Zone. It's a mandatory field during TAS data-plane creation.
-- `backup_storage_class` (String) Backup Storage Class will be used to create all backups on this data plane. Please note this cannot be changed in future.
- **Note**: This field is non-mandatory during the TAS data plane creation. 
- It is a mandatory field during  Non TAS (i.e `tkgm`, `tkgs`, `openshift`) data plane creation.
-- `configure_core_dns` (Boolean) Turn on publishing the TDH's DNS to core DNS of the K8S cluster. This will enable communication between pods of the control plane and the data plane with control plane pods. Disable this only when the TDH base URL has a forwarder set in corporate DNS or for some specific use case.
-Please note that TDH needs these communications between the pods to function.
-- `cp_bootstrapped_cluster` (Boolean) Whether to onboard Data Plane on a K8s cluster running TDH Control Plane 
- **Note**: Not a required field during TAS data-plane creation
-- `data_plane_release_id` (String) ID of the Helm Release. Please use datasource `tdh_data_plane_helm_releases` to get this.
- **Note**: This field is non-mandatory during the TAS data plane creation. 
- It is a mandatory field during  Non TAS (i.e `tkgm`, `tkgs`, `openshift`) data plane creation.
-- `k8s_cluster_name` (String) Name of Kubernetes Cluster. Please use datasource `tdh_k8s_clusters` to get the list of available clusters from an account.
-**Note**: This field is non-mandatory during the TAS data plane creation . 
- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`) data plane creation.
+- `backup_storage_class` (String) Backup Storage Class will be used to create all backups on this data plane. Please note this cannot be changed in future.<br>## Notes- This field is non-mandatory during the TAS data plane creation.<br>- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.
+- `configure_core_dns` (Boolean) Turn on publishing the TDH's DNS to core DNS of the K8S cluster. This will enable communication between pods of the control plane and the data plane with control plane pods. Disable this only when the TDH base URL has a forwarder set in corporate DNS or for some specific use case.<br>Please note that TDH needs these communications between the pods to function.
+- `cp_bootstrapped_cluster` (Boolean) Whether to onboard Data Plane on a K8s cluster running TDH Control Plane.<br>**Note:** Not a required field during TAS data-plane creation.
+- `data_plane_release_id` (String) ID of the Helm Release. Please use datasource `tdh_data_plane_helm_releases` to get this.<br>## Notes- This field is non-mandatory during the TAS data plane creation.<br>- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.
+- `k8s_cluster_name` (String) Name of Kubernetes Cluster. Please use datasource `tdh_k8s_clusters` to get the list of available clusters from an account.<br>## Notes- This field is non-mandatory during the TAS data plane creation.<br>- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.
 - `network` (String) Network Details. It's a mandatory field during TAS data-plane creation.
 - `org_id` (String) Organization ID. This filed is not required during TAS data-plane creation
-- `storage_classes` (Set of String) Storage Classes on the data plane. 
- **Note**: This field is non-mandatory during the TAS data plane creation. It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	 data plane creation.
+- `storage_classes` (Set of String) Storage Classes on the data plane.<br>## Notes- This field is non-mandatory during the TAS data plane creation.<br>- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.
 - `tags` (Set of String) Tags
 
 ### Read-Only

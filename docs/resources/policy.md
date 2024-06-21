@@ -24,9 +24,9 @@ data "tdh_cluster_metadata" "pg" {
 }
 
 resource "tdh_policy" "sample" {
-  name         = "tf-pg-policy"
-  description  = "to allow login and create DB"
-  service_type = "POSTGRES"
+  name             = "tf-pg-policy"
+  description      = "to allow login and create DB"
+  service_type     = "POSTGRES"
   permission_specs = [
     {
       resource    = "cluster:${data.tdh_cluster_metadata.pg.name}"
@@ -34,9 +34,9 @@ resource "tdh_policy" "sample" {
       permissions = ["login"] # use the same value from tdh_service_roles.all.list[*].name
     },
     {
-      resource = "cluster:${data.tdh_cluster_metadata.pg.name}/database:broadcom"
+      resource    = "cluster:${data.tdh_cluster_metadata.pg.name}/database:broadcom"
       # use any value from tdh_cluster_metadata.pg.databases[*].name
-      role = "create"
+      role        = "create"
       # this role is database specific; same can be known by the structure of permissionId of service role
       permissions = ["create"]
     },
@@ -49,13 +49,13 @@ resource "tdh_policy" "sample" {
 
 ### Required
 
-- `name` (String) Name of the policy
+- `name` (String) Name of the policy.
 - `permission_specs` (Attributes Set) Permissions to enforce on service resources. Only required for policies other than `NETWORK` type. (see [below for nested schema](#nestedatt--permission_specs))
 - `service_type` (String) Type of TDH service to managed. Supported values: `POSTGRES`, `MYSQL`, `RABBITMQ`, `REDIS`.
 
 ### Optional
 
-- `description` (String) Description of the policy
+- `description` (String) Description of the policy.
 
 ### Read-Only
 
@@ -68,7 +68,7 @@ resource "tdh_policy" "sample" {
 Required:
 
 - `permissions` (Set of String) Name of the permission, usually same as role name. Please make use of datasource `tdh_service_roles` to get the relevant values.
-- `resource` (String) Name of the cluster/instance. Please make use of datasource `tdh_clusters` to get the names & . Format of this field is: `cluster:<NAME>[/database:<DB_NAME>[/schema:<SCHEMA>[/table:<TABLE>]]]`.
+- `resource` (String) Name of the cluster/instance. Please make use of datasource `tdh_clusters` to get the names & `tdh_cluster_metadata` to get cluster service specific resources like databases, schemas, vhosts etc.<br>Format of this field is:<br>- `cluster:<NAME>[/database:<DB_NAME>[/schema:<SCHEMA>[/table:<TABLE>]]]` for `POSTGRES`- `cluster:<NAME>[/database:<DB_NAME>[/table:<TABLE>[/columns:<COMMA_SEPARATED_COLUMNS>]]]` for `MYSQL`- `cluster:<NAME>[/vhost:<VHOST>[/queue:<QUEUE>]]` for `RABBITMQ`- `cluster:<NAME>` for `REDIS`
 - `role` (String) Name of the role, it will vary on service type. Please make use of datasource `tdh_service_roles` to get the relevant values by a service type, `POSTGRES` for example.
 
 ## Import
