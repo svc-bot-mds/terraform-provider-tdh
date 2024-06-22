@@ -1,14 +1,14 @@
 package customer_metadata
 
 type CreateUpdatePolicyRequest struct {
-	Name            string           `json:"name"`
-	Description     string           `json:"description"`
-	ServiceType     string           `json:"serviceType"`
-	PermissionsSpec []PermissionSpec `json:"permissionsSpec,omitempty"`
-	NetworkSpecs    []*NetworkSpec   `json:"networkSpecs,omitempty"`
+	Name            string                  `json:"name"`
+	Description     string                  `json:"description"`
+	ServiceType     string                  `json:"serviceType"`
+	PermissionsSpec []PermissionSpecRequest `json:"permissionsSpec,omitempty"`
+	NetworkSpecs    []*NetworkSpec          `json:"networkSpecs,omitempty"`
 }
 
-type PermissionSpec struct {
+type PermissionSpecRequest struct {
 	Resource    string   `json:"resource"`
 	Permissions []string `json:"permissions"`
 	Role        string   `json:"role"`

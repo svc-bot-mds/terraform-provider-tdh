@@ -222,7 +222,7 @@ func (r *networkPolicyResource) Update(ctx context.Context, req resource.UpdateR
 	tflog.Debug(ctx, "update policy request dto", map[string]interface{}{"dto": updateRequest})
 
 	// Update existing policy
-	if err := r.client.CustomerMetadata.UpdatePolicy(plan.ID.ValueString(), &updateRequest); err != nil {
+	if _, err := r.client.CustomerMetadata.UpdatePolicy(plan.ID.ValueString(), &updateRequest); err != nil {
 		resp.Diagnostics.AddError(
 			"Updating  Network Policy",
 			"Could not update Network Policy, unexpected error: "+err.Error(),

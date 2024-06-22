@@ -14,16 +14,14 @@ resource "tdh_policy" "sample" {
   service_type = "POSTGRES"
   permission_specs = [
     {
-      resource    = "cluster:${data.tdh_cluster_metadata.pg.name}"
-      role        = "login"   # use any value from tdh_service_roles.all.list[*].name
-      permissions = ["login"] # use the same value from tdh_service_roles.all.list[*].name
+      resource   = "cluster:${data.tdh_cluster_metadata.pg.name}"
+      role       = "login" # use any value from tdh_service_roles.all.list[*].name
+      permission = "login" # optional, must be same as role for services other than REDIS
     },
     {
       resource = "cluster:${data.tdh_cluster_metadata.pg.name}/database:broadcom"
       # use any value from tdh_cluster_metadata.pg.databases[*].name
       role = "create"
-      # this role is database specific; same can be known by the structure of permissionId of service role
-      permissions = ["create"]
     },
   ]
 }
