@@ -78,7 +78,7 @@ func (r *dataPlaneResource) Configure(_ context.Context, req resource.ConfigureR
 func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	tflog.Info(ctx, "INIT__Schema")
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents a TDH Data Plane.<br>" +
+		MarkdownDescription: "Represents a TDH Data Plane.\n" +
 			"**Note:** For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -97,33 +97,33 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				Required:    true,
 			},
 			"k8s_cluster_name": schema.StringAttribute{
-				MarkdownDescription: "Name of Kubernetes Cluster. Please use datasource `tdh_k8s_clusters` to get the list of available clusters from an account.<br>" +
-					"## Notes" +
-					"- This field is non-mandatory during the TAS data plane creation.<br>" +
+				MarkdownDescription: "Name of Kubernetes Cluster. Please use datasource `tdh_k8s_clusters` to get the list of available clusters from an account.\n" +
+					"## Notes\n" +
+					"- This field is non-mandatory during the TAS data plane creation.\n" +
 					"- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.",
 				Required: false,
 				Optional: true,
 			},
 			"shared": schema.BoolAttribute{
-				MarkdownDescription: "Shared Data Plane.<br>" +
-					"## Notes<br>" +
-					"- This field should be set to true during the TAS data plane creation.<br>" +
+				MarkdownDescription: "Shared Data Plane.\n" +
+					"## Notes\n" +
+					"- This field should be set to true during the TAS data plane creation.\n" +
 					"- It can be set to true/false during Non TAS (i.e `tkgm`, `tkgs`, `openshift`) data plane creation.",
 				Required: true,
 			},
 			"configure_core_dns": schema.BoolAttribute{
-				Description: "Turn on publishing the TDH's DNS to core DNS of the K8S cluster. This will enable communication between pods of the control plane and the data plane with control plane pods. Disable this only when the TDH base URL has a forwarder set in corporate DNS or for some specific use case.<br>" +
+				Description: "Turn on publishing the TDH's DNS to core DNS of the K8S cluster. This will enable communication between pods of the control plane and the data plane with control plane pods. Disable this only when the TDH base URL has a forwarder set in corporate DNS or for some specific use case.\n" +
 					"Please note that TDH needs these communications between the pods to function.",
 				Optional: true,
 			},
 			"auto_upgrade": schema.BoolAttribute{
-				MarkdownDescription: "Whether to enable auto-upgrade on Data plane.<br>" +
+				MarkdownDescription: "Whether to enable auto-upgrade on Data plane.\n" +
 					"**Note:** This field should be set to false for TAS data-plane creation.",
 				Optional: true,
 				Required: false,
 			},
 			"cp_bootstrapped_cluster": schema.BoolAttribute{
-				MarkdownDescription: "Whether to onboard Data Plane on a K8s cluster running TDH Control Plane.<br>" +
+				MarkdownDescription: "Whether to onboard Data Plane on a K8s cluster running TDH Control Plane.\n" +
 					"**Note:** Not a required field during TAS data-plane creation.",
 				Optional: true,
 			},
@@ -136,25 +136,25 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				Required:    true,
 			},
 			"backup_storage_class": schema.StringAttribute{
-				MarkdownDescription: "Backup Storage Class will be used to create all backups on this data plane. Please note this cannot be changed in future.<br>" +
-					"## Notes" +
-					"- This field is non-mandatory during the TAS data plane creation.<br>" +
+				MarkdownDescription: "Backup Storage Class will be used to create all backups on this data plane. Please note this cannot be changed in future.\n" +
+					"## Notes\n" +
+					"- This field is non-mandatory during the TAS data plane creation.\n" +
 					"- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.",
 				Required: false,
 				Optional: true,
 			},
 			"data_plane_release_id": schema.StringAttribute{
-				MarkdownDescription: "ID of the Helm Release. Please use datasource `tdh_data_plane_helm_releases` to get this.<br>" +
-					"## Notes" +
-					"- This field is non-mandatory during the TAS data plane creation.<br>" +
+				MarkdownDescription: "ID of the Helm Release. Please use datasource `tdh_data_plane_helm_releases` to get this.\n" +
+					"## Notes\n" +
+					"- This field is non-mandatory during the TAS data plane creation.\n" +
 					"- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.",
 				Required: false,
 				Optional: true,
 			},
 			"storage_classes": schema.SetAttribute{
-				MarkdownDescription: "Storage Classes on the data plane.<br>" +
-					"## Notes" +
-					"- This field is non-mandatory during the TAS data plane creation.<br>" +
+				MarkdownDescription: "Storage Classes on the data plane.\n" +
+					"## Notes\n" +
+					"- This field is non-mandatory during the TAS data plane creation.\n" +
 					"- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.",
 				ElementType: types.StringType,
 				Required:    false,
@@ -166,7 +166,7 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				Optional:    true,
 			},
 			"services": schema.SetAttribute{
-				MarkdownDescription: "Services. **Note**: TAS data-plane creation supports `postgres` only.",
+				MarkdownDescription: "Services to support on this data plane.\n**Note:** TAS data-plane creation supports `postgres` only.",
 				ElementType:         types.StringType,
 				Required:            true,
 			},

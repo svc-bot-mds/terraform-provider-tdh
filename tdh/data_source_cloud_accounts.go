@@ -57,7 +57,7 @@ func (d *cloudAccountsDatasource) Metadata(_ context.Context, req datasource.Met
 // Schema defines the schema for the data source.
 func (d *cloudAccountsDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Used to fetch all cloud accounts on TDH.<br>" +
+		MarkdownDescription: "Used to fetch all cloud accounts on TDH.\n" +
 			"**Note:** For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

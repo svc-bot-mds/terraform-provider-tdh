@@ -74,7 +74,7 @@ func (r *networkPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		Description: "Represents a policy on TDH.",
+		Description: "Policy to manage network access to service clusters on TDH.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Auto-generated ID of the policy after creation, and can be used to import it from TDH to terraform state.",

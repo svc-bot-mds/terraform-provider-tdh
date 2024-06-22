@@ -49,7 +49,7 @@ func (d *tasksDataSource) Metadata(_ context.Context, req datasource.MetadataReq
 // Schema defines the schema for the data source.
 func (d *tasksDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Used to fetch running/completed task(s).<br>" +
+		MarkdownDescription: "Used to fetch running/completed task(s).\n" +
 			"**Note:** At least one of `id` or `resource_name` is required; when both are present, preference will be given to `id`.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

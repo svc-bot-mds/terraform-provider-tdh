@@ -144,11 +144,11 @@ func (r *policyResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 							},
 						},
 						"resource": schema.StringAttribute{
-							MarkdownDescription: "Name of the cluster/instance. Please make use of datasource `tdh_clusters` to get the names & `tdh_cluster_metadata` to get cluster service specific resources like databases, schemas, vhosts etc.<br>" +
-								"Format of this field is:<br>" +
-								"- `cluster:<NAME>[/database:<DB_NAME>[/schema:<SCHEMA>[/table:<TABLE>]]]` for `POSTGRES`" +
-								"- `cluster:<NAME>[/database:<DB_NAME>[/table:<TABLE>[/columns:<COMMA_SEPARATED_COLUMNS>]]]` for `MYSQL`" +
-								"- `cluster:<NAME>[/vhost:<VHOST>[/queue:<QUEUE>]]` for `RABBITMQ`" +
+							MarkdownDescription: "Name of the cluster/instance. Please make use of datasource `tdh_clusters` to get the names & `tdh_cluster_metadata` to get cluster service specific resources like databases, schemas, vhosts etc.\n" +
+								"Format of this field is:\n" +
+								"- `cluster:<NAME>[/database:<DB_NAME>[/schema:<SCHEMA>[/table:<TABLE>]]]` for `POSTGRES`\n" +
+								"- `cluster:<NAME>[/database:<DB_NAME>[/table:<TABLE>[/columns:<COMMA_SEPARATED_COLUMNS>]]]` for `MYSQL`\n" +
+								"- `cluster:<NAME>[/vhost:<VHOST>[/queue:<QUEUE>]]` for `RABBITMQ`\n" +
 								"- `cluster:<NAME>` for `REDIS`",
 							Required: true,
 							Validators: []validator.String{
@@ -156,11 +156,11 @@ func (r *policyResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 							},
 						},
 						"permission": schema.StringAttribute{
-							MarkdownDescription: "Name of the permission, usually same as role name. Please make use of datasource `tdh_service_roles` to get the relevant values.<br>" +
-								"## Notes<br>" +
-								"- Optional, must be same as role for services other than `REDIS`<br>" +
+							MarkdownDescription: "Name of the permission, usually same as role name. Please make use of datasource `tdh_service_roles` to get the relevant values.\n" +
+								"## Notes\n" +
+								"- Optional, must be same as role for services other than `REDIS`\n" +
 								"- Required for `REDIS` policy. It has to be extracted from `permission_id` of `tdh_service_roles` datasource.\n" +
-								"Ex: If `permission_id` is \"mds:redis:+@read\", fill the value \"+@read\", similarly for other permissions.\n" +
+								"Ex: If `permission_id` is \"mds:redis:+@read\", fill the value \"+@read\", similarly for other permissions. " +
 								"**Note:** When `permission_id` is \"mds:redis:custom\", you can define a custom valid Redis rule.",
 							Optional: true,
 							Computed: true,

@@ -113,8 +113,8 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`, `cluster_metadata`." +
-			"<br>Changing only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: " +
+		MarkdownDescription: "Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`, `cluster_metadata`.\n" +
+			"Changing only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: " +
 			"`tdh_cluster_network_policies_association`.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

@@ -3,12 +3,14 @@
 page_title: "tdh_cluster Resource - tdh"
 subcategory: ""
 description: |-
-  Represents a service instance or cluster. Some attributes are used only once for creation, they are: dedicated, network_policy_ids, cluster_metadata.Changing only tags is supported at the moment. If you wish to update network policies associated with it, please refer resource: tdh_cluster_network_policies_association.
+  Represents a service instance or cluster. Some attributes are used only once for creation, they are: dedicated, network_policy_ids, cluster_metadata.
+  Changing only tags is supported at the moment. If you wish to update network policies associated with it, please refer resource: tdh_cluster_network_policies_association.
 ---
 
 # tdh_cluster (Resource)
 
-Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`, `cluster_metadata`.<br>Changing only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: `tdh_cluster_network_policies_association`.
+Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`, `cluster_metadata`.
+Changing only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: `tdh_cluster_network_policies_association`.
 
 ## Example Usage
 
@@ -74,7 +76,7 @@ resource "tdh_cluster" "test" {
   data_plane_id       = "DP_ID"       # can get using datasource "tdh_regions" based on instance size selected there
   network_policy_ids  = [tdh_network_policy.network.id]
   tags                = ["tdh-tf", "new-tag"]
-  version             = local.version# available values can be fetched using datasource "tdh_service_versions"
+  version             = local.version             # available values can be fetched using datasource "tdh_service_versions"
   storage_policy_name = local.storage_policy_name # complete list can be got using datasource "tdh_eligible_data_planes"
   cluster_metadata    = {
     username      = "test"
