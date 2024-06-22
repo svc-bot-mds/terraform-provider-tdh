@@ -3,12 +3,14 @@
 page_title: "tdh_data_plane_helm_releases Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch all Helm Releases for the data plane.Note: For SRE only.
+  Used to fetch all Helm Releases for the data plane.
+  Note: For SRE only.
 ---
 
 # tdh_data_plane_helm_releases (Data Source)
 
-Used to fetch all Helm Releases for the data plane.<br>**Note:** For SRE only.
+Used to fetch all Helm Releases for the data plane.
+**Note:** For SRE only.
 
 ## Example Usage
 

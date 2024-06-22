@@ -3,12 +3,17 @@
 page_title: "tdh_service_account Resource - tdh"
 subcategory: ""
 description: |-
-  Represents a service account created on TDH, can be used to create/update/delete/import a service account.## Notes1. Only service accounts with valid oAuth App can be imported.2. Please make sure you have selected the valid policy with active clusters while creating the service account.
+  Represents a service account created on TDH, can be used to create/update/delete/import a service account.
+  Notes
+  Only service accounts with valid oAuth App can be imported.Please make sure you have selected the valid policy with active clusters while creating the service account.
 ---
 
 # tdh_service_account (Resource)
 
-Represents a service account created on TDH, can be used to create/update/delete/import a service account.<br>## Notes1. Only service accounts with valid oAuth App can be imported.<br>2. Please make sure you have selected the valid policy with active clusters while creating the service account.<br>
+Represents a service account created on TDH, can be used to create/update/delete/import a service account.
+## Notes
+1. Only service accounts with valid oAuth App can be imported.
+2. Please make sure you have selected the valid policy with active clusters while creating the service account.
 
 ## Example Usage
 

@@ -70,7 +70,7 @@ func (r *objectStorageResource) Schema(ctx context.Context, _ resource.SchemaReq
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents a object storage created on TDH, can be used to create/update/delete/import a object storage.<br>" +
+		MarkdownDescription: "Represents a object storage created on TDH, can be used to create/update/delete/import a object storage.\n" +
 			"**Note:** For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

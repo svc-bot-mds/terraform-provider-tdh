@@ -95,10 +95,10 @@ func (r *serviceAccountResource) Schema(ctx context.Context, _ resource.SchemaRe
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents a service account created on TDH, can be used to create/update/delete/import a service account.<br>" +
-			"## Notes" +
-			"1. Only service accounts with valid oAuth App can be imported.<br>" +
-			"2. Please make sure you have selected the valid policy with active clusters while creating the service account.<br>",
+		MarkdownDescription: "Represents a service account created on TDH, can be used to create/update/delete/import a service account.\n" +
+			"## Notes\n" +
+			"1. Only service accounts with valid oAuth App can be imported.\n" +
+			"2. Please make sure you have selected the valid policy with active clusters while creating the service account.\n",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Auto-generated ID after creating an user, and can be passed to import an existing user from TDH to terraform state.",

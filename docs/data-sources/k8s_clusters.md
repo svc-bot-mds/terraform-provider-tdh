@@ -3,12 +3,14 @@
 page_title: "tdh_k8s_clusters Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch all Kubernetes Clusters within an provider account.Note: For SRE only.
+  Used to fetch all Kubernetes Clusters within an provider account.
+  Note: For SRE only.
 ---
 
 # tdh_k8s_clusters (Data Source)
 
-Used to fetch all Kubernetes Clusters within an provider account.<br>**Note:** For SRE only.
+Used to fetch all Kubernetes Clusters within an provider account.
+**Note:** For SRE only.
 
 ## Example Usage
 

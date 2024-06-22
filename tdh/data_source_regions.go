@@ -56,7 +56,7 @@ func (d *regionsDataSource) Metadata(_ context.Context, req datasource.MetadataR
 
 func (d *regionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Used to fetch the regions having data-planes by desired amount of resources available.<br>" +
+		MarkdownDescription: "Used to fetch the regions having data-planes by desired amount of resources available.\n" +
 			"**Note:** At a time, either `instance_size` or all of (`cpu`, `memory`, `storage`, `node_count`) can be passed.",
 		Attributes: map[string]schema.Attribute{
 			"provider_type": schema.StringAttribute{
