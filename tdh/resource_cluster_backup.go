@@ -24,6 +24,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/core"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -113,6 +114,9 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"name": schema.StringAttribute{
 				Description: "Name of the backup.",
@@ -168,6 +172,9 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 			"org_id": schema.StringAttribute{
 				Description: "ID of the org this backup belongs to.",
 				Computed:    true,
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"region": schema.StringAttribute{
 				Description: "The region of the cluster.",
@@ -176,6 +183,9 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 			"data_plane_id": schema.StringAttribute{
 				Description: "The ID of the data plane.",
 				Computed:    true,
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"metadata": schema.SingleNestedAttribute{
 				Description: "The metadata of the backup.",

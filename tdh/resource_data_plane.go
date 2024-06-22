@@ -9,12 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -91,6 +93,9 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 			"account_id": schema.StringAttribute{
 				MarkdownDescription: "ID of the account to use for data plane operations. Please use datasource `tdh_cloud_accounts` to get the list of available accounts.",
 				Required:            true,
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"name": schema.StringAttribute{
 				Description: "Name of the Data Plane",
@@ -130,6 +135,9 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 			"org_id": schema.StringAttribute{
 				Description: "Organization ID. This filed is not required during TAS data-plane creation",
 				Optional:    true,
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"provider_name": schema.StringAttribute{
 				Description: "Provider name",
@@ -150,6 +158,9 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 					"- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.",
 				Required: false,
 				Optional: true,
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"storage_classes": schema.SetAttribute{
 				MarkdownDescription: "Storage Classes on the data plane.\n" +

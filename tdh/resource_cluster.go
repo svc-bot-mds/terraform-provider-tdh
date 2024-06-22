@@ -24,6 +24,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/upgrade-service"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 	"strconv"
 )
 
@@ -208,6 +209,9 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
+					setvalidator.ValueStringsAre(
+						validators.UUIDValidator{},
+					),
 				},
 			},
 			"status": schema.StringAttribute{
@@ -219,6 +223,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
+					validators.UUIDValidator{},
 				},
 			},
 			"last_updated": schema.StringAttribute{
@@ -322,6 +327,9 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					"object_storage_id": schema.StringAttribute{
 						MarkdownDescription: "ID of the object storage for backup operations. Can be fetched using datasource `tdh_object_storages`.",
 						Optional:            true,
+						Validators: []validator.String{
+							validators.UUIDValidator{},
+						},
 					},
 				},
 			},

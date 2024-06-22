@@ -31,7 +31,7 @@ output "resp" {
 
 ### Read-Only
 
-- `id` (String) ID of the restore.
+- `id` (String) The testing framework requires an id attribute to be present in every data source and resource
 - `list` (Attributes List) List of restores. (see [below for nested schema](#nestedatt--list))
 
 <a id="nestedatt--list"></a>
