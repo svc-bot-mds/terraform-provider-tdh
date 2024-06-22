@@ -36,8 +36,8 @@ provider "tdh" {
 
 ### Optional
 
-- `host` (String) URI for TDH API. *(may also be provided via *TDH_HOST* environment variable)*
-- `org_id` (String) Organization Id for TDH API. *(may also be provided via *TDH_ORG_ID* environment variable)*
-- `password` (String, Sensitive) Password for TDH API. *(may also be provided via *TDH_PASSWORD* environment variable)*
-- `type` (String) OAuth Type for the TDH API. *(must be `user_creds`, kept for backward compatibility)*.
-- `username` (String) Username for TDH API. *(may also be provided via *TDH_USERNAME* environment variable)*
+- `host` (String) URI for TDH API. *(may also be provided via `TDH_HOST` environment variable)*
+- `org_id` (String) Organization Id for TDH API. *(may also be provided via `TDH_ORG_ID` environment variable)*
+- `password` (String, Sensitive) Password for TDH API. *(may also be provided via `TDH_PASSWORD` environment variable)*
+- `type` (String) OAuth Type for the TDH API. *(must be `user_creds` if used, attribute kept for backward compatibility)*
+- `username` (String) Username for TDH API. *(may also be provided via `TDH_USERNAME` environment variable)*

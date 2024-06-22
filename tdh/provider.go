@@ -27,6 +27,13 @@ var (
 	_ provider.Provider = &tdhProvider{}
 )
 
+const (
+	EnvHost     = "TDH_HOST"
+	EnvUsername = "TDH_USERNAME"
+	EnvPassword = "TDH_PASSWORD"
+	EnvOrgId    = "TDH_ORG_ID"
+)
+
 // New is a helper function to simplify provider server and testing implementation.
 func New() provider.Provider {
 	return &tdhProvider{}
@@ -55,27 +62,27 @@ func (p *tdhProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 		Description: "Interact with VMware Tanzu Data Hub",
 		Attributes: map[string]schema.Attribute{
 			"host": schema.StringAttribute{
-				MarkdownDescription: "URI for TDH API. *(may also be provided via *TDH_HOST* environment variable)*",
+				MarkdownDescription: fmt.Sprintf("URI for TDH API. *(may also be provided via `%s` environment variable)*", EnvHost),
 				Optional:            true,
 			},
 			"type": schema.StringAttribute{
-				MarkdownDescription: "OAuth Type for the TDH API. *(must be `user_creds`, kept for backward compatibility)*.",
+				MarkdownDescription: fmt.Sprintf("OAuth Type for the TDH API. *(must be `%s` if used, attribute kept for backward compatibility)*", oauth_type.UserCredentials),
 				Optional:            true,
 				Validators: []validator.String{
-					stringvalidator.OneOf("user_creds"),
+					stringvalidator.OneOf(oauth_type.UserCredentials),
 				},
 			},
 			"username": schema.StringAttribute{
-				MarkdownDescription: "Username for TDH API. *(may also be provided via *TDH_USERNAME* environment variable)*",
+				MarkdownDescription: fmt.Sprintf("Username for TDH API. *(may also be provided via `%s` environment variable)*", EnvUsername),
 				Optional:            true,
 			},
 			"password": schema.StringAttribute{
-				MarkdownDescription: "Password for TDH API. *(may also be provided via *TDH_PASSWORD* environment variable)*",
+				MarkdownDescription: fmt.Sprintf("Password for TDH API. *(may also be provided via `%s` environment variable)*", EnvPassword),
 				Optional:            true,
 				Sensitive:           true,
 			},
 			"org_id": schema.StringAttribute{
-				MarkdownDescription: "Organization Id for TDH API. *(may also be provided via *TDH_ORG_ID* environment variable)*",
+				MarkdownDescription: fmt.Sprintf("Organization Id for TDH API. *(may also be provided via `%s` environment variable)*", EnvOrgId),
 				Optional:            true,
 			},
 		},
@@ -99,10 +106,10 @@ func (p *tdhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	// Default values to environment variables, but override
 	// with Terraform configuration value if set.
 
-	host := os.Getenv("TDH_HOST")
-	orgId := os.Getenv("TDH_ORG_ID")
-	username := os.Getenv("TDH_USERNAME")
-	password := os.Getenv("TDH_PASSWORD")
+	host := os.Getenv(EnvHost)
+	orgId := os.Getenv(EnvOrgId)
+	username := os.Getenv(EnvUsername)
+	password := os.Getenv(EnvPassword)
 
 	if !config.Host.IsNull() {
 		host = config.Host.ValueString()
@@ -129,7 +136,7 @@ func (p *tdhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 			path.Root("host"),
 			"Missing TDH API Host",
 			"The provider cannot create the TDH API client as there is a missing or empty value for the TDH API host. "+
-				"Set the host value in the configuration or use the TDH_HOST environment variable. "+
+				fmt.Sprintf("Set the host value in the configuration or use the '%s' environment variable. ", EnvHost)+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
@@ -139,7 +146,7 @@ func (p *tdhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 			path.Root("Username"),
 			"Unknown TDH API Username",
 			"The provider cannot create the TDH API client as there is an unknown configuration value for the TDH API Username. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the TDH_USERNAME environment variable. ",
+				fmt.Sprintf("Either target apply the source of the value first, set the value statically in the configuration, or use the '%s' environment variable. ", EnvUsername),
 		)
 	}
 
@@ -148,7 +155,7 @@ func (p *tdhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 			path.Root("Password"),
 			"Unknown TDH API Password",
 			"The provider cannot create the TDH API client as there is an unknown configuration value for the TDH API Password. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the TDH_PASSWORD environment variable. ",
+				fmt.Sprintf("Either target apply the source of the value first, set the value statically in the configuration, or use the '%s' environment variable. ", EnvPassword),
 		)
 	}
 
@@ -157,7 +164,7 @@ func (p *tdhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 			path.Root("org id"),
 			"Unknown TDH API Org Id",
 			"The provider cannot create the TDH API client as there is an unknown configuration value for the TDH API Org Id. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the TDH_ORG_ID environment variable.",
+				fmt.Sprintf("Either target apply the source of the value first, set the value statically in the configuration, or use the '%s' environment variable.", EnvOrgId),
 		)
 	}
 
