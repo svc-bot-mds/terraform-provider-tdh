@@ -64,6 +64,7 @@ resource "tdh_service_account" "example" {
 
 - `oauth_app` (Attributes) Provides OauthApp details. (see [below for nested schema](#nestedatt--oauth_app))
 - `policy_ids` (Set of String) IDs of service policies to be associated with service account.
+**Note:** Type of policies whose IDs are used, must be one of these: `RABBITMQ`, `TDH`
 - `tags` (Set of String) Tags or labels to categorise service accounts for ease of finding.
 
 ### Read-Only

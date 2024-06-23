@@ -4,10 +4,12 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 )
 
 var (
@@ -47,6 +49,9 @@ func (d *storageClassDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 			"cloud_account_id": schema.StringAttribute{
 				Description: "ID of the Cloud Provider Account.",
 				Required:    true,
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"k8s_cluster_name": schema.StringAttribute{
 				Description: "K8s Cluster Name.",

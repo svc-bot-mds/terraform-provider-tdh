@@ -11,12 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/core"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -117,6 +119,9 @@ func (r *cloudAccountResource) Schema(ctx context.Context, _ resource.SchemaRequ
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					validators.UUIDValidator{},
 				},
 			},
 			"credentials": schema.StringAttribute{

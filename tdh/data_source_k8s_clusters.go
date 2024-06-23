@@ -4,10 +4,12 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 )
 
 var (
@@ -58,6 +60,9 @@ func (d *k8sClustersDatasource) Schema(_ context.Context, _ datasource.SchemaReq
 			"account_id": schema.StringAttribute{
 				Required:    true,
 				Description: "ID of the provider account",
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"list": schema.ListNestedAttribute{
 				Description: "List of Kubernetes Clusters. Can be used while creating resource `tdh_data_plane`.",

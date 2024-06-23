@@ -5,12 +5,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/task"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 )
 
 var (
@@ -55,6 +57,9 @@ func (d *tasksDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 			"id": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "ID of the task.",
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"resource_name": schema.StringAttribute{
 				Optional:            true,

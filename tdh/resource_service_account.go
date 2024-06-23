@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -11,21 +12,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/policy_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/time_unit"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/core"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
+	"slices"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &serviceAccountResource{}
-	_ resource.ResourceWithConfigure   = &serviceAccountResource{}
-	_ resource.ResourceWithImportState = &serviceAccountResource{}
+	_          resource.Resource                = &serviceAccountResource{}
+	_          resource.ResourceWithConfigure   = &serviceAccountResource{}
+	_          resource.ResourceWithImportState = &serviceAccountResource{}
+	validTypes                                  = []string{policy_type.RABBITMQ, policy_type.TDH}
 )
 
 func NewServiceAccountResource() resource.Resource {
@@ -72,7 +78,8 @@ func (r *serviceAccountResource) Metadata(_ context.Context, req resource.Metada
 	resp.TypeName = req.ProviderTypeName + "_service_account"
 }
 
-func (r *serviceAccountResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *serviceAccountResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	tflog.Info(ctx, "INIT__Configure")
 	if req.ProviderData == nil {
 		return
 	}
@@ -98,7 +105,7 @@ func (r *serviceAccountResource) Schema(ctx context.Context, _ resource.SchemaRe
 		MarkdownDescription: "Represents a service account created on TDH, can be used to create/update/delete/import a service account.\n" +
 			"## Notes\n" +
 			"1. Only service accounts with valid oAuth App can be imported.\n" +
-			"2. Please make sure you have selected the valid policy with active clusters while creating the service account.\n",
+			"2. Please make sure you have selected the valid policy with active clusters while creating the service account.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Auto-generated ID after creating an user, and can be passed to import an existing user from TDH to terraform state.",
@@ -119,10 +126,16 @@ func (r *serviceAccountResource) Schema(ctx context.Context, _ resource.SchemaRe
 				Computed:    true,
 			},
 			"policy_ids": schema.SetAttribute{
-				Description: "IDs of service policies to be associated with service account.",
+				MarkdownDescription: "IDs of service policies to be associated with service account.\n" +
+					"**Note:** Type of policies whose IDs are used, must be one of these: `RABBITMQ`, `TDH`",
 				Optional:    true,
 				Computed:    false,
 				ElementType: types.StringType,
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(
+						validators.UUIDValidator{},
+					),
+				},
 			},
 			"tags": schema.SetAttribute{
 				Description: "Tags or labels to categorise service accounts for ease of finding.",
@@ -258,6 +271,9 @@ func (r *serviceAccountResource) Create(ctx context.Context, req resource.Create
 	}
 	plan.Tags.ElementsAs(ctx, &svcAccountRequest.Tags, true)
 	plan.PolicyIds.ElementsAs(ctx, &svcAccountRequest.PolicyIds, true)
+	if r.validatePolicyIds(svcAccountRequest.PolicyIds, &resp.Diagnostics); resp.Diagnostics.HasError() {
+		return
+	}
 
 	svcAcctCredentials, err := r.client.CustomerMetadata.CreateServiceAccount(&svcAccountRequest)
 	if err != nil {
@@ -357,6 +373,28 @@ func (r *serviceAccountResource) Create(ctx context.Context, req resource.Create
 	tflog.Info(ctx, "END__Create")
 }
 
+func (r *serviceAccountResource) validatePolicyIds(policyIds []string, diags *diag.Diagnostics) {
+	if len(policyIds) > 0 {
+		for _, id := range policyIds {
+			pol, err := r.client.CustomerMetadata.GetPolicy(id)
+			if err != nil {
+				diags.AddAttributeError(
+					path.Root("policy_ids").AtSetValue(types.StringValue(id)),
+					"Invalid policy ID",
+					err.Error(),
+				)
+			}
+			if !slices.Contains(validTypes, pol.ServiceType) {
+				diags.AddAttributeError(
+					path.Root("policy_ids").AtSetValue(types.StringValue(id)),
+					"Invalid policy ID",
+					fmt.Sprintf("policy type '%s' of ID '%s' is not supported for service account", pol.ServiceType, id),
+				)
+			}
+		}
+	}
+}
+
 func (r *serviceAccountResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Info(ctx, "INIT__Update")
 
@@ -372,6 +410,9 @@ func (r *serviceAccountResource) Update(ctx context.Context, req resource.Update
 	updateRequest := customer_metadata.SvcAccountUpdateRequest{}
 	state.Tags.ElementsAs(ctx, &updateRequest.Tags, true)
 	state.PolicyIds.ElementsAs(ctx, &updateRequest.PolicyIds, true)
+	if r.validatePolicyIds(updateRequest.PolicyIds, &resp.Diagnostics); resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Update existing svc account
 	if err := r.client.CustomerMetadata.UpdateServiceAccount(state.ID.ValueString(), &updateRequest); err != nil {

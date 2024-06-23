@@ -17,6 +17,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 	"time"
 )
 
@@ -77,6 +78,9 @@ func (r *clusterNetworkPoliciesAssociationResource) Schema(ctx context.Context, 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"policy_ids": schema.SetAttribute{
 				MarkdownDescription: "IDs of the network policies to associate with the cluster.",
@@ -84,6 +88,9 @@ func (r *clusterNetworkPoliciesAssociationResource) Schema(ctx context.Context, 
 				ElementType:         types.StringType,
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
+					setvalidator.ValueStringsAre(
+						validators.UUIDValidator{},
+					),
 				},
 			},
 		},

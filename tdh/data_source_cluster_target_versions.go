@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -45,6 +46,7 @@ func (d *clusterTargetVersionsDataSource) Schema(_ context.Context, _ datasource
 				MarkdownDescription: "ID of the cluster.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
+					validators.UUIDValidator{},
 				},
 			},
 			"current_version": schema.StringAttribute{
