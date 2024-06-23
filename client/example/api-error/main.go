@@ -28,7 +28,6 @@ func main() {
 		fmt.Println(err)
 		var apiError core.ApiError
 		if errors.As(err, &apiError) {
-			fmt.Println("recognized")
 			fmt.Println(apiError.ErrorMessage)
 		}
 		return

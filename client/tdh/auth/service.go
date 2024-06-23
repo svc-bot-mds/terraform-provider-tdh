@@ -95,6 +95,34 @@ func (s *Service) processAuthResponse(response *TokenResponse) error {
 	return nil
 }
 
+// Login - Logs in user and return cookies
+func (s *Service) Login() error {
+	fmt.Println("Trying login")
+	if s.Api.AuthToUse.OAuthAppType != oauth_type.UserCredentials {
+		return nil
+	}
+
+	authToUse := s.Api.AuthToUse
+	if authToUse.Username == "" && authToUse.OAuthAppType == oauth_type.UserCredentials {
+		return fmt.Errorf("define TDH Username")
+	}
+	if authToUse.Password == "" && authToUse.OAuthAppType == oauth_type.UserCredentials {
+		return fmt.Errorf("define TDH Password")
+	}
+
+	reqUrl := fmt.Sprintf("%s/%s/%s", s.Endpoint, Auth, Login)
+	tokenRequest := TokenRequest{
+		Username: authToUse.Username,
+		Password: authToUse.Password,
+	}
+	_, err := s.Api.Post(&reqUrl, &tokenRequest, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *Service) GetSmtpDetails() (model.Smtp, error) {
 	var response model.Smtp
 
