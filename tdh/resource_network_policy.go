@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -16,6 +17,9 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/task"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
+	"reflect"
 	"regexp"
 )
 
@@ -91,11 +95,17 @@ func (r *networkPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 				Description: "Description of the policy.",
 				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"resource_ids": schema.SetAttribute{
 				Description: "IDs of service resources/instances being managed by the policy.",
 				Computed:    true,
 				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"network_spec": schema.SingleNestedAttribute{
 				MarkdownDescription: "Network config to allow access to service resource.",
@@ -144,7 +154,7 @@ func (r *networkPolicyResource) Create(ctx context.Context, req resource.CreateR
 		ServiceType: policy_type.NETWORK,
 	}
 
-	networkSpec := &customer_metadata.NetworkSpec{
+	networkSpec := customer_metadata.NetworkSpec{
 		Cidr: plan.NetworkSpec.Cidr.ValueString(),
 	}
 	tflog.Debug(ctx, "Create Network Policy DTO", map[string]interface{}{"dto": plan.NetworkSpec.NetworkPortIds})
@@ -213,7 +223,7 @@ func (r *networkPolicyResource) Update(ctx context.Context, req resource.UpdateR
 		ServiceType: policy_type.NETWORK,
 	}
 
-	networkSpec := &customer_metadata.NetworkSpec{
+	networkSpec := customer_metadata.NetworkSpec{
 		Cidr: plan.NetworkSpec.Cidr.ValueString(),
 	}
 	plan.NetworkSpec.NetworkPortIds.ElementsAs(ctx, &networkSpec.NetworkPortIds, true)
@@ -222,12 +232,30 @@ func (r *networkPolicyResource) Update(ctx context.Context, req resource.UpdateR
 	tflog.Debug(ctx, "update policy request dto", map[string]interface{}{"dto": updateRequest})
 
 	// Update existing policy
-	if _, err := r.client.CustomerMetadata.UpdatePolicy(plan.ID.ValueString(), &updateRequest); err != nil {
+	response, err := r.client.CustomerMetadata.UpdatePolicy(plan.ID.ValueString(), &updateRequest)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Updating  Network Policy",
 			"Could not update Network Policy, unexpected error: "+err.Error(),
 		)
 		return
+	}
+	if !reflect.DeepEqual(response.NetworkSpec, updateRequest.NetworkSpecs) { // some task is running
+		tasksResponse, err := r.client.TaskService.GetTasks(&task.TasksQuery{ResourceName: updateRequest.Name})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Updating  Network Policy",
+				"Could not update Network Policy, unexpected error: "+err.Error(),
+			)
+			return
+		}
+		if err = utils.WaitForTask(r.client, (*tasksResponse.Get())[0].Id); err != nil {
+			resp.Diagnostics.AddError(
+				"Updating  Network Policy",
+				"Operation error: "+err.Error(),
+			)
+			return
+		}
 	}
 
 	policy, err := r.client.CustomerMetadata.GetPolicy(plan.ID.ValueString())

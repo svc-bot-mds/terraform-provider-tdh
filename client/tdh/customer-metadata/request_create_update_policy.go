@@ -5,7 +5,7 @@ type CreateUpdatePolicyRequest struct {
 	Description     string                  `json:"description"`
 	ServiceType     string                  `json:"serviceType"`
 	PermissionsSpec []PermissionSpecRequest `json:"permissionsSpec,omitempty"`
-	NetworkSpecs    []*NetworkSpec          `json:"networkSpecs,omitempty"`
+	NetworkSpecs    []NetworkSpec           `json:"networkSpecs,omitempty"`
 }
 
 type PermissionSpecRequest struct {

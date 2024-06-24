@@ -16,6 +16,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 )
 
@@ -67,8 +68,11 @@ func (d *regionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				Required:            true,
 			},
 			"service_type": schema.StringAttribute{
-				MarkdownDescription: "Service Type. Ex: `POSTGRES`, `MYSQL`, `REDIS`, `RABBITMQ`.",
+				MarkdownDescription: fmt.Sprintf("Type of the service. Supported values: %s.", supportedServiceTypesMarkdown()),
 				Required:            true,
+				Validators: []validator.String{
+					utils.ServiceTypeValidator,
+				},
 			},
 			"cpu": schema.StringAttribute{
 				MarkdownDescription: "K8s CPU units required. Ex: `500m`, `1` (1000m) .",
@@ -87,8 +91,9 @@ func (d *regionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				Optional:            true,
 			},
 			"instance_size": schema.StringAttribute{
-				MarkdownDescription: "Type of instance size. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`, `SMALL-LITE`.`SMALL-LITE` instance size is applicable only for 'POSTGRES' service type",
-        Required:            true,
+				MarkdownDescription: "Type of instance size. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `SMALL-LITE`, `LARGE`, `XX-LARGE`.\n" +
+					"**Note:** `SMALL-LITE` instance size is applicable only for `POSTGRES` service type.",
+				Required: true,
 				Validators: []validator.String{
 					validators.EmptyStringValidator{},
 					stringvalidator.ConflictsWith(path.Expressions{
