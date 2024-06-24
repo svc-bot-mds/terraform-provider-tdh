@@ -14,7 +14,7 @@ locals {
 data "tdh_regions" "shared" {
   instance_size = local.instance_type
   provider_type = local.provider_type
-  service_type = local.service_type
+  service_type  = local.service_type
 }
 data "tdh_object_storages" "all" {
 }
