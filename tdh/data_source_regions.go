@@ -88,7 +88,7 @@ func (d *regionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 			},
 			"instance_size": schema.StringAttribute{
 				MarkdownDescription: "Type of instance size. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`, `SMALL-LITE`.`SMALL-LITE` instance size is applicable only for 'POSTGRES' service type",
-				Required:            true,
+        Required:            true,
 				Validators: []validator.String{
 					validators.EmptyStringValidator{},
 					stringvalidator.ConflictsWith(path.Expressions{

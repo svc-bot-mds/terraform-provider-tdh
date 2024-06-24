@@ -41,6 +41,7 @@ output "resp" {
 
 - `cpu` (String) K8s CPU units required. Ex: `500m`, `1` (1000m) .
 - `dedicated_data_plane` (Boolean) If set to `true`, only data-planes that are exclusive to current Org *(determined by auth identity)* are queried. Else only shared ones.
+- `instance_size` (String) Type of instance size. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`, `SMALL-LITE`.`SMALL-LITE` instance size is applicable only for 'POSTGRES' service type
 - `memory` (String) K8s memory units required. Ex: `800Mi`, `2Gi` .
 - `node_count` (String) Count of worker nodes that must be present in a data-plane. Ex: `3` .
 - `storage` (String) K8s storage units required. Ex: `2Gi` .
