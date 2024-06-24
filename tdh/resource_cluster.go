@@ -166,7 +166,8 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			},
 			"instance_size": schema.StringAttribute{
 				MarkdownDescription: "Size of instance. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`." +
-					"\nPlease make use of datasource `tdh_network_ports` to decide on a size based on resources it requires.",
+					"\nPlease make use of datasource `tdh_network_ports` to decide on a size based on resources it requires." +
+					"\n`SMALL-LITE` instance size is applicable only for 'POSTGRES' service type",
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -657,6 +658,11 @@ func (r *clusterResource) saveFromResponse(ctx *context.Context, diagnostics *di
 
 func (r *clusterResource) validateInputs(ctx *context.Context, diags *diag.Diagnostics, tfPlan *clusterResourceModel) {
 	tflog.Info(*ctx, "validating inputs")
+	if tfPlan.ServiceType.ValueString() != service_type.POSTGRES && tfPlan.InstanceSize.ValueString() == "SMALL-LITE" {
+		diags.AddAttributeError(path.Root("instance_size"),
+			"Invalid input", fmt.Sprintf("Instance Size \"%s\" is not available for Service \"%s\"", tfPlan.InstanceSize.ValueString(), tfPlan.ServiceType.ValueString()))
+		return
+	}
 	if tfPlan.ServiceType.ValueString() == service_type.RABBITMQ {
 		return
 	}
