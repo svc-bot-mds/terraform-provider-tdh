@@ -9,7 +9,7 @@ type Policy struct {
 	Updating        bool              `json:"updating"`
 	ResourceIds     []string          `json:"resourceIds,omitempty"`
 	PermissionsSpec []PermissionsSpec `json:"permissionsSpec,omitempty"`
-	NetworkSpec     []*NetworkSpec    `json:"networkSpecs,omitempty"`
+	NetworkSpec     []NetworkSpec     `json:"networkSpecs,omitempty"`
 }
 type PermissionsSpec struct {
 	Resource    string         `json:"resource"`

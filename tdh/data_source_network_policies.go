@@ -200,15 +200,15 @@ func (d *networkPoliciesDatasource) convertToTfModels(ctx *context.Context, diag
 			Name:        types.StringValue(dto.Name),
 			Description: types.StringValue(dto.Description),
 		}
-		tfNetworkSpecModels := make([]*NetworkSpecModel, len(dto.NetworkSpec))
+		tfNetworkSpecModels := make([]NetworkSpecModel, len(dto.NetworkSpec))
 		for i, networkSpec := range dto.NetworkSpec {
-			tfNetworkSpecModels[i] = &NetworkSpecModel{
+			tfNetworkSpecModels[i] = NetworkSpecModel{
 				Cidr: types.StringValue(networkSpec.CIDR),
 			}
 			networkPortIds, _ := types.SetValueFrom(*ctx, types.StringType, networkSpec.NetworkPortIds)
 			tfNetworkSpecModels[i].NetworkPortIds = networkPortIds
 		}
-		tfModel.NetworkSpec = tfNetworkSpecModels[0]
+		tfModel.NetworkSpec = &tfNetworkSpecModels[0]
 
 		resourceIds, diags := types.SetValueFrom(*ctx, types.StringType, dto.ResourceIds)
 		if diag.Append(diags...); diag.HasError() {
