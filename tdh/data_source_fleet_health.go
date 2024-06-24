@@ -87,7 +87,7 @@ func (d *fleetHealthDatasource) Metadata(_ context.Context, req datasource.Metad
 // Schema defines the schema for the data source.
 func (d *fleetHealthDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Used to fetch Fleet Health Details for SRE.<br>" +
+		MarkdownDescription: "Used to fetch Fleet Health Details for SRE.\n" +
 			"**Note:** For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

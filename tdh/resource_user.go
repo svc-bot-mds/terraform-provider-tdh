@@ -3,6 +3,7 @@ package tdh
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -11,11 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
-	customer_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -106,6 +109,11 @@ func (r *userResource) Schema(ctx context.Context, _ resource.SchemaRequest, res
 				Optional:    true,
 				Computed:    false,
 				ElementType: types.StringType,
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(
+						validators.UUIDValidator{},
+					),
+				},
 			},
 			"role_ids": schema.SetAttribute{
 				MarkdownDescription: "One or more of (Admin, Developer, Viewer, Operator, Compliance Manager). Please make use of `datasource_roles` to get role_ids.",

@@ -4,11 +4,13 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/service_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 )
 
 var (
@@ -98,6 +100,9 @@ func (d *clusterMetadataDataSource) Schema(_ context.Context, _ datasource.Schem
 			"id": schema.StringAttribute{
 				Description: "ID of the cluster.",
 				Required:    true,
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"provider_name": schema.StringAttribute{
 				Description: "Name of the data-plane's cloud provider where cluster is deployed.",

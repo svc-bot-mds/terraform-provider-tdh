@@ -2,13 +2,14 @@ package model
 
 // Policy base model for TDH Policy
 type Policy struct {
-	ID              string             `json:"id"`
-	Name            string             `json:"name"`
-	Description     string             `json:"description"`
-	ServiceType     string             `json:"serviceType"`
-	ResourceIds     []string           `json:"resourceIds,omitempty"`
-	PermissionsSpec []*PermissionsSpec `json:"permissionsSpec,omitempty"`
-	NetworkSpec     []*NetworkSpec     `json:"networkSpecs,omitempty"`
+	ID              string            `json:"id"`
+	Name            string            `json:"name"`
+	Description     string            `json:"description"`
+	ServiceType     string            `json:"serviceType"`
+	Updating        bool              `json:"updating"`
+	ResourceIds     []string          `json:"resourceIds,omitempty"`
+	PermissionsSpec []PermissionsSpec `json:"permissionsSpec,omitempty"`
+	NetworkSpec     []*NetworkSpec    `json:"networkSpecs,omitempty"`
 }
 type PermissionsSpec struct {
 	Resource    string         `json:"resource"`

@@ -4,12 +4,14 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
-	infra_connector "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 )
 
 var (
@@ -51,8 +53,7 @@ func (d *eligibleDataPlanesDatasource) Metadata(_ context.Context, req datasourc
 func (d *eligibleDataPlanesDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Used to fetch all Data planes.\n" +
-			"## Note:\n" +
-			"- This datasource is using during the service cluster creation",
+			"**Note:** This datasource is used during the service cluster creation",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
@@ -65,6 +66,9 @@ func (d *eligibleDataPlanesDatasource) Schema(_ context.Context, _ datasource.Sc
 			"org_id": schema.StringAttribute{
 				Description: "Org ID, can be left out to filter shared data planes.",
 				Optional:    true,
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"list": schema.ListNestedAttribute{
 				Computed: true,

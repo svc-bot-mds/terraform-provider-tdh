@@ -19,8 +19,9 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/core"
-	customer_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 	"time"
 )
 
@@ -101,6 +102,9 @@ func (r *localUserResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				ElementType: types.StringType,
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
+					setvalidator.ValueStringsAre(
+						validators.UUIDValidator{},
+					),
 				},
 			},
 			"password": schema.SingleNestedAttribute{

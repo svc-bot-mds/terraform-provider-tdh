@@ -54,6 +54,15 @@ func (r *Root) doRequest(req *http.Request) ([]byte, error) {
 
 	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusAccepted {
 		errorWithMsg := fmt.Errorf("status: %d, body: %s", res.StatusCode, body)
+		if res.StatusCode == http.StatusUnauthorized && r.Token != nil {
+			fmt.Println("Existing token possibly expired, trying to get new...")
+			// get token and try same request
+			if _, err = r.TokenGetter(); err != nil {
+				return nil, err
+			}
+			fmt.Println("Updated token, retrying original request...")
+			return r.doRequest(req)
+		}
 		var apiError ApiError
 		if err = json.Unmarshal(body, &apiError); err != nil {
 			return nil, errors.Join(errorWithMsg)

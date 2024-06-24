@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
-	infra_connector "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
 )
 
@@ -47,7 +47,7 @@ func (d *dataPlaneHelmReleaseDatasource) Metadata(_ context.Context, req datasou
 // Schema defines the schema for the data source.
 func (d *dataPlaneHelmReleaseDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Used to fetch all Helm Releases for the data plane.<br>" +
+		MarkdownDescription: "Used to fetch all Helm Releases for the data plane.\n" +
 			"**Note:** For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

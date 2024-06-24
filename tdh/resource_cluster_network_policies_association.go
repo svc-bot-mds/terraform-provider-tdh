@@ -15,8 +15,9 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/policy_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
-	customer_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 	"time"
 )
 
@@ -67,7 +68,7 @@ func (r *clusterNetworkPoliciesAssociationResource) Schema(ctx context.Context, 
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents the association between a service instance/cluster and network policies.<br>" +
+		MarkdownDescription: "Represents the association between a service instance/cluster and network policies.\n" +
 			"**Note:** Make sure to first import the existing associations that may have been created during cluster creation, since this is an overwrite operation.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -77,6 +78,9 @@ func (r *clusterNetworkPoliciesAssociationResource) Schema(ctx context.Context, 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"policy_ids": schema.SetAttribute{
 				MarkdownDescription: "IDs of the network policies to associate with the cluster.",
@@ -84,6 +88,9 @@ func (r *clusterNetworkPoliciesAssociationResource) Schema(ctx context.Context, 
 				ElementType:         types.StringType,
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
+					setvalidator.ValueStringsAre(
+						validators.UUIDValidator{},
+					),
 				},
 			},
 		},

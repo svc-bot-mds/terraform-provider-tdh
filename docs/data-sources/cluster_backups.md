@@ -31,8 +31,11 @@ output "resp" {
 
 ### Optional
 
-- `id` (String) Backup ID
 - `list` (Attributes List) List of the backups. (see [below for nested schema](#nestedatt--list))
+
+### Read-Only
+
+- `id` (String) The testing framework requires an id attribute to be present in every data source and resource
 
 <a id="nestedatt--list"></a>
 ### Nested Schema for `list`

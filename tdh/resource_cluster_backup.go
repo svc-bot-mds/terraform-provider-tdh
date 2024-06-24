@@ -24,6 +24,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/core"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -97,8 +98,8 @@ func (r *clusterBackupResource) Configure(_ context.Context, req resource.Config
 func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	tflog.Info(ctx, "INIT__Schema")
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "This is used to create backup (and restore a backup) of a database service cluster like `POSTGRES`, `MYSQL`, `REDIS`.<br>" +
-			"**NOTE:** To restore a backup, either create a backup or import by ID.",
+		MarkdownDescription: "This is used to create backup (and restore a backup) of a database service cluster like `POSTGRES`, `MYSQL`, `REDIS`.\n" +
+			"**Note:** To restore a backup, either create a backup or import by ID.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "ID of the backup.",
@@ -112,6 +113,9 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					validators.UUIDValidator{},
 				},
 			},
 			"name": schema.StringAttribute{
@@ -168,6 +172,9 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 			"org_id": schema.StringAttribute{
 				Description: "ID of the org this backup belongs to.",
 				Computed:    true,
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"region": schema.StringAttribute{
 				Description: "The region of the cluster.",
@@ -176,6 +183,9 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 			"data_plane_id": schema.StringAttribute{
 				Description: "The ID of the data plane.",
 				Computed:    true,
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"metadata": schema.SingleNestedAttribute{
 				Description: "The metadata of the backup.",
@@ -236,9 +246,10 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 				},
 			},
 			"restore": schema.SingleNestedAttribute{
-				MarkdownDescription: "Use it to restore this backup. **NOTE**: Just declare it as empty block in case of `REDIS` cluster backup since in case of Redis, restore happens on same cluster i.e. the cluster has to be present and there will be some downtime.",
-				Required:            false,
-				Optional:            true,
+				MarkdownDescription: "Use it to restore this backup.\n" +
+					"**Note:** Just declare it as empty block in case of `REDIS` cluster backup since in case of Redis, restore happens on same cluster i.e. the cluster has to be present and there will be some downtime.",
+				Required: false,
+				Optional: true,
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.UseStateForUnknown(),
 				},

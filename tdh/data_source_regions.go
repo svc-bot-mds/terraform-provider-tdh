@@ -13,7 +13,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
-	infra_connector "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
 )
 
@@ -56,11 +56,11 @@ func (d *regionsDataSource) Metadata(_ context.Context, req datasource.MetadataR
 
 func (d *regionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Used to fetch the regions having data-planes by desired amount of resources available.<br>" +
+		MarkdownDescription: "Used to fetch the regions having data-planes by desired amount of resources available.\n" +
 			"**Note:** At a time, either `instance_size` or all of (`cpu`, `memory`, `storage`, `node_count`) can be passed.",
 		Attributes: map[string]schema.Attribute{
 			"provider_type": schema.StringAttribute{
-				MarkdownDescription: "Shortname of cloud provider platform where data-plane lives. Ex: `tkgs`,`tkgm`,`openshift`,`tas`.",
+				MarkdownDescription: "Shortname of cloud provider platform where data-plane lives. Ex: `tkgs`, `tkgm`, `openshift`, `tas`.",
 				Required:            true,
 			},
 			"cpu": schema.StringAttribute{

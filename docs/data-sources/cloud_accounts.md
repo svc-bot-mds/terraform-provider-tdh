@@ -3,12 +3,14 @@
 page_title: "tdh_cloud_accounts Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch all cloud accounts on TDH.Note: For SRE only.
+  Used to fetch all cloud accounts on TDH.
+  Note: For SRE only.
 ---
 
 # tdh_cloud_accounts (Data Source)
 
-Used to fetch all cloud accounts on TDH.<br>**Note:** For SRE only.
+Used to fetch all cloud accounts on TDH.
+**Note:** For SRE only.
 
 ## Example Usage
 

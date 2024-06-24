@@ -3,12 +3,14 @@
 page_title: "tdh_cloud_account Resource - tdh"
 subcategory: ""
 description: |-
-  Represents a cloud account created on TDH, can be used to create/update/delete/import a cloud account.Note: For SRE only.
+  Represents a cloud account created on TDH, can be used to create/update/delete/import a cloud account.
+  Note: For SRE only.
 ---
 
 # tdh_cloud_account (Resource)
 
-Represents a cloud account created on TDH, can be used to create/update/delete/import a cloud account.<br>**Note:** For SRE only.
+Represents a cloud account created on TDH, can be used to create/update/delete/import a cloud account.
+**Note:** For SRE only.
 
 ## Example Usage
 

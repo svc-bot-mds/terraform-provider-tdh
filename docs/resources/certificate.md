@@ -3,12 +3,14 @@
 page_title: "tdh_certificate Resource - tdh"
 subcategory: ""
 description: |-
-  Represents a certificate created on TDH, can be used to create/update/delete/import a certificate.Note: For SRE only.
+  Represents a certificate created on TDH, can be used to create/update/delete/import a certificate.
+  Note: For SRE only.
 ---
 
 # tdh_certificate (Resource)
 
-Represents a certificate created on TDH, can be used to create/update/delete/import a certificate.<br>**Note:** For SRE only.
+Represents a certificate created on TDH, can be used to create/update/delete/import a certificate.
+**Note:** For SRE only.
 
 ## Example Usage
 

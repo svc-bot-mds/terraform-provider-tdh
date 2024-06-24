@@ -13,15 +13,17 @@ import (
 func main() {
 	host := "TDH_HOST_URL"
 	client, err := tdh.NewClient(&host, &model.ClientAuth{
-		ApiToken:     "API_TOKEN",
-		OAuthAppType: oauth_type.ApiToken,
+		OAuthAppType: oauth_type.UserCredentials,
+		Username:     "USERNAME",
+		Password:     "PASSWORD",
+		OrgId:        "ORG_ID",
 	})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	err = client.CustomerMetadata.UpdateUser("64533d8a2cee5b76e7c5fa70", &customer_metadata.UserUpdateRequest{
+	err = client.CustomerMetadata.UpdateUser("df4b263e-86e6-40c2-8705-350906ddafda", &customer_metadata.UserUpdateRequest{
 		//PolicyIds:   []string{"644a14ac4efa951adae6b7d3"},
 		Tags: []string{"client-test"},
 		ServiceRoles: []customer_metadata.RolesRequest{

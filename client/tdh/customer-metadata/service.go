@@ -252,17 +252,17 @@ func (s *Service) CreatePolicy(requestBody *CreateUpdatePolicyRequest) (*model.P
 }
 
 // UpdatePolicy - Submits a request to update policy
-func (s *Service) UpdatePolicy(id string, requestBody *CreateUpdatePolicyRequest) error {
+func (s *Service) UpdatePolicy(id string, requestBody *CreateUpdatePolicyRequest) (*model.Policy, error) {
 	if id == "" {
-		return fmt.Errorf("policy ID cannot be empty")
+		return nil, fmt.Errorf("policy ID cannot be empty")
 	}
 	if requestBody == nil {
-		return fmt.Errorf("requestBody cannot be nil")
+		return nil, fmt.Errorf("requestBody cannot be nil")
 	}
 	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Policies, id)
-
-	_, err := s.Api.Put(&urlPath, requestBody, nil)
-	return err
+	var response model.Policy
+	_, err := s.Api.Put(&urlPath, requestBody, &response)
+	return &response, err
 }
 
 // GetPolicy - Submits a request to fetch policy
