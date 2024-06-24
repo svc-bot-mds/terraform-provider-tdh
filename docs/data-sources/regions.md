@@ -17,8 +17,14 @@ Used to fetch the regions having data-planes by desired amount of resources avai
 ```terraform
 # pass valid data with respect to the instance type selected
 data "tdh_regions" "dedicated_dp" {
-  instance_size        = "XX-SMALL"
+  instance_size        = "SMALL-LITE"
   dedicated_data_plane = true
+  provider_type = "tkgs" # can be fetched using datasource "tdh_provider_types"
+  service_type = "POSTGRES" # can get using datasource "tdh_provider_types"
+}
+
+output "resp" {
+  value = data.tdh_regions.dedicated_dp.regions
 }
 ```
 
@@ -28,12 +34,13 @@ data "tdh_regions" "dedicated_dp" {
 ### Required
 
 - `provider_type` (String) Shortname of cloud provider platform where data-plane lives. Ex: `tkgs`, `tkgm`, `openshift`, `tas`.
+- `service_type` (String) Service Type. Ex: `POSTGRES`, `MYSQL`, `REDIS`, `RABBITMQ`.
 
 ### Optional
 
 - `cpu` (String) K8s CPU units required. Ex: `500m`, `1` (1000m) .
 - `dedicated_data_plane` (Boolean) If set to `true`, only data-planes that are exclusive to current Org *(determined by auth identity)* are queried. Else only shared ones.
-- `instance_size` (String) Type of instance size. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`.
+- `instance_size` (String) Type of instance size. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`, `SMALL-LITE`.`SMALL-LITE` instance size is applicable only for 'POSTGRES' service type
 - `memory` (String) K8s memory units required. Ex: `800Mi`, `2Gi` .
 - `node_count` (String) Count of worker nodes that must be present in a data-plane. Ex: `3` .
 - `storage` (String) K8s storage units required. Ex: `2Gi` .

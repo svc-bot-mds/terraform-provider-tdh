@@ -31,6 +31,7 @@ locals {
 data "tdh_regions" "shared" {
   instance_size = local.instance_type
   provider_type = local.provider_type
+  service_type = local.service_type
 }
 data "tdh_object_storages" "all" {
 }
@@ -58,9 +59,9 @@ output "data" {
 }
 
 resource "tdh_network_policy" "network" {
-  name         = "tf-pg-nw-policy"
+  name = "tf-pg-nw-policy"
   network_spec = {
-    cidr             = "0.0.0.0/32",
+    cidr = "0.0.0.0/32",
     network_port_ids = [
       for port in data.tdh_network_ports.all.list : port.id if strcontains(port.id, "postgres")
     ]
@@ -78,7 +79,7 @@ resource "tdh_cluster" "test" {
   tags                = ["tdh-tf", "new-tag"]
   version             = local.version             # available values can be fetched using datasource "tdh_service_versions"
   storage_policy_name = local.storage_policy_name # complete list can be got using datasource "tdh_eligible_data_planes"
-  cluster_metadata    = {
+  cluster_metadata = {
     username      = "test"
     password      = "Admin!23"
     database      = "test"
@@ -99,6 +100,7 @@ resource "tdh_cluster" "test" {
 - `data_plane_id` (String) ID of the data-plane where the cluster is running.
 - `instance_size` (String) Size of instance. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`.
 Please make use of datasource `tdh_network_ports` to decide on a size based on resources it requires.
+`SMALL-LITE` instance size is applicable only for 'POSTGRES' service type
 - `name` (String) Name of the cluster.
 - `network_policy_ids` (Set of String) IDs of network policies to attach to the cluster.
 - `provider_type` (String) Short-code of provider to use for data-plane. Ex: `tkgs`, `tkgm` . Complete list can be seen using datasource `tdh_provider_types`.

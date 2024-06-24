@@ -2,6 +2,7 @@ package tdh
 
 import (
 	"context"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -30,6 +31,7 @@ type regionsDataSourceModel struct {
 	Storage            types.String   `tfsdk:"storage"`
 	NodeCount          types.String   `tfsdk:"node_count"`
 	InstanceSize       types.String   `tfsdk:"instance_size"`
+	ServiceType        types.String   `tfsdk:"service_type"`
 	Regions            []RegionsModel `tfsdk:"regions"`
 	DedicatedDataPlane types.Bool     `tfsdk:"dedicated_data_plane"`
 	Id                 types.String   `tfsdk:"id"`
@@ -63,6 +65,10 @@ func (d *regionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				MarkdownDescription: "Shortname of cloud provider platform where data-plane lives. Ex: `tkgs`, `tkgm`, `openshift`, `tas`.",
 				Required:            true,
 			},
+			"service_type": schema.StringAttribute{
+				MarkdownDescription: "Service Type. Ex: `POSTGRES`, `MYSQL`, `REDIS`, `RABBITMQ`.",
+				Required:            true,
+			},
 			"cpu": schema.StringAttribute{
 				MarkdownDescription: "K8s CPU units required. Ex: `500m`, `1` (1000m) .",
 				Optional:            true,
@@ -80,7 +86,7 @@ func (d *regionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				Optional:            true,
 			},
 			"instance_size": schema.StringAttribute{
-				MarkdownDescription: "Type of instance size. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`.",
+				MarkdownDescription: "Type of instance size. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`, `SMALL-LITE`.`SMALL-LITE` instance size is applicable only for 'POSTGRES' service type",
 				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.Expressions{
@@ -140,6 +146,12 @@ func (d *regionsDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	//Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 
+	if state.ServiceType.ValueString() != service_type.POSTGRES && state.InstanceSize.ValueString() == "SMALL-LITE" {
+		resp.Diagnostics.AddAttributeError(path.Root("instance_size"),
+			"Invalid input", fmt.Sprintf("Instance Size \"%s\" is not available for Service \"%s\"", state.InstanceSize.ValueString(), state.ServiceType.ValueString()))
+		return
+	}
+
 	regionQuery := &infra_connector.DataPlaneRegionsQuery{
 		CPU:       state.Cpu.ValueString(),
 		NodeCount: state.NodeCount.ValueString(),
@@ -150,7 +162,7 @@ func (d *regionsDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	var typeDetail model.InstanceType
 	if !state.InstanceSize.IsNull() {
 		instanceTypes, err := d.client.Controller.GetServiceInstanceTypes(&controller.InstanceTypesQuery{
-			ServiceType: service_type.RABBITMQ,
+			ServiceType: state.ServiceType.ValueString(),
 		})
 		if err != nil {
 			resp.Diagnostics.AddError(
