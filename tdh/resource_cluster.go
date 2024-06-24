@@ -671,18 +671,15 @@ func (r *clusterResource) validateInputs(ctx *context.Context, diags *diag.Diagn
 			diags.AddAttributeError(path.Root("cluster_metadata").AtName("database"),
 				"Invalid input", fmt.Sprintf("Service \"%s\" requires database attribute.", tfPlan.ServiceType.ValueString()))
 			return
-		} else {
-
-			const pattern = `^[a-z][a-z0-9_]*$`
-			regex := regexp.MustCompile(pattern)
-
-			// Check if the value matches the pattern
-			if !regex.MatchString(tfPlan.ClusterMetadata.Database.ValueString()) {
-				diags.AddError("Validation Failed", "Attribute 'database'  should start with an alphabet & may contain only lowercase alphabets, numbers or underscores")
-
-			}
 		}
+		const pattern = `^[a-z][a-z0-9_]*$`
+		regex := regexp.MustCompile(pattern)
 
+		// Check if the value matches the pattern
+		if !regex.MatchString(tfPlan.ClusterMetadata.Database.ValueString()) {
+			diags.AddError("Invalid input", "Attribute 'database'  should start with an alphabet & may contain only lowercase alphabets, numbers or underscores")
+
+		}
 	}
 
 }

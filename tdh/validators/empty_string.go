@@ -15,11 +15,11 @@ type EmptyStringValidator struct {
 }
 
 func (s EmptyStringValidator) Description(ctx context.Context) string {
-	return fmt.Sprintf("Must be a valid string")
+	return fmt.Sprintf("Must not contain any whitespace characters")
 }
 
 func (s EmptyStringValidator) MarkdownDescription(_ context.Context) string {
-	return fmt.Sprintf("Must be a valid string")
+	return fmt.Sprintf("Must not contain any whitespace characters")
 }
 
 func (s EmptyStringValidator) ValidateString(_ context.Context, request validator.StringRequest, response *validator.StringResponse) {
@@ -29,7 +29,7 @@ func (s EmptyStringValidator) ValidateString(_ context.Context, request validato
 
 	stringValue := request.ConfigValue.ValueString()
 	if strings.TrimSpace(stringValue) == "" {
-		response.Diagnostics.AddAttributeError(request.Path, "Invalid String", "Enter a valid string")
+		response.Diagnostics.AddAttributeError(request.Path, "Invalid String", "Enter a valid string. Must Must not contain any whitespace characters")
 		return
 	}
 }
