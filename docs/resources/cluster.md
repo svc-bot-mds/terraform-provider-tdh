@@ -31,7 +31,7 @@ locals {
 data "tdh_regions" "shared" {
   instance_size = local.instance_type
   provider_type = local.provider_type
-  service_type = local.service_type
+  service_type  = local.service_type
 }
 data "tdh_object_storages" "all" {
 }
@@ -59,9 +59,9 @@ output "data" {
 }
 
 resource "tdh_network_policy" "network" {
-  name = "tf-pg-nw-policy"
+  name         = "tf-pg-nw-policy"
   network_spec = {
-    cidr = "0.0.0.0/32",
+    cidr             = "0.0.0.0/32",
     network_port_ids = [
       for port in data.tdh_network_ports.all.list : port.id if strcontains(port.id, "postgres")
     ]
@@ -79,7 +79,7 @@ resource "tdh_cluster" "test" {
   tags                = ["tdh-tf", "new-tag"]
   version             = local.version             # available values can be fetched using datasource "tdh_service_versions"
   storage_policy_name = local.storage_policy_name # complete list can be got using datasource "tdh_eligible_data_planes"
-  cluster_metadata = {
+  cluster_metadata    = {
     username      = "test"
     password      = "Admin!23"
     database      = "test"
@@ -107,6 +107,9 @@ Please make use of datasource `tdh_network_ports` to decide on a size based on r
 - `region` (String) Region of data plane. Available values can be seen using datasource `tdh_regions`.
 - `storage_policy_name` (String) Name of the storage policy for the cluster.
 - `version` (String) Version of the cluster.
+#### Notes:
+- Changing this will result in cluster upgrade process. Use datasource `tdh_cluster_target_versions` to get next versions.
+- To specific extra options for cluster upgrade, please make use of ['upgrade' attribute](#nestedatt--upgrade).
 
 ### Optional
 
@@ -116,7 +119,7 @@ Please make use of datasource `tdh_network_ports` to decide on a size based on r
 Default is `POSTGRES`.
 - `shared` (Boolean) If present and set to `true`, the cluster will get deployed on a shared data-plane in current Org.
 - `tags` (Set of String) Set of tags or labels to categorise the cluster.
-- `upgrade` (Attributes) Use this to upgrade cluster version. (see [below for nested schema](#nestedatt--upgrade))
+- `upgrade` (Attributes) Use this for specifying extra options for upgrading cluster version. (see [below for nested schema](#nestedatt--upgrade))
 
 ### Read-Only
 
@@ -145,13 +148,9 @@ Optional:
 <a id="nestedatt--upgrade"></a>
 ### Nested Schema for `upgrade`
 
-Required:
-
-- `target_version` (String) Target version to upgrade to. Use datasource `tdh_cluster_target_versions` to get available versions.
-
 Optional:
 
-- `omit_backup` (Boolean) Whether to take backup before upgrade process.
+- `omit_backup` (Boolean) Whether to take backup before upgrade process. (default is `false`)
 
 
 <a id="nestedatt--metadata"></a>

@@ -22,7 +22,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
-	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/upgrade-service"
+	upgrade_service "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/upgrade-service"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 	"regexp"
@@ -85,8 +85,7 @@ type MetadataModel struct {
 }
 
 type upgradeMetadata struct {
-	TargetVersion types.String `tfsdk:"target_version"`
-	OmitBackup    types.Bool   `tfsdk:"omit_backup"`
+	OmitBackup types.Bool `tfsdk:"omit_backup"`
 }
 
 func (r *clusterResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -241,8 +240,11 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"version": schema.StringAttribute{
-				Description: "Version of the cluster.",
-				Required:    true,
+				MarkdownDescription: "Version of the cluster.\n" +
+					"#### Notes:\n" +
+					"- Changing version will result in cluster upgrade process. Use datasource `tdh_cluster_target_versions` to get next versions.\n" +
+					"- To specify extra options for cluster upgrade, please make use of ['upgrade' attribute](#nestedatt--upgrade).",
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -346,16 +348,12 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"upgrade": schema.SingleNestedAttribute{
-				Description: "Use this to upgrade cluster version.",
+				Description: "Use this for specifying extra options for upgrading cluster version.",
 				Required:    false,
 				Optional:    true,
 				Attributes: map[string]schema.Attribute{
-					"target_version": schema.StringAttribute{
-						MarkdownDescription: "Target version to upgrade to. Use datasource `tdh_cluster_target_versions` to get available versions.",
-						Required:            true,
-					},
 					"omit_backup": schema.BoolAttribute{
-						Description: "Whether to take backup before upgrade process.",
+						Description: "Whether to take backup before upgrade process. (default is `false`)",
 						Optional:    true,
 					},
 				},
@@ -531,19 +529,20 @@ func (r *clusterResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	// Detect version change
-	if plan.Upgrade != nil && plan.Upgrade.TargetVersion != state.Version {
+	if plan.Version != state.Version {
 		tflog.Info(ctx, "Version change detected", map[string]interface{}{
 			"old_version": state.Version.ValueString(),
-			"new_version": plan.Upgrade.TargetVersion.ValueString(),
+			"new_version": plan.Version.ValueString(),
 		})
-
-		omitBackup := plan.Upgrade.OmitBackup.ValueBool()
 		// Generate API request to update the version
 		versionUpdateRequest := upgrade_service.UpdateClusterVersionRequest{
 			Id:            state.ID.ValueString(),
-			TargetVersion: plan.Upgrade.TargetVersion.ValueString(),
+			TargetVersion: plan.Version.ValueString(),
 			RequestType:   "SERVICE",
-			Metadata:      upgrade_service.UpdateClusterVersionRequestMetadata{OmitBackup: strconv.FormatBool(omitBackup)},
+		}
+
+		if plan.Upgrade != nil {
+			versionUpdateRequest.Metadata.OmitBackup = strconv.FormatBool(plan.Upgrade.OmitBackup.ValueBool())
 		}
 
 		// Call the API to update the version
@@ -561,6 +560,7 @@ func (r *clusterResource) Update(ctx context.Context, req resource.UpdateRequest
 			)
 			return
 		}
+		resp.State.RemoveResource(ctx)
 	}
 
 	// Generate API request body from plan
@@ -638,6 +638,7 @@ func (r *clusterResource) saveFromResponse(ctx *context.Context, diagnostics *di
 	state.DataPlaneId = types.StringValue(cluster.DataPlaneId)
 	state.LastUpdated = types.StringValue(cluster.LastUpdated)
 	state.Created = types.StringValue(cluster.Created)
+	state.StoragePolicyName = types.StringValue(cluster.StoragePolicyName)
 	state.Version = types.StringValue(cluster.Version)
 	tflog.Info(*ctx, "trying to save mdsMetadata", map[string]interface{}{
 		"obj": cluster.Metadata,
