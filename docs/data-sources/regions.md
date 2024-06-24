@@ -33,6 +33,7 @@ output "resp" {
 
 ### Required
 
+- `instance_size` (String) Type of instance size. Supported values: `XX-SMALL`, `X-SMALL`, `SMALL`, `LARGE`, `XX-LARGE`, `SMALL-LITE`.`SMALL-LITE` instance size is applicable only for `POSTGRES` service type
 - `provider_type` (String) Shortname of cloud provider platform where data-plane lives. Ex: `tkgs`, `tkgm`, `openshift`, `tas`.
 - `service_type` (String) Service Type. Ex: `POSTGRES`, `MYSQL`, `REDIS`, `RABBITMQ`.
 
