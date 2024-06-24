@@ -22,10 +22,12 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
-	upgrade_service "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/upgrade-service"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/upgrade-service"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
+	"regexp"
 	"strconv"
-	"time"
+	"strings"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -114,8 +116,8 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`, `cluster_metadata`." +
-			"<br>Changing only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: " +
+		MarkdownDescription: "Represents a service instance or cluster. Some attributes are used only once for creation, they are: `dedicated`, `network_policy_ids`, `cluster_metadata`.\n" +
+			"Changing only `tags` is supported at the moment. If you wish to update network policies associated with it, please refer resource: " +
 			"`tdh_cluster_network_policies_association`.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -209,6 +211,9 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
+					setvalidator.ValueStringsAre(
+						validators.UUIDValidator{},
+					),
 				},
 			},
 			"status": schema.StringAttribute{
@@ -220,6 +225,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
+					validators.UUIDValidator{},
 				},
 			},
 			"last_updated": schema.StringAttribute{
@@ -251,6 +257,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
+					validators.EmptyStringValidator{},
 				},
 			},
 			"metadata": schema.SingleNestedAttribute{
@@ -305,10 +312,18 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					"username": schema.StringAttribute{
 						Description: "Username for the cluster.",
 						Required:    true,
+						Validators: []validator.String{
+							stringvalidator.LengthBetween(3, 32),
+							stringvalidator.RegexMatches(regexp.MustCompile(`^[a-z][a-z0-9_]*$`), "must start with an alphabet & may contain only lowercase alphabets, numbers or underscores"),
+						},
 					},
 					"password": schema.StringAttribute{
 						Description: "Password for the cluster.",
 						Required:    true,
+						Validators: []validator.String{
+							stringvalidator.LengthBetween(8, 24),
+							validators.PasswordValidator{},
+						},
 					},
 					"database": schema.StringAttribute{
 						MarkdownDescription: "Database name in the cluster. **Required for services:** `POSTGRES` & `MYSQL`.",
@@ -323,6 +338,9 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					"object_storage_id": schema.StringAttribute{
 						MarkdownDescription: "ID of the object storage for backup operations. Can be fetched using datasource `tdh_object_storages`.",
 						Optional:            true,
+						Validators: []validator.String{
+							validators.UUIDValidator{},
+						},
 					},
 				},
 			},
@@ -399,10 +417,17 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 
 	tflog.Info(ctx, "INIT__Submitting request")
 
-	if _, err := r.client.Controller.CreateCluster(&clusterRequest); err != nil {
+	response, err := r.client.Controller.CreateCluster(&clusterRequest)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Submitting request to create cluster",
 			"Could not create cluster, unexpected error: "+err.Error(),
+		)
+		return
+	}
+	if err = utils.WaitForTask(r.client, response.TaskId); err != nil {
+		resp.Diagnostics.AddError("Error in creating cluster",
+			"Task responsible for this operation failed, error: "+err.Error(),
 		)
 		return
 	}
@@ -411,6 +436,9 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 		ServiceType:   clusterRequest.ServiceType,
 		Name:          clusterRequest.Name,
 		FullNameMatch: true,
+		PageQuery: model.PageQuery{
+			Size: 1,
+		},
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Fetching clusters",
@@ -420,7 +448,7 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	if len(*clusters.Get()) <= 0 {
-		resp.Diagnostics.AddError("Fetching Clusters",
+		resp.Diagnostics.AddError("Fetching clusters",
 			"Unable to fetch the created cluster",
 		)
 		return
@@ -428,22 +456,6 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 
 	// Map response body to schema and populate Computed attribute values
 	createdCluster := &(*clusters.Get())[0]
-	if createdCluster.Status == "FAILED" {
-		resp.Diagnostics.AddError("Error creating cluster",
-			"Cluster creation failed with the status 'FAILED'")
-		return
-	} else {
-		for createdCluster.Status != "READY" && createdCluster.Status != "FAILED" {
-			time.Sleep(10 * time.Second)
-			createdCluster, err = r.client.Controller.GetCluster(createdCluster.ID)
-			if err != nil {
-				resp.Diagnostics.AddError("Fetching cluster",
-					"Could not fetch cluster by ID, unexpected error: "+err.Error(),
-				)
-				return
-			}
-		}
-	}
 	tflog.Info(ctx, "INIT__Saving Response")
 	if r.saveFromResponse(&ctx, &resp.Diagnostics, &plan, createdCluster) != 0 {
 		return
@@ -534,7 +546,7 @@ func (r *clusterResource) Update(ctx context.Context, req resource.UpdateRequest
 		}
 
 		// Call the API to update the version
-		_, err := r.client.UpgradeService.UpdateClusterVersion(&versionUpdateRequest)
+		response, err := r.client.UpgradeService.UpdateClusterVersion(&versionUpdateRequest)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Updating Cluster Version",
@@ -542,22 +554,11 @@ func (r *clusterResource) Update(ctx context.Context, req resource.UpdateRequest
 			)
 			return
 		}
-
-		// Wait for the version update to complete
-		for {
-			time.Sleep(10 * time.Second)
-			updatedCluster, err := r.client.Controller.GetCluster(state.ID.ValueString())
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Fetching Updated Cluster",
-					"Could not fetch updated cluster by ID, unexpected error: "+err.Error(),
-				)
-				return
-			}
-			if updatedCluster.Version == plan.Version.ValueString() {
-				tflog.Info(ctx, "Cluster version updated successfully")
-				break
-			}
+		if err = utils.WaitForTask(r.client, response.TaskId); err != nil {
+			resp.Diagnostics.AddError("Updating Cluster Version",
+				"Operation error: "+err.Error(),
+			)
+			return
 		}
 	}
 
@@ -609,7 +610,7 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 	if err = utils.WaitForTask(r.client, response.TaskId); err != nil {
-		resp.Diagnostics.AddError("Creating cluster network policies association",
+		resp.Diagnostics.AddError("Deleting TDH Cluster",
 			"Task responsible for this operation failed, error: "+err.Error(),
 		)
 		return
@@ -636,6 +637,7 @@ func (r *clusterResource) saveFromResponse(ctx *context.Context, diagnostics *di
 	state.DataPlaneId = types.StringValue(cluster.DataPlaneId)
 	state.LastUpdated = types.StringValue(cluster.LastUpdated)
 	state.Created = types.StringValue(cluster.Created)
+	state.Version = types.StringValue(cluster.Version)
 	tflog.Info(*ctx, "trying to save mdsMetadata", map[string]interface{}{
 		"obj": cluster.Metadata,
 	})
@@ -663,9 +665,21 @@ func (r *clusterResource) validateInputs(ctx *context.Context, diags *diag.Diagn
 			"Invalid input", fmt.Sprintf("Service \"%s\" requires this attribute.", tfPlan.ServiceType.ValueString()))
 		return
 	}
-	if tfPlan.ServiceType.ValueString() != service_type.REDIS && tfPlan.ClusterMetadata.Database.IsNull() {
-		diags.AddAttributeError(path.Root("cluster_metadata").AtName("database"),
-			"Invalid input", fmt.Sprintf("Service \"%s\" requires this attribute.", tfPlan.ServiceType.ValueString()))
-		return
+
+	if tfPlan.ServiceType.ValueString() != service_type.REDIS {
+		if tfPlan.ClusterMetadata.Database.IsNull() || tfPlan.ClusterMetadata.Database.ValueString() == "" || strings.TrimSpace(tfPlan.ClusterMetadata.Database.ValueString()) == "" {
+			diags.AddAttributeError(path.Root("cluster_metadata").AtName("database"),
+				"Invalid input", fmt.Sprintf("Service \"%s\" requires database attribute.", tfPlan.ServiceType.ValueString()))
+			return
+		}
+		const pattern = `^[a-z][a-z0-9_]*$`
+		regex := regexp.MustCompile(pattern)
+
+		// Check if the value matches the pattern
+		if !regex.MatchString(tfPlan.ClusterMetadata.Database.ValueString()) {
+			diags.AddError("Invalid input", "Attribute 'database'  should start with an alphabet & may contain only lowercase alphabets, numbers or underscores")
+
+		}
 	}
+
 }

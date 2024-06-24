@@ -3,12 +3,14 @@
 page_title: "tdh_certificates Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch all certificates on TDH.Note: For SRE only.
+  Used to fetch all certificates on TDH.
+  Note: For SRE only.
 ---
 
 # tdh_certificates (Data Source)
 
-Used to fetch all certificates on TDH.<br>**Note:** For SRE only.
+Used to fetch all certificates on TDH.
+**Note:** For SRE only.
 
 ## Example Usage
 

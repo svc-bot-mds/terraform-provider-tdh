@@ -2,6 +2,8 @@ package tdh
 
 import (
 	"crypto/tls"
+	"errors"
+	"fmt"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/auth"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
@@ -31,6 +33,8 @@ type Client struct {
 	TaskService      *task.Service
 }
 
+type TokenGetter func() (*auth.TokenResponse, error)
+
 // NewClient -
 func NewClient(host *string, authInfo *model.ClientAuth) (*Client, error) {
 	hostUrl := HostURL
@@ -47,9 +51,18 @@ func NewClient(host *string, authInfo *model.ClientAuth) (*Client, error) {
 	}
 
 	c := prepareClient(host, root)
+	root.TokenGetter = func() (any, error) {
+		return c.Auth.GetAccessToken()
+	}
 
-	_, err := c.Auth.GetAccessToken()
-	if err != nil {
+	if err := c.Auth.Login(); err != nil {
+		apiErr := core.ApiError{}
+		if errors.As(err, &apiErr) {
+			return nil, fmt.Errorf("%s", apiErr.ErrorMessage)
+		}
+		return nil, err
+	}
+	if _, err := c.Auth.GetAccessToken(); err != nil {
 		return nil, err
 	}
 

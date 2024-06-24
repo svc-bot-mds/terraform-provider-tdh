@@ -10,7 +10,7 @@ description: |-
 # tdh_smtp (Data Source)
 
 Used to fetch SMTP details.
-## Note: For SRE only.
+**Note:** For SRE only.
 
 ## Example Usage
 

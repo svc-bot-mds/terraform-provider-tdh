@@ -12,8 +12,10 @@ import (
 func main() {
 	host := "TDH_HOST_URL"
 	client, err := tdh.NewClient(&host, &model.ClientAuth{
-		ApiToken:     "API_TOKEN",
-		OAuthAppType: oauth_type.ApiToken,
+		OAuthAppType: oauth_type.UserCredentials,
+		Username:     "USERNAME",
+		Password:     "PASSWORD",
+		OrgId:        "ORG_ID",
 	})
 	if err != nil {
 		fmt.Println(err)

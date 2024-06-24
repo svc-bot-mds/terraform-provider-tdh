@@ -3,6 +3,9 @@ package tdh
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -13,11 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/service_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
-	customer_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
+	"reflect"
 	"sort"
+	"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -36,18 +42,19 @@ type policyResource struct {
 }
 
 type policyResourceModel struct {
-	ID              types.String           `tfsdk:"id"`
-	Name            types.String           `tfsdk:"name"`
-	Description     types.String           `tfsdk:"description"`
-	ServiceType     types.String           `tfsdk:"service_type"`
-	PermissionSpecs []*PermissionSpecModel `tfsdk:"permission_specs"`
-	ResourceIds     types.Set              `tfsdk:"resource_ids"`
+	ID              types.String          `tfsdk:"id"`
+	Name            types.String          `tfsdk:"name"`
+	Description     types.String          `tfsdk:"description"`
+	ServiceType     types.String          `tfsdk:"service_type"`
+	PermissionSpecs []PermissionSpecModel `tfsdk:"permission_specs"`
+	ResourceIds     types.Set             `tfsdk:"resource_ids"`
+	Updating        types.Bool            `tfsdk:"updating"`
 }
 
 type PermissionSpecModel struct {
-	Role        types.String `tfsdk:"role"`
-	Resource    types.String `tfsdk:"resource"`
-	Permissions types.Set    `tfsdk:"permissions"`
+	Role       types.String `tfsdk:"role"`
+	Resource   types.String `tfsdk:"resource"`
+	Permission types.String `tfsdk:"permission"`
 }
 
 func (r *policyResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -95,6 +102,10 @@ func (r *policyResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 				Optional:    true,
 				Computed:    true,
 			},
+			"updating": schema.BoolAttribute{
+				Description: "Denotes whether there is any task running on policy.",
+				Computed:    true,
+			},
 			"service_type": schema.StringAttribute{
 				MarkdownDescription: fmt.Sprintf("Type of TDH service to managed. Supported values: %s.", supportedServiceTypesMarkdown()),
 				Required:            true,
@@ -111,27 +122,54 @@ func (r *policyResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 				},
 			},
 			"permission_specs": schema.SetNestedAttribute{
-				MarkdownDescription: "Permissions to enforce on service resources. Only required for policies other than `NETWORK` type.",
+				MarkdownDescription: "Permission to enforce on service resources. Only required for policies other than `NETWORK` type.",
 				Required:            true,
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+				},
 				NestedObject: schema.NestedAttributeObject{
+					CustomType: types.ObjectType{
+						AttrTypes: map[string]attr.Type{
+							"role":       types.StringType,
+							"resource":   types.StringType,
+							"permission": types.StringType,
+						},
+					},
 					Attributes: map[string]schema.Attribute{
 						"role": schema.StringAttribute{
 							MarkdownDescription: "Name of the role, it will vary on service type. Please make use of datasource `tdh_service_roles` to get the relevant values by a service type, `POSTGRES` for example.",
 							Required:            true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtLeast(1),
+							},
 						},
 						"resource": schema.StringAttribute{
-							MarkdownDescription: "Name of the cluster/instance. Please make use of datasource `tdh_clusters` to get the names & `tdh_cluster_metadata` to get cluster service specific resources like databases, schemas, vhosts etc.<br>" +
-								"Format of this field is:<br>" +
-								"- `cluster:<NAME>[/database:<DB_NAME>[/schema:<SCHEMA>[/table:<TABLE>]]]` for `POSTGRES`" +
-								"- `cluster:<NAME>[/database:<DB_NAME>[/table:<TABLE>[/columns:<COMMA_SEPARATED_COLUMNS>]]]` for `MYSQL`" +
-								"- `cluster:<NAME>[/vhost:<VHOST>[/queue:<QUEUE>]]` for `RABBITMQ`" +
+							MarkdownDescription: "Name of the cluster/instance. Please make use of datasource `tdh_clusters` to get the names & `tdh_cluster_metadata` to get cluster service specific resources like databases, schemas, vhosts etc.\n" +
+								"Format of this field is:\n" +
+								"- `cluster:<NAME>[/database:<DB_NAME>[/schema:<SCHEMA>[/table:<TABLE>]]]` for `POSTGRES`\n" +
+								"- `cluster:<NAME>[/database:<DB_NAME>[/table:<TABLE>[/columns:<COMMA_SEPARATED_COLUMNS>]]]` for `MYSQL`\n" +
+								"- `cluster:<NAME>[/vhost:<VHOST>[/queue:<QUEUE>]]` for `RABBITMQ`\n" +
 								"- `cluster:<NAME>` for `REDIS`",
 							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtLeast(1),
+							},
 						},
-						"permissions": schema.SetAttribute{
-							MarkdownDescription: "Name of the permission, usually same as role name. Please make use of datasource `tdh_service_roles` to get the relevant values.",
-							Required:            true,
-							ElementType:         types.StringType,
+						"permission": schema.StringAttribute{
+							MarkdownDescription: "Name of the permission, usually same as role name. Please make use of datasource `tdh_service_roles` to get the relevant values.\n" +
+								"## Notes\n" +
+								"- Optional, must be same as role for services other than `REDIS`\n" +
+								"- Required for `REDIS` policy. It has to be extracted from `permission_id` of `tdh_service_roles` datasource.\n" +
+								"Ex: If `permission_id` is \"mds:redis:+@read\", fill the value \"+@read\", similarly for other permissions. " +
+								"**Note:** When `permission_id` is \"mds:redis:custom\", you can define a custom valid Redis rule.",
+							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+							Validators: []validator.String{
+								stringvalidator.LengthAtLeast(1),
+							},
 						},
 					},
 				},
@@ -153,24 +191,18 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	rolesReq := make([]customer_metadata.PermissionSpec, len(plan.PermissionSpecs))
+	if err := r.validateSpecs(&plan); err != nil {
+		resp.Diagnostics.AddError("Invalid input", err.Error())
+		return
+	}
 
 	// Generate API request body from plan
 	policyRequest := customer_metadata.CreateUpdatePolicyRequest{
-		Name:        plan.Name.ValueString(),
-		Description: plan.Description.ValueString(),
-		ServiceType: plan.ServiceType.ValueString(),
+		Name:            plan.Name.ValueString(),
+		Description:     plan.Description.ValueString(),
+		ServiceType:     plan.ServiceType.ValueString(),
+		PermissionsSpec: *r.convertFromSpecsTfModel(&plan.PermissionSpecs),
 	}
-	for i, roleId := range plan.PermissionSpecs {
-
-		rolesReq[i] = customer_metadata.PermissionSpec{
-			Role:     roleId.Role.ValueString(),
-			Resource: roleId.Resource.ValueString(),
-		}
-		roleId.Permissions.ElementsAs(ctx, &rolesReq[i].Permissions, true)
-	}
-	sort.Slice(rolesReq, func(i, j int) bool { return rolesReq[i].Role < rolesReq[j].Role })
-	policyRequest.PermissionsSpec = rolesReq
 
 	tflog.Debug(ctx, "Create Policy DTO", map[string]interface{}{"dto": policyRequest})
 	if _, err := r.client.CustomerMetadata.CreatePolicy(&policyRequest); err != nil {
@@ -219,55 +251,65 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	tflog.Info(ctx, "INIT__Update")
 
 	// Retrieve values from plan
-	var plan policyResourceModel
+	var state, plan, postPlan policyResourceModel
 	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+	if resp.Diagnostics.Append(diags...); resp.Diagnostics.HasError() {
+		return
+	}
+	diags = req.State.Get(ctx, &state)
+	if resp.Diagnostics.Append(diags...); resp.Diagnostics.HasError() {
 		return
 	}
 
+	if err := r.validateSpecs(&plan); err != nil {
+		resp.Diagnostics.AddError("Invalid input", err.Error())
+		return
+	}
 	// Generate API request body from plan
 	updateRequest := customer_metadata.CreateUpdatePolicyRequest{
-		Name:        plan.Name.ValueString(),
-		Description: plan.Description.ValueString(),
-		ServiceType: plan.ServiceType.ValueString(),
+		Name:            plan.Name.ValueString(),
+		Description:     plan.Description.ValueString(),
+		ServiceType:     plan.ServiceType.ValueString(),
+		PermissionsSpec: *r.convertFromSpecsTfModel(&plan.PermissionSpecs),
 	}
-	permissionSpecRequest := make([]customer_metadata.PermissionSpec, len(plan.PermissionSpecs))
-
-	for i, roleId := range plan.PermissionSpecs {
-		permissionSpecRequest[i] = customer_metadata.PermissionSpec{
-			Role:     roleId.Role.ValueString(),
-			Resource: roleId.Resource.ValueString(),
-		}
-		roleId.Permissions.ElementsAs(ctx, &permissionSpecRequest[i].Permissions, true)
-	}
-	updateRequest.PermissionsSpec = permissionSpecRequest
 	tflog.Debug(ctx, "update policy request dto", map[string]interface{}{"dto": updateRequest})
 
 	// Update existing policy
-	if err := r.client.CustomerMetadata.UpdatePolicy(plan.ID.ValueString(), &updateRequest); err != nil {
+	var policy *model.Policy
+	policy, err := r.client.CustomerMetadata.UpdatePolicy(plan.ID.ValueString(), &updateRequest)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Updating TDH Policy",
 			"Could not update Policy, unexpected error: "+err.Error(),
 		)
 		return
 	}
-
-	policy, err := r.client.CustomerMetadata.GetPolicy(plan.ID.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Fetching Policy",
-			"Could not fetch policy while updating, unexpected error: "+err.Error(),
-		)
-		return
+	for policy.Updating {
+		time.Sleep(5 * time.Second)
+		policy, err = r.client.CustomerMetadata.GetPolicy(plan.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Fetching Policy",
+				"Could not fetch policy while updating, unexpected error: "+err.Error(),
+			)
+			return
+		}
 	}
 
 	//Update resource state with updated items and timestamp
-	if saveFromPolicyResponse(&ctx, &resp.Diagnostics, &plan, policy) != 0 {
+	if saveFromPolicyResponse(&ctx, &resp.Diagnostics, &postPlan, policy) != 0 {
 		return
+	}
+	tflog.Debug(ctx, "checking something", map[string]interface{}{
+		"postPlan": *r.convertFromSpecsTfModel(&postPlan.PermissionSpecs),
+		"plan":     updateRequest.PermissionsSpec,
+	})
+	// if both differs even after update, means something failed
+	if !reflect.DeepEqual(*r.convertFromSpecsTfModel(&postPlan.PermissionSpecs), updateRequest.PermissionsSpec) {
+		resp.Diagnostics.AddError("Updating Policy", "Policy has failed to update. For more info, you can query datasource 'tdh_task' with cluster name(s) used in attribute(s) 'resource' inside 'permission_specs'")
 	}
 
 	//resp.State.RemoveResource(ctx)
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, postPlan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -338,9 +380,46 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	tflog.Info(ctx, "END__Read")
 }
 
+func (r *policyResource) validateSpecs(p *policyResourceModel) error {
+	if p.ServiceType.ValueString() == service_type.REDIS {
+		if len(p.PermissionSpecs) > 1 {
+			return fmt.Errorf("for service %q, attribute 'permission_specs' must contain only 1 element", p.ServiceType.ValueString())
+		}
+		for _, specModel := range p.PermissionSpecs {
+			if specModel.Permission.IsNull() || specModel.Permission.IsUnknown() {
+				return fmt.Errorf("for service %q, attribute 'permission_specs[*].permission' must be specified", p.ServiceType.ValueString())
+			}
+		}
+		return nil
+	}
+	for i, spec := range p.PermissionSpecs {
+		if !(spec.Permission.IsNull() || spec.Permission.IsUnknown()) && spec.Role != spec.Permission {
+			return fmt.Errorf("for service %q, attribute 'permission' (when passed) must match with attribute 'role' in 'permission_specs[%d]' ", p.ServiceType.ValueString(), i)
+		}
+	}
+	return nil
+}
+
+func (r *policyResource) convertFromSpecsTfModel(specs *[]PermissionSpecModel) *[]customer_metadata.PermissionSpecRequest {
+	specModels := make([]customer_metadata.PermissionSpecRequest, len(*specs))
+
+	for i, specModel := range *specs {
+		specModels[i] = customer_metadata.PermissionSpecRequest{
+			Role:        specModel.Role.ValueString(),
+			Resource:    specModel.Resource.ValueString(),
+			Permissions: []string{specModel.Role.ValueString()}, // usually same as role, but for REDIS, permission will come due to validation, and will be set below
+		}
+		if !(specModel.Permission.IsNull() || specModel.Permission.IsUnknown()) {
+			specModels[i].Permissions = []string{specModel.Permission.ValueString()}
+		}
+	}
+	sort.Slice(specModels, func(i, j int) bool { return specModels[i].Role < specModels[j].Role })
+	return &specModels
+}
+
 func saveFromPolicyResponse(ctx *context.Context, diagnostics *diag.Diagnostics, state *policyResourceModel, policy *model.Policy) int8 {
 	tflog.Info(*ctx, "Saving response to resourceModel state/plan", map[string]interface{}{"policy": *policy})
-	tfPermissionSpecModel, diags := convertFromPermissionSpecDto(ctx, policy.PermissionsSpec)
+	tfPermissionSpecModel, diags := convertFromPermissionSpecDto(policy.PermissionsSpec)
 	if diagnostics.Append(diags...); diagnostics.HasError() {
 		return 1
 	}
@@ -356,6 +435,7 @@ func saveFromPolicyResponse(ctx *context.Context, diagnostics *diag.Diagnostics,
 	state.Name = types.StringValue(policy.Name)
 	state.ServiceType = types.StringValue(policy.ServiceType)
 	state.Description = types.StringValue(policy.Description)
+	state.Updating = types.BoolValue(policy.Updating)
 	resourceIds, diags := types.SetValueFrom(*ctx, types.StringType, policy.ResourceIds)
 	if diagnostics.Append(diags...); diagnostics.HasError() {
 		return 1
@@ -365,15 +445,14 @@ func saveFromPolicyResponse(ctx *context.Context, diagnostics *diag.Diagnostics,
 	return 0
 }
 
-func convertFromPermissionSpecDto(ctx *context.Context, roles []*model.PermissionsSpec) ([]*PermissionSpecModel, diag.Diagnostics) {
-	tfPermissionSpecModels := make([]*PermissionSpecModel, len(roles))
+func convertFromPermissionSpecDto(roles []model.PermissionsSpec) ([]PermissionSpecModel, diag.Diagnostics) {
+	tfPermissionSpecModels := make([]PermissionSpecModel, len(roles))
 	for i, permissionSpec := range roles {
-		tfPermissionSpecModels[i] = &PermissionSpecModel{
-			Role:     types.StringValue(permissionSpec.Role),
-			Resource: types.StringValue(permissionSpec.Resource),
+		tfPermissionSpecModels[i] = PermissionSpecModel{
+			Role:       types.StringValue(permissionSpec.Role),
+			Resource:   types.StringValue(permissionSpec.Resource),
+			Permission: types.StringValue(permissionSpec.Permissions[0].Name),
 		}
-		permissions, _ := types.SetValueFrom(*ctx, types.StringType, []string{permissionSpec.Permissions[0].Name})
-		tfPermissionSpecModels[i].Permissions = permissions
 	}
 	return tfPermissionSpecModels, nil
 }

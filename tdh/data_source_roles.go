@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/role_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
-	service_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/service-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/service-metadata"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
 )
 
