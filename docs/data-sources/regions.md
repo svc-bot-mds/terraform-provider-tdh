@@ -3,12 +3,14 @@
 page_title: "tdh_regions Data Source - tdh"
 subcategory: ""
 description: |-
-  Used to fetch the regions having data-planes by desired amount of resources available.Note: At a time, either instance_size or all of (cpu, memory, storage, node_count) can be passed.
+  Used to fetch the regions having data-planes by desired amount of resources available.
+  Note: At a time, either instance_size or all of (cpu, memory, storage, node_count) can be passed.
 ---
 
 # tdh_regions (Data Source)
 
-Used to fetch the regions having data-planes by desired amount of resources available.<br>**Note:** At a time, either `instance_size` or all of (`cpu`, `memory`, `storage`, `node_count`) can be passed.
+Used to fetch the regions having data-planes by desired amount of resources available.
+**Note:** At a time, either `instance_size` or all of (`cpu`, `memory`, `storage`, `node_count`) can be passed.
 
 ## Example Usage
 
@@ -25,7 +27,7 @@ data "tdh_regions" "dedicated_dp" {
 
 ### Required
 
-- `provider_type` (String) Shortname of cloud provider platform where data-plane lives. Ex: `tkgs`,`tkgm`,`openshift`,`tas`.
+- `provider_type` (String) Shortname of cloud provider platform where data-plane lives. Ex: `tkgs`, `tkgm`, `openshift`, `tas`.
 
 ### Optional
 

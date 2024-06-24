@@ -15,7 +15,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/constants/policy_type"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
-	customer_metadata "github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
+	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/customer-metadata"
 	"regexp"
 )
 
@@ -74,7 +74,7 @@ func (r *networkPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		Description: "Represents a policy on TDH.",
+		Description: "Policy to manage network access to service clusters on TDH.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Auto-generated ID of the policy after creation, and can be used to import it from TDH to terraform state.",
@@ -222,7 +222,7 @@ func (r *networkPolicyResource) Update(ctx context.Context, req resource.UpdateR
 	tflog.Debug(ctx, "update policy request dto", map[string]interface{}{"dto": updateRequest})
 
 	// Update existing policy
-	if err := r.client.CustomerMetadata.UpdatePolicy(plan.ID.ValueString(), &updateRequest); err != nil {
+	if _, err := r.client.CustomerMetadata.UpdatePolicy(plan.ID.ValueString(), &updateRequest); err != nil {
 		resp.Diagnostics.AddError(
 			"Updating  Network Policy",
 			"Could not update Network Policy, unexpected error: "+err.Error(),

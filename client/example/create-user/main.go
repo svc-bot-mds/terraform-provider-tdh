@@ -14,8 +14,10 @@ import (
 func main() {
 	host := "TDH_HOST_URL"
 	client, err := tdh.NewClient(&host, &model.ClientAuth{
-		ApiToken:     "API_TOKEN",
-		OAuthAppType: oauth_type.ApiToken,
+		OAuthAppType: oauth_type.UserCredentials,
+		Username:     "USERNAME",
+		Password:     "PASSWORD",
+		OrgId:        "ORG_ID",
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -25,7 +27,7 @@ func main() {
 	err = client.CustomerMetadata.CreateUser(&customer_metadata.CreateUserRequest{
 		AccountType: account_type.USER_ACCOUNT,
 		Usernames:   []string{"developer@vmware.com"},
-		PolicyIds:   []string{"6446112a8710fc120cbdc8ff", "6438cbd364740d4d48dc2673"},
+		PolicyIds:   []string{"df4b263e-86e6-40c2-8705-350906ddafda", "e415202b-3967-46a9-a906-76527fd43f21"},
 		ServiceRoles: []customer_metadata.RolesRequest{
 			{RoleId: "ManagedDataService:Developer"},
 			{RoleId: "ManagedDataService:Admin"},

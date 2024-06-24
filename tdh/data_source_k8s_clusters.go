@@ -4,10 +4,12 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
+	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
 )
 
 var (
@@ -48,7 +50,7 @@ func (d *k8sClustersDatasource) Metadata(_ context.Context, req datasource.Metad
 // Schema defines the schema for the data source.
 func (d *k8sClustersDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Used to fetch all Kubernetes Clusters within an provider account.<br>" +
+		MarkdownDescription: "Used to fetch all Kubernetes Clusters within an provider account.\n" +
 			"**Note:** For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -58,6 +60,9 @@ func (d *k8sClustersDatasource) Schema(_ context.Context, _ datasource.SchemaReq
 			"account_id": schema.StringAttribute{
 				Required:    true,
 				Description: "ID of the provider account",
+				Validators: []validator.String{
+					validators.UUIDValidator{},
+				},
 			},
 			"list": schema.ListNestedAttribute{
 				Description: "List of Kubernetes Clusters. Can be used while creating resource `tdh_data_plane`.",

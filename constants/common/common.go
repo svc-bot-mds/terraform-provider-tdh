@@ -2,6 +2,8 @@ package common
 
 const DataSource = "data_source_"
 const ClusterId = "cluster"
+const ClusterBackupsId = "clusterBackups"
+const ClusterRestoresId = "clusterRestores"
 const InstanceTypesId = "instance_types"
 const PoliciesId = "policies"
 const NetworkPoliciesId = "network_policies"

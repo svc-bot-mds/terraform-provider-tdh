@@ -12,6 +12,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/controller"
+	"github.com/svc-bot-mds/terraform-provider-tdh/constants/common"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -76,8 +77,8 @@ func (d *backupDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 		Description: "Used to fetch all the backups available for the service type on TDH.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Description: "Backup ID",
-				Optional:    true,
+				Computed:            true,
+				MarkdownDescription: "The testing framework requires an id attribute to be present in every data source and resource",
 			},
 			"service_type": schema.StringAttribute{
 				MarkdownDescription: fmt.Sprintf("Type of the service. Supported values: %s .", supportedDataServiceTypesMarkdown()),
@@ -227,6 +228,7 @@ func (d *backupDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 	state.List = append(state.List, tfModels...)
 
+	state.Id = types.StringValue(common.DataSource + common.ClusterBackupsId)
 	// Set state
 	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)

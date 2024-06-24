@@ -15,11 +15,12 @@ type Service struct {
 }
 
 type Root struct {
-	HostUrl    *string
-	OrgId      string
-	AuthToUse  *model.ClientAuth
-	HttpClient *http.Client
-	Token      *string
+	HostUrl     *string
+	OrgId       string
+	AuthToUse   *model.ClientAuth
+	HttpClient  *http.Client
+	Token       *string
+	TokenGetter func() (any, error)
 }
 
 func NewService(hostUrl *string, endPoint string, root *Root) *Service {
@@ -75,7 +76,7 @@ func (r *Root) Post(url *string, reqBody interface{}, dest interface{}) ([]byte,
 
 	if dest != nil && body != nil {
 		if len(body) <= 0 {
-			err = fmt.Errorf("error occured.")
+			err = fmt.Errorf("error occured")
 			return nil, err
 		}
 		err = json.Unmarshal(body, &dest)

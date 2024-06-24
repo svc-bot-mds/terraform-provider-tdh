@@ -22,5 +22,8 @@ func main() {
 
 	response, err := client.Controller.GetClusterMetaData("CLUSTER_ID")
 
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println(response)
 }

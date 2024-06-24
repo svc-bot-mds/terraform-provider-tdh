@@ -29,16 +29,14 @@ resource "tdh_policy" "sample" {
   service_type     = "POSTGRES"
   permission_specs = [
     {
-      resource    = "cluster:${data.tdh_cluster_metadata.pg.name}"
-      role        = "login"   # use any value from tdh_service_roles.all.list[*].name
-      permissions = ["login"] # use the same value from tdh_service_roles.all.list[*].name
+      resource   = "cluster:${data.tdh_cluster_metadata.pg.name}"
+      role       = "login" # use any value from tdh_service_roles.all.list[*].name
+      permission = "login" # optional, must be same as role for services other than REDIS
     },
     {
-      resource    = "cluster:${data.tdh_cluster_metadata.pg.name}/database:broadcom"
+      resource = "cluster:${data.tdh_cluster_metadata.pg.name}/database:broadcom"
       # use any value from tdh_cluster_metadata.pg.databases[*].name
-      role        = "create"
-      # this role is database specific; same can be known by the structure of permissionId of service role
-      permissions = ["create"]
+      role     = "create"
     },
   ]
 }
@@ -50,7 +48,7 @@ resource "tdh_policy" "sample" {
 ### Required
 
 - `name` (String) Name of the policy.
-- `permission_specs` (Attributes Set) Permissions to enforce on service resources. Only required for policies other than `NETWORK` type. (see [below for nested schema](#nestedatt--permission_specs))
+- `permission_specs` (Attributes Set) Permission to enforce on service resources. Only required for policies other than `NETWORK` type. (see [below for nested schema](#nestedatt--permission_specs))
 - `service_type` (String) Type of TDH service to managed. Supported values: `POSTGRES`, `MYSQL`, `RABBITMQ`, `REDIS`.
 
 ### Optional
@@ -61,15 +59,28 @@ resource "tdh_policy" "sample" {
 
 - `id` (String) Auto-generated ID of the policy after creation, and can be used to import it from TDH to terraform state.
 - `resource_ids` (Set of String) IDs of service resources/instances being managed by the policy.
+- `updating` (Boolean) Denotes whether there is any task running on policy.
 
 <a id="nestedatt--permission_specs"></a>
 ### Nested Schema for `permission_specs`
 
 Required:
 
-- `permissions` (Set of String) Name of the permission, usually same as role name. Please make use of datasource `tdh_service_roles` to get the relevant values.
-- `resource` (String) Name of the cluster/instance. Please make use of datasource `tdh_clusters` to get the names & `tdh_cluster_metadata` to get cluster service specific resources like databases, schemas, vhosts etc.<br>Format of this field is:<br>- `cluster:<NAME>[/database:<DB_NAME>[/schema:<SCHEMA>[/table:<TABLE>]]]` for `POSTGRES`- `cluster:<NAME>[/database:<DB_NAME>[/table:<TABLE>[/columns:<COMMA_SEPARATED_COLUMNS>]]]` for `MYSQL`- `cluster:<NAME>[/vhost:<VHOST>[/queue:<QUEUE>]]` for `RABBITMQ`- `cluster:<NAME>` for `REDIS`
+- `resource` (String) Name of the cluster/instance. Please make use of datasource `tdh_clusters` to get the names & `tdh_cluster_metadata` to get cluster service specific resources like databases, schemas, vhosts etc.
+Format of this field is:
+- `cluster:<NAME>[/database:<DB_NAME>[/schema:<SCHEMA>[/table:<TABLE>]]]` for `POSTGRES`
+- `cluster:<NAME>[/database:<DB_NAME>[/table:<TABLE>[/columns:<COMMA_SEPARATED_COLUMNS>]]]` for `MYSQL`
+- `cluster:<NAME>[/vhost:<VHOST>[/queue:<QUEUE>]]` for `RABBITMQ`
+- `cluster:<NAME>` for `REDIS`
 - `role` (String) Name of the role, it will vary on service type. Please make use of datasource `tdh_service_roles` to get the relevant values by a service type, `POSTGRES` for example.
+
+Optional:
+
+- `permission` (String) Name of the permission, usually same as role name. Please make use of datasource `tdh_service_roles` to get the relevant values.
+## Notes
+- Optional, must be same as role for services other than `REDIS`
+- Required for `REDIS` policy. It has to be extracted from `permission_id` of `tdh_service_roles` datasource.
+Ex: If `permission_id` is "mds:redis:+@read", fill the value "+@read", similarly for other permissions. **Note:** When `permission_id` is "mds:redis:custom", you can define a custom valid Redis rule.
 
 ## Import
 

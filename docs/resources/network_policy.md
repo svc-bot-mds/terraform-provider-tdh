@@ -3,12 +3,12 @@
 page_title: "tdh_network_policy Resource - tdh"
 subcategory: ""
 description: |-
-  Represents a policy on TDH.
+  Policy to manage network access to service clusters on TDH.
 ---
 
 # tdh_network_policy (Resource)
 
-Represents a policy on TDH.
+Policy to manage network access to service clusters on TDH.
 
 ## Example Usage
 
