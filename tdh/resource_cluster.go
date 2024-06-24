@@ -25,7 +25,9 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/upgrade-service"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
+	"regexp"
 	"strconv"
+	"strings"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -255,6 +257,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
+					validators.EmptyStringValidator{},
 				},
 			},
 			"metadata": schema.SingleNestedAttribute{
@@ -309,10 +312,18 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					"username": schema.StringAttribute{
 						Description: "Username for the cluster.",
 						Required:    true,
+						Validators: []validator.String{
+							stringvalidator.LengthBetween(3, 32),
+							stringvalidator.RegexMatches(regexp.MustCompile(`^[a-z][a-z0-9_]*$`), "must start with an alphabet & may contain only lowercase alphabets, numbers or underscores"),
+						},
 					},
 					"password": schema.StringAttribute{
 						Description: "Password for the cluster.",
 						Required:    true,
+						Validators: []validator.String{
+							stringvalidator.LengthBetween(8, 24),
+							validators.PasswordValidator{},
+						},
 					},
 					"database": schema.StringAttribute{
 						MarkdownDescription: "Database name in the cluster. **Required for services:** `POSTGRES` & `MYSQL`.",
@@ -654,9 +665,21 @@ func (r *clusterResource) validateInputs(ctx *context.Context, diags *diag.Diagn
 			"Invalid input", fmt.Sprintf("Service \"%s\" requires this attribute.", tfPlan.ServiceType.ValueString()))
 		return
 	}
-	if tfPlan.ServiceType.ValueString() != service_type.REDIS && tfPlan.ClusterMetadata.Database.IsNull() {
-		diags.AddAttributeError(path.Root("cluster_metadata").AtName("database"),
-			"Invalid input", fmt.Sprintf("Service \"%s\" requires this attribute.", tfPlan.ServiceType.ValueString()))
-		return
+
+	if tfPlan.ServiceType.ValueString() != service_type.REDIS {
+		if tfPlan.ClusterMetadata.Database.IsNull() || tfPlan.ClusterMetadata.Database.ValueString() == "" || strings.TrimSpace(tfPlan.ClusterMetadata.Database.ValueString()) == "" {
+			diags.AddAttributeError(path.Root("cluster_metadata").AtName("database"),
+				"Invalid input", fmt.Sprintf("Service \"%s\" requires database attribute.", tfPlan.ServiceType.ValueString()))
+			return
+		}
+		const pattern = `^[a-z][a-z0-9_]*$`
+		regex := regexp.MustCompile(pattern)
+
+		// Check if the value matches the pattern
+		if !regex.MatchString(tfPlan.ClusterMetadata.Database.ValueString()) {
+			diags.AddError("Invalid input", "Attribute 'database'  should start with an alphabet & may contain only lowercase alphabets, numbers or underscores")
+
+		}
 	}
+
 }
