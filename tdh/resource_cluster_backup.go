@@ -25,6 +25,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/core"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
+	"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -109,11 +110,8 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 				},
 			},
 			"cluster_id": schema.StringAttribute{
-				Description: "ID of the cluster.",
+				Description: "ID of the cluster to take backup of.",
 				Required:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 				Validators: []validator.String{
 					validators.UUIDValidator{},
 				},
@@ -126,32 +124,50 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 				},
 			},
 			"description": schema.StringAttribute{
-				Description: "Description for the create backup.",
+				Description: "Description for the backup.",
 				Optional:    true,
 			},
 			"cluster_name": schema.StringAttribute{
 				Description: "Name of the cluster.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"cluster_version": schema.StringAttribute{
 				Description: "Version of the cluster.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"service_type": schema.StringAttribute{
 				Description: "Service Type of the cluster.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"generated_name": schema.StringAttribute{
 				Description: "Name that was automatically generated for this backup.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"time_started": schema.StringAttribute{
 				Description: "Time when the backup was initiated.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"time_completed": schema.StringAttribute{
 				Description: "Time when the backup was completed.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"status": schema.StringAttribute{
 				Description: "Status of the backup.",
@@ -164,10 +180,16 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 			"backup_trigger_type": schema.StringAttribute{
 				Description: "The type of trigger for the backup.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"provider_name": schema.StringAttribute{
 				Description: "The provider of the cluster.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"org_id": schema.StringAttribute{
 				Description: "ID of the org this backup belongs to.",
@@ -175,10 +197,16 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 				Validators: []validator.String{
 					validators.UUIDValidator{},
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"region": schema.StringAttribute{
 				Description: "The region of the cluster.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"data_plane_id": schema.StringAttribute{
 				Description: "The ID of the data plane.",
@@ -186,11 +214,16 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 				Validators: []validator.String{
 					validators.UUIDValidator{},
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"metadata": schema.SingleNestedAttribute{
 				Description: "The metadata of the backup.",
 				Computed:    true,
-				Optional:    true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
 				CustomType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"cluster_name":    types.StringType,
@@ -246,8 +279,10 @@ func (r *clusterBackupResource) Schema(ctx context.Context, _ resource.SchemaReq
 				},
 			},
 			"restore": schema.SingleNestedAttribute{
-				MarkdownDescription: "Use it to restore this backup.\n" +
-					"**Note:** Just declare it as empty block in case of `REDIS` cluster backup since in case of Redis, restore happens on same cluster i.e. the cluster has to be present and there will be some downtime.",
+				MarkdownDescription: "Define this block to restore a pre-created backup.\n" +
+					"## Notes\n" +
+					"- Just declare it as empty block in case of `REDIS` cluster backup since in case of Redis, restore happens on same cluster i.e. the cluster has to be present and there will be some downtime.\n" +
+					"- Backup creation and restore won't happen in same operation, so first backup has to be created or imported, then next 'apply' will trigger restore.",
 				Required: false,
 				Optional: true,
 				PlanModifiers: []planmodifier.Object{
@@ -330,6 +365,15 @@ func (r *clusterBackupResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &plan)...)
+
+	if !(plan.Restore.IsNull() || plan.Restore.IsUnknown()) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("restore"),
+			"Invalid input",
+			"attribute 'restore' is only required after creating/importing a backup",
+		)
+		return
+	}
 	// Generate API request body from plan
 	request := controller.BackupCreateRequest{
 		Name:           plan.Name.ValueString(),
@@ -376,6 +420,12 @@ func (r *clusterBackupResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 	createdBackup := &(*backups.Get())[0]
+	if err = r.waitForBackupStatus(ctx, createdBackup); err != nil {
+		resp.Diagnostics.AddError("Verifying cluster backup",
+			"Could not verify backup status, unexpected error: "+err.Error(),
+		)
+		return
+	}
 
 	// Map response body to schema and populate Computed attribute values
 	if r.saveBackupFromResponse(&ctx, &resp.Diagnostics, &plan, createdBackup) != 0 {
@@ -383,13 +433,41 @@ func (r *clusterBackupResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	// Set state to fully populated data
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Info(ctx, "END__Create")
+}
+
+func (r *clusterBackupResource) waitForBackupStatus(ctx context.Context, createdBackup *model.ClusterBackup) error {
+	bkpChan := make(chan error)
+	go func(ch chan error) {
+		triesLeft := 3
+		ticker := time.NewTicker(15 * time.Second)
+		for triesLeft != 0 {
+			select {
+			case <-ctx.Done():
+				ch <- fmt.Errorf("polling task has been cancelled")
+				break
+			case <-ticker.C:
+				bkp, err := r.client.Controller.GetBackup(createdBackup.Id)
+				if err != nil {
+					ch <- fmt.Errorf("backup progress could not be checked due to error: %v", err.Error())
+					break
+				}
+				if bkp.Status == "Completed" || bkp.Status == "Succeeded" {
+					ch <- nil
+					break
+				}
+				triesLeft--
+			}
+		}
+	}(bkpChan)
+
+	return <-bkpChan
 }
 
 func (r *clusterBackupResource) Update(ctx context.Context, request resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -407,12 +485,12 @@ func (r *clusterBackupResource) Update(ctx context.Context, request resource.Upd
 
 	if !plan.Restore.IsNull() {
 		tflog.Info(ctx, "Considering it has restore action")
-		if r.validateRestoreInputs(&ctx, &resp.Diagnostics, &plan); resp.Diagnostics.HasError() {
+		if r.validateRestoreInputs(&ctx, &resp.Diagnostics, &state, &plan); resp.Diagnostics.HasError() {
 			return
 		}
-		r.waitForRestore(&ctx, &resp.Diagnostics, &state, &plan)
+		r.triggerRestoreAndWait(&ctx, &resp.Diagnostics, &state, &plan)
 		state.Restore, diags = types.ObjectValueFrom(ctx, state.Restore.AttributeTypes(ctx), plan.Restore)
-		diags = resp.State.Set(ctx, state)
+		diags = resp.State.Set(ctx, &state)
 	}
 	tflog.Info(ctx, "END__Update")
 }
@@ -435,7 +513,7 @@ func (r *clusterBackupResource) Delete(ctx context.Context, request resource.Del
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Deleting object store",
+			"Deleting cluster backup",
 			"Could not delete cluster backup by ID "+state.ClusterID.ValueString()+": "+err.Error(),
 		)
 		return
@@ -494,6 +572,9 @@ func (r *clusterBackupResource) ImportState(ctx context.Context, req resource.Im
 
 func (r *clusterBackupResource) saveBackupFromResponse(ctx *context.Context, diags *diag.Diagnostics, state *clusterBackupResourceModel, response *model.ClusterBackup) int8 {
 	tflog.Info(*ctx, "Saving response to resourceModel state/plan")
+	if !(state.ID.IsNull() || state.ID.IsUnknown()) {
+		state.Restore = types.ObjectNull(state.Restore.AttributeTypes(*ctx))
+	}
 	state.ID = types.StringValue(response.Id)
 	state.ClusterID = types.StringValue(response.ClusterId)
 	state.Name = types.StringValue(response.Name)
@@ -528,12 +609,13 @@ func (r *clusterBackupResource) saveBackupFromResponse(ctx *context.Context, dia
 		return 1
 	}
 	state.Metadata = metadataObject
-	state.Restore = types.ObjectNull(state.Restore.AttributeTypes(*ctx))
 	return 0
 }
 
-func (r *clusterBackupResource) validateRestoreInputs(ctx *context.Context, diags *diag.Diagnostics, state *clusterBackupResourceModel) {
-	tflog.Info(*ctx, "validating restore inputs")
+func (r *clusterBackupResource) validateRestoreInputs(ctx *context.Context, diags *diag.Diagnostics, state *clusterBackupResourceModel, plan *clusterBackupResourceModel) {
+	tflog.Info(*ctx, "validating restore inputs", map[string]interface{}{
+		"plan": plan,
+	})
 	defer func() {
 		tflog.Info(*ctx, "validated restore inputs")
 	}()
@@ -541,7 +623,7 @@ func (r *clusterBackupResource) validateRestoreInputs(ctx *context.Context, diag
 		return
 	}
 	var restoreInfo RestoreInfoModel
-	state.Restore.As(*ctx, &restoreInfo, basetypes.ObjectAsOptions{})
+	plan.Restore.As(*ctx, &restoreInfo, basetypes.ObjectAsOptions{})
 	if restoreInfo.ClusterName.IsNull() {
 		diags.AddError("Invalid input", "Value for 'cluster_name' is required for restore.")
 	}
@@ -553,7 +635,7 @@ func (r *clusterBackupResource) validateRestoreInputs(ctx *context.Context, diag
 	}
 }
 
-func (r *clusterBackupResource) waitForRestore(ctx *context.Context, diags *diag.Diagnostics, state *clusterBackupResourceModel, plan *clusterBackupResourceModel) {
+func (r *clusterBackupResource) triggerRestoreAndWait(ctx *context.Context, diags *diag.Diagnostics, state *clusterBackupResourceModel, plan *clusterBackupResourceModel) {
 	tflog.Info(*ctx, "initiating restore")
 	defer func() {
 		tflog.Info(*ctx, "exiting restore")
@@ -562,7 +644,7 @@ func (r *clusterBackupResource) waitForRestore(ctx *context.Context, diags *diag
 	plan.Restore.As(*ctx, &restoreInfo, basetypes.ObjectAsOptions{})
 	var metadataModel BackupMetadata
 	state.Metadata.As(*ctx, &metadataModel, basetypes.ObjectAsOptions{})
-	request := controller.RestoreClusterBackupRequest{
+	request := controller.ClusterCreateRequest{
 		Name:              restoreInfo.ClusterName.ValueString(),
 		StoragePolicyName: restoreInfo.StoragePolicy.ValueString(),
 		NetworkPolicyIds:  restoreInfo.NetworkPolicyIds,
@@ -603,7 +685,13 @@ func (r *clusterBackupResource) waitForRestore(ctx *context.Context, diags *diag
 	request.Shared = dataPlane.Shared
 	request.Dedicated = len(dataPlane.OrgId) != 0
 	tflog.Debug(*ctx, "req after dp details", map[string]interface{}{"req": request})
-	response, err := r.client.Controller.RestoreClusterBackup(&request)
+	var api func(request *controller.ClusterCreateRequest) (*model.TaskResponse, error)
+	if request.ServiceType == service_type.POSTGRES {
+		api = r.client.Controller.CreateCluster
+	} else {
+		api = r.client.Controller.RestoreClusterBackup
+	}
+	response, err := api(&request)
 	if err != nil {
 		diags.AddError("Restoring cluster backup", "Got error while submitting request: "+err.Error())
 		return

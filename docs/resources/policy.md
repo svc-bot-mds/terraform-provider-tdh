@@ -24,9 +24,9 @@ data "tdh_cluster_metadata" "pg" {
 }
 
 resource "tdh_policy" "sample" {
-  name             = "tf-pg-policy"
-  description      = "to allow login and create DB"
-  service_type     = "POSTGRES"
+  name         = "tf-pg-policy"
+  description  = "to allow login and create DB"
+  service_type = "POSTGRES"
   permission_specs = [
     {
       resource   = "cluster:${data.tdh_cluster_metadata.pg.name}"
