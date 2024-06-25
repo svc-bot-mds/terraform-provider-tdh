@@ -63,10 +63,10 @@ resource "tdh_cluster" "test" {
   version             = local.version             # available values can be fetched using datasource "tdh_service_versions"
   storage_policy_name = local.storage_policy_name # complete list can be got using datasource "tdh_eligible_data_planes"
   cluster_metadata = {
-    username      = "test"
-    password      = "Admin!23"
-    database      = "test"
-    objectStoreId = "OBJECT_STORE_ID" # can be used from datasource "tdh_object_storages"
+    username          = "test"
+    password          = "Admin!23"
+    database          = "test"
+    object_storage_id = "OBJECT_STORE_ID" # can be used from datasource "tdh_object_storages"
   }
   // non editable fields
   lifecycle {

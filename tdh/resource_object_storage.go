@@ -290,7 +290,7 @@ func (r *objectStorageResource) saveFromResponse(state *ObjectStorageResourceMod
 	state.Name = types.StringValue(response.Name)
 	state.Endpoint = types.StringValue(response.Endpoint)
 	state.BucketName = types.StringValue(response.BucketName)
-	state.Region = types.StringValue(response.BucketName)
+	state.Region = types.StringValue(response.Region)
 	return 0
 }
 

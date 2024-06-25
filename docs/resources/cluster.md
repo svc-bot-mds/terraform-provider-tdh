@@ -77,13 +77,13 @@ resource "tdh_cluster" "test" {
   data_plane_id       = "DP_ID"       # can get using datasource "tdh_regions" based on instance size selected there
   network_policy_ids  = [tdh_network_policy.network.id]
   tags                = ["tdh-tf", "new-tag"]
-  version             = local.version             # available values can be fetched using datasource "tdh_service_versions"
+  version             = local.version # available values can be fetched using datasource "tdh_service_versions"
   storage_policy_name = local.storage_policy_name # complete list can be got using datasource "tdh_eligible_data_planes"
   cluster_metadata    = {
-    username      = "test"
-    password      = "Admin!23"
-    database      = "test"
-    objectStoreId = "OBJECT_STORE_ID" # can be used from datasource "tdh_object_storages"
+    username          = "test"
+    password          = "Admin!23"
+    database          = "test"
+    object_storage_id = "OBJECT_STORE_ID" # can be used from datasource "tdh_object_storages"
   }
   // non editable fields
   lifecycle {
@@ -108,8 +108,8 @@ Please make use of datasource `tdh_network_ports` to decide on a size based on r
 - `storage_policy_name` (String) Name of the storage policy for the cluster.
 - `version` (String) Version of the cluster.
 #### Notes:
-- Changing this will result in cluster upgrade process. Use datasource `tdh_cluster_target_versions` to get next versions.
-- To specific extra options for cluster upgrade, please make use of ['upgrade' attribute](#nestedatt--upgrade).
+- Changing version will result in cluster upgrade process. Use datasource `tdh_cluster_target_versions` to get next versions.
+- To specify extra options for cluster upgrade, please make use of ['upgrade' attribute](#nestedatt--upgrade).
 
 ### Optional
 
