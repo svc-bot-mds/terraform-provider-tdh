@@ -3,13 +3,13 @@
 page_title: "tdh_smtp Resource - tdh"
 subcategory: ""
 description: |-
-  Represents SMTP details. We can only edit the smtp details.
+  Represents SMTP details. Only updating existing SMTP details is allowed, so make sure to import it first (any alphanumeric string can be passed as ID).
   Note: For SRE only.
 ---
 
 # tdh_smtp (Resource)
 
-Represents SMTP details. We can only edit the smtp details.
+Represents SMTP details. Only updating existing SMTP details is allowed, so make sure to import it first (any alphanumeric string can be passed as ID).
 **Note:** For SRE only.
 
 ## Example Usage

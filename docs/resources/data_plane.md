@@ -139,6 +139,5 @@ Please note that TDH needs these communications between the pods to function.
 Import is supported using the following syntax:
 
 ```shell
-# Data plane can be imported by specifying the UUID.
 terraform import tdh_data_plane.example d3c49288-7b17-4e78-a6af-257b49e34e53
 ```

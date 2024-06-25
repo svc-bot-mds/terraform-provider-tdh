@@ -67,7 +67,7 @@ To use the provider without installing from Terraform's hosted registry, you can
       }
     }
     ```
-
+8. At this point, `terraform init` will not be required and normal management actions can be run like plan/apply/import/destroy.
 
 ## Development
 
