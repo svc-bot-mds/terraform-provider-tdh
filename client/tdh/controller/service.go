@@ -81,16 +81,16 @@ func (s *Service) GetClusterRestores(query RestoreQuery) (model.Paged[model.Clus
 }
 
 // RestoreClusterBackup - Restores a cluster backup
-func (s *Service) RestoreClusterBackup(request *RestoreClusterBackupRequest) (model.TaskResponse, error) {
-	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Clusters)
+func (s *Service) RestoreClusterBackup(request *ClusterCreateRequest) (*model.TaskResponse, error) {
+	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Restore)
 	var response model.TaskResponse
 
 	_, err := s.Api.Post(&urlPath, request, &response)
 	if err != nil {
-		return response, err
+		return nil, err
 	}
 
-	return response, nil
+	return &response, nil
 }
 
 // GetServiceVersions - Returns all the versions available for provisioning
