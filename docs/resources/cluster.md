@@ -77,9 +77,9 @@ resource "tdh_cluster" "test" {
   data_plane_id       = "DP_ID"       # can get using datasource "tdh_regions" based on instance size selected there
   network_policy_ids  = [tdh_network_policy.network.id]
   tags                = ["tdh-tf", "new-tag"]
-  version             = local.version # available values can be fetched using datasource "tdh_service_versions"
+  version             = local.version             # available values can be fetched using datasource "tdh_service_versions"
   storage_policy_name = local.storage_policy_name # complete list can be got using datasource "tdh_eligible_data_planes"
-  cluster_metadata    = {
+  cluster_metadata = {
     username          = "test"
     password          = "Admin!23"
     database          = "test"
@@ -172,6 +172,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-# Cluster can be imported by specifying the UUID.
 terraform import tdh_cluster.example d3c49288-7b17-4e78-a6af-257b49e34e53
 ```

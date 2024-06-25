@@ -87,6 +87,5 @@ Ex: If `permission_id` is "mds:redis:+@read", fill the value "+@read", similarly
 Import is supported using the following syntax:
 
 ```shell
-# Policy can be imported by specifying the UUID.
 terraform import tdh_policy.sample d3c49288-7b17-4e78-a6af-257b49e34e53
 ```

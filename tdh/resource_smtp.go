@@ -68,7 +68,7 @@ func (r *smtpResource) Schema(ctx context.Context, _ resource.SchemaRequest, res
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents SMTP details. We can only edit the smtp details.\n" +
+		MarkdownDescription: "Represents SMTP details. Only updating existing SMTP details is allowed, so make sure to import it first (any alphanumeric string can be passed as ID).\n" +
 			"**Note:** For SRE only.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
