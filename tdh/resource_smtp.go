@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/model"
@@ -74,6 +76,9 @@ func (r *smtpResource) Schema(ctx context.Context, _ resource.SchemaRequest, res
 			"id": schema.StringAttribute{
 				Description: "ID for this SMTP",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"host": schema.StringAttribute{
 				Description: "SMTP - Host Name",
@@ -94,6 +99,7 @@ func (r *smtpResource) Schema(ctx context.Context, _ resource.SchemaRequest, res
 			"password": schema.StringAttribute{
 				MarkdownDescription: "SMTP - Password",
 				Required:            true,
+				Sensitive:           true,
 			},
 			"tls": schema.StringAttribute{
 				MarkdownDescription: "Whether TLS is enabled or not",
