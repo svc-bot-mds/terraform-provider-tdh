@@ -3,12 +3,12 @@
 page_title: "tdh_local_user Resource - tdh"
 subcategory: ""
 description: |-
-  Represents an Local User registered on TDH, can be used to create/update/delete/import a local user.
+  Represents a Local User registered on TDH, can be used to create/update/delete/import a local user.
 ---
 
 # tdh_local_user (Resource)
 
-Represents an Local User registered on TDH, can be used to create/update/delete/import a local user.
+Represents a Local User registered on TDH, can be used to create/update/delete/import a local user.
 
 ## Example Usage
 
@@ -27,7 +27,6 @@ resource "tdh_local_user" "example" {
     new     = "Admin!23"
     confirm = "Admin!23"
   }
-  tags       = ["new-user"]
   policy_ids = data.tdh_policies.local_user.list[0].id # available policies can be known with datasource "tdh_policies"
 }
 ```

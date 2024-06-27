@@ -80,7 +80,7 @@ func (r *localUserResource) Schema(ctx context.Context, _ resource.SchemaRequest
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents an Local User registered on TDH, can be used to create/update/delete/import a local user.",
+		MarkdownDescription: "Represents a Local User registered on TDH, can be used to create/update/delete/import a local user.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Auto-generated ID after creating a local user, and can be passed to import an existing local user from TDH to terraform state.",
