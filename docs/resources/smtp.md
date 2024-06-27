@@ -35,7 +35,7 @@ resource "tdh_smtp" "custom" {
 - `auth` (String) Whether authentication is enabled or not
 - `from` (String) SMTP - Email Address
 - `host` (String) SMTP - Host Name
-- `password` (String) SMTP - Password
+- `password` (String, Sensitive) SMTP - Password
 - `port` (String) SMTP - Port. Can be passed to import an existing smtp details from TDH to terraform state during the update.
 - `tls` (String) Whether TLS is enabled or not
 - `user_name` (String) SMTP - User name
