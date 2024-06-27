@@ -92,6 +92,10 @@ resource "tdh_data_plane" "example" {
 ### Required
 
 - `account_id` (String) ID of the account to use for data plane operations. Please use datasource `tdh_cloud_accounts` to get the list of available accounts.
+- `k8s_cluster_name` (String) Name of Kubernetes Cluster. Please use datasource `tdh_k8s_clusters` to get the list of available clusters from an account.
+## Notes
+- This field is non-mandatory during the TAS data plane creation.
+- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.
 - `name` (String) Name of the Data Plane
 - `provider_name` (String) Provider name
 - `services` (Set of String) Services to support on this data plane.
@@ -115,10 +119,6 @@ Please note that TDH needs these communications between the pods to function.
 - `cp_bootstrapped_cluster` (Boolean) Whether to onboard Data Plane on a K8s cluster running TDH Control Plane.
 **Note:** Not a required field during TAS data-plane creation.
 - `data_plane_release_id` (String) ID of the Helm Release. Please use datasource `tdh_data_plane_helm_releases` to get this.
-## Notes
-- This field is non-mandatory during the TAS data plane creation.
-- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.
-- `k8s_cluster_name` (String) Name of Kubernetes Cluster. Please use datasource `tdh_k8s_clusters` to get the list of available clusters from an account.
 ## Notes
 - This field is non-mandatory during the TAS data plane creation.
 - It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.

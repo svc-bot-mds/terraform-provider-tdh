@@ -106,8 +106,10 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 					"## Notes\n" +
 					"- This field is non-mandatory during the TAS data plane creation.\n" +
 					"- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.",
-				Required: false,
-				Optional: true,
+				Required: true,
+				Validators: []validator.String{
+					validators.EmptyStringValidator{},
+				},
 			},
 			"shared": schema.BoolAttribute{
 				MarkdownDescription: "Shared Data Plane.\n" +
