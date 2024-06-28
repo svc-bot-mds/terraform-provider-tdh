@@ -38,7 +38,7 @@ resource "tdh_object_storage" "example" {
 - `access_key_id` (String) Access Key Id for the authentication of object storage.
 - `bucket_name` (String) Name of the initial bucket to create. Modifying this field is not allowed.
 - `endpoint` (String) Endpoint of the object storage to use. Modifying this field is not allowed.
-- `name` (String) Name for the object storage. Updating it will result in creating new object store.
+- `name` (String) Name of the object storage. Updating it will result in creating new object store.
 - `region` (String) Region where object storage is created. Modifying this field is not allowed.
 - `secret_access_key` (String, Sensitive) Secret Access Key for the authentication of object storage.
 

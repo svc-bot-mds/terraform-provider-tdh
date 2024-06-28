@@ -90,8 +90,8 @@ func (r *localUserResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				},
 			},
 			"username": schema.StringAttribute{
-				Description: "Updating the username results in deletion of existing local user and new user with updated name is created.",
-				Required:    true,
+				MarkdownDescription: "Name of the local user. **Note:** Updating the name results in deletion of existing local user and new user with updated name is created.",
+				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -239,7 +239,7 @@ func (r *localUserResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	passwordChanged := false
-	if passwordChanged = r.validateUpdateInputs(state.Password, plan.Password, &resp.Diagnostics); resp.Diagnostics.HasError() {
+	if passwordChanged = r.validateUpdateInputs(&state, &plan, &resp.Diagnostics); resp.Diagnostics.HasError() {
 		return
 	}
 	// Generate API request body from plan
@@ -418,21 +418,22 @@ func (r *localUserResource) validateCreateInputs(password *localUserPassword, di
 }
 
 // Returns true if password change is detected
-func (r *localUserResource) validateUpdateInputs(statePassword *localUserPassword, planPassword *localUserPassword, diag *diag.Diagnostics) bool {
+func (r *localUserResource) validateUpdateInputs(state *localUserResourceModel, plan *localUserResourceModel, diags *diag.Diagnostics) bool {
+	statePassword, planPassword := state.Password, plan.Password
 	if planPassword == nil {
 		return false
 	}
 	// this point onwards means password block is declared
 	if planPassword.Current.IsNull() {
 		if statePassword == nil || statePassword.New != planPassword.New {
-			diag.AddError("Invalid inputs", "Password reset requires all of 'current', 'new' & 'confirm'.")
+			diags.AddError("Invalid inputs", "Password reset requires all of 'current', 'new' & 'confirm'.")
 			return false
 		}
 	} else if planPassword.Current.ValueString() == planPassword.New.ValueString() {
-		diag.AddError("Invalid inputs", "'current' and 'new' password cannot be same.")
+		diags.AddError("Invalid inputs", "'current' and 'new' password cannot be same.")
 		return false
 	} else if planPassword.New.ValueString() != planPassword.Confirm.ValueString() {
-		diag.AddError("Invalid inputs", "'new' and 'confirm' password must match.")
+		diags.AddError("Invalid inputs", "'new' and 'confirm' password must match.")
 		return false
 	} else {
 		// when "current" is set, and is different from "new"

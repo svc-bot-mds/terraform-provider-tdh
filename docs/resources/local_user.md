@@ -37,7 +37,7 @@ resource "tdh_local_user" "example" {
 ### Required
 
 - `policy_ids` (Set of String) IDs of service policies to be associated with local user.
-- `username` (String) Updating the username results in deletion of existing local user and new user with updated name is created.
+- `username` (String) Name of the local user. **Note:** Updating the name results in deletion of existing local user and new user with updated name is created.
 
 ### Optional
 

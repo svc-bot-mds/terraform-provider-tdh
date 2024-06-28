@@ -81,7 +81,7 @@ func (r *objectStorageResource) Schema(ctx context.Context, _ resource.SchemaReq
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "Name for the object storage. Updating it will result in creating new object store.",
+				Description: "Name of the object storage. Updating it will result in creating new object store.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
