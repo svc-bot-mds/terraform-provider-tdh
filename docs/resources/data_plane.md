@@ -98,7 +98,7 @@ resource "tdh_data_plane" "example" {
 - It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.
 - `name` (String) Name of the Data Plane
 - `provider_name` (String) Provider name
-- `services` (Set of String) Services to support on this data plane.
+- `services` (Set of String) Services to support on this data plane. Please use datasource `tdh_data_plane_helm_releases` to get the list of available services in a release.
 **Note:** TAS data-plane creation supports `postgres` only.
 - `shared` (Boolean) Shared Data Plane.
 ## Notes

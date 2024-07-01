@@ -7,7 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -17,6 +19,7 @@ import (
 	"github.com/svc-bot-mds/terraform-provider-tdh/client/tdh/infra-connector"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/utils"
 	"github.com/svc-bot-mds/terraform-provider-tdh/tdh/validators"
+	"slices"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -128,11 +131,17 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 					"**Note:** This field should be set to false for TAS data-plane creation.",
 				Optional: true,
 				Required: false,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"cp_bootstrapped_cluster": schema.BoolAttribute{
 				MarkdownDescription: "Whether to onboard Data Plane on a K8s cluster running TDH Control Plane.\n" +
 					"**Note:** Not a required field during TAS data-plane creation.",
 				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"org_id": schema.StringAttribute{
 				Description: "Organization ID. This filed is not required during TAS data-plane creation",
@@ -163,6 +172,9 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				Validators: []validator.String{
 					validators.UUIDValidator{},
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"storage_classes": schema.SetAttribute{
 				MarkdownDescription: "Storage Classes on the data plane.\n" +
@@ -172,6 +184,9 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				ElementType: types.StringType,
 				Required:    false,
 				Optional:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"tags": schema.SetAttribute{
 				Description: "Tags",
@@ -179,7 +194,7 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				Optional:    true,
 			},
 			"services": schema.SetAttribute{
-				MarkdownDescription: "Services to support on this data plane.\n**Note:** TAS data-plane creation supports `postgres` only.",
+				MarkdownDescription: "Services to support on this data plane. Please use datasource `tdh_data_plane_helm_releases` to get the list of available services in a release.\n**Note:** TAS data-plane creation supports `postgres` only.",
 				ElementType:         types.StringType,
 				Required:            true,
 			},
@@ -337,19 +352,13 @@ func (r *dataPlaneResource) Create(ctx context.Context, req resource.CreateReque
 func (r *dataPlaneResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Info(ctx, "INIT__Update")
 
-	// Retrieve values from plan
-	var plan dataPlaneResourceModel
+	var state, plan dataPlaneResourceModel
 	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+	if resp.Diagnostics.Append(diags...); resp.Diagnostics.HasError() { // Retrieve values from plan
 		return
 	}
-
-	// Retrieve current state
-	var state dataPlaneResourceModel
 	diags = req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+	if resp.Diagnostics.Append(diags...); resp.Diagnostics.HasError() { // Retrieve current state
 		return
 	}
 
@@ -369,6 +378,39 @@ func (r *dataPlaneResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	if !state.Services.Equal(plan.Services) {
+		tflog.Debug(ctx, "services are changed in plan, validating...")
+		for _, currentService := range state.Services.Elements() {
+			if !slices.Contains(plan.Services.Elements(), currentService) {
+				resp.Diagnostics.AddError(
+					"Updating Data Plane",
+					"Removing a service is not allowed",
+				)
+				return
+			}
+		}
+
+		tflog.Debug(ctx, "service change is valid, proceeding...")
+		req := infra_connector.DataPlaneUpdateServicesRequest{
+			DataPlaneId: state.ID.ValueString(),
+		}
+		if plan.Services.ElementsAs(ctx, &req.Services, true).HasError() {
+			return
+		}
+		taskResponse, err := r.client.InfraConnector.UpdateDataPlaneServices(&req)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Updating Data Plane",
+				"Could not update data plane, unexpected error: "+err.Error(),
+			)
+			return
+		}
+		if err = utils.WaitForTask(r.client, taskResponse.TaskId); err != nil {
+			resp.Diagnostics.AddError("Updating data plane",
+				"Operation error: "+err.Error())
+			return
+		}
+	}
 	dataPlane, err := r.client.InfraConnector.GetDataPlaneById(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -473,7 +515,19 @@ func saveFromDataPlaneResponse(ctx *context.Context, diagnostics *diag.Diagnosti
 	state.AutoUpgrade = types.BoolValue(dataPlane.AutoUpgrade)
 	state.AccountId = types.StringValue(dataPlane.Account.Id)
 	state.CpBootstrappedCluster = types.BoolValue(dataPlane.DataPlaneOnControlPlane)
-	list, diags := types.SetValueFrom(*ctx, types.StringType, dataPlane.Tags)
+	state.Shared = types.BoolValue(dataPlane.Shared)
+	list, diags := types.SetValueFrom(*ctx, types.StringType, dataPlane.Services)
+	if diagnostics.Append(diags...); diags.HasError() {
+		return 1
+	}
+	state.Services = list
+	list, diags = types.SetValueFrom(*ctx, types.StringType, dataPlane.StoragePolicies)
+	if diagnostics.Append(diags...); diags.HasError() {
+		return 1
+	}
+	state.StorageClasses = list
+
+	list, diags = types.SetValueFrom(*ctx, types.StringType, dataPlane.Tags)
 	if diagnostics.Append(diags...); diagnostics.HasError() {
 		return 1
 	}
