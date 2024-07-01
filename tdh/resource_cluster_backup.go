@@ -484,7 +484,7 @@ func (r *clusterBackupResource) Update(ctx context.Context, request resource.Upd
 	}
 
 	if !plan.Restore.IsNull() {
-		tflog.Info(ctx, "Considering it has restore action")
+		tflog.Info(ctx, "Considering it as restore action")
 		if r.validateRestoreInputs(&ctx, &resp.Diagnostics, &state, &plan); resp.Diagnostics.HasError() {
 			return
 		}

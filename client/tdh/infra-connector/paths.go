@@ -19,6 +19,7 @@ const (
 	Count            = "count"
 	Clusters         = "clusters"
 	DataplaneOnboard = "dataplane-onboard"
+	Sync             = "sync"
 	Eligible         = "eligible"
 	HelmRelase       = "dataplane-helm-release"
 	Release          = "release"

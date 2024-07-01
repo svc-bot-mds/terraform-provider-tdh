@@ -16,6 +16,7 @@ type DataPlane struct {
 	} `json:"account"`
 	Upgradeable          bool   `json:"upgradeable"`
 	AutoUpgrade          bool   `json:"autoUpgrade"`
+	Enabled              bool   `json:"enabled"`
 	DataPlaneReleaseID   string `json:"dataPlaneReleaseID"`
 	DataPlaneReleaseName string `json:"dataPlaneReleaseName"`
 	Shared               bool   `json:"shared"`
