@@ -82,7 +82,6 @@ func (d *storageClassDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 func (d *storageClassDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	tflog.Info(ctx, "INIT__Read")
 	var plan StorageClassDataSourceModel
-	var state StorageClassDataSourceModel
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &plan)...)
@@ -107,14 +106,14 @@ func (d *storageClassDataSource) Read(ctx context.Context, req datasource.ReadRe
 			Name:        types.StringValue(list.StorageClassName),
 			Provisioner: types.StringValue(list.Provisioner),
 		}
-		state.StorageClasses = append(state.StorageClasses, storageClass)
+		plan.StorageClasses = append(plan.StorageClasses, storageClass)
 	}
 
 	tflog.Debug(ctx, "before setting state", map[string]interface{}{
-		"state": state,
+		"state": plan,
 	})
 	// Set state
-	diags := resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &plan)
 	if resp.Diagnostics.Append(diags...); resp.Diagnostics.HasError() {
 		return
 	}
