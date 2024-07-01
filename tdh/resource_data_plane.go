@@ -49,7 +49,10 @@ type dataPlaneResourceModel struct {
 	Shared                types.Bool   `tfsdk:"shared"`
 	OrgId                 types.String `tfsdk:"org_id"`
 	Tags                  types.Set    `tfsdk:"tags"`
+	Status                types.String `tfsdk:"status"`
 	AutoUpgrade           types.Bool   `tfsdk:"auto_upgrade"`
+	Enabled               types.Bool   `tfsdk:"enabled"`
+	Sync                  types.Bool   `tfsdk:"sync"`
 	Services              types.Set    `tfsdk:"services"`
 	CpBootstrappedCluster types.Bool   `tfsdk:"cp_bootstrapped_cluster"`
 	ConfigureCoreDns      types.Bool   `tfsdk:"configure_core_dns"`
@@ -135,6 +138,24 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"enabled": schema.BoolAttribute{
+				MarkdownDescription: "Whether to enable the Data plane.\n" +
+					"**Note:** This field should be omitted or set to true for TAS data-plane creation.",
+				Optional: true,
+				Required: false,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"sync": schema.BoolAttribute{
+				MarkdownDescription: "Set this to `true` whenever syncing is required.",
+				Optional:            true,
+				Required:            false,
+				Computed:            true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"cp_bootstrapped_cluster": schema.BoolAttribute{
 				MarkdownDescription: "Whether to onboard Data Plane on a K8s cluster running TDH Control Plane.\n" +
 					"**Note:** Not a required field during TAS data-plane creation.",
@@ -149,6 +170,10 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				Validators: []validator.String{
 					validators.UUIDValidator{},
 				},
+			},
+			"status": schema.StringAttribute{
+				Description: "Status of the data plane",
+				Computed:    true,
 			},
 			"provider_name": schema.StringAttribute{
 				Description: "Provider name",
@@ -362,22 +387,6 @@ func (r *dataPlaneResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	// Generate API request body from plan
-	var updateRequest infra_connector.DataPlaneUpdateRequest
-	plan.Tags.ElementsAs(ctx, &updateRequest.Tags, true)
-	updateRequest.DataplaneName = plan.Name.ValueString()
-	updateRequest.AutoUpgrade = plan.AutoUpgrade.ValueBool()
-
-	// Update existing cluster
-	err := r.client.InfraConnector.UpdateDataPlane(plan.ID.ValueString(), &updateRequest)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Updating Data Plane",
-			"Could not update data plane, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
 	if !state.Services.Equal(plan.Services) {
 		tflog.Debug(ctx, "services are changed in plan, validating...")
 		for _, currentService := range state.Services.Elements() {
@@ -411,6 +420,43 @@ func (r *dataPlaneResource) Update(ctx context.Context, req resource.UpdateReque
 			return
 		}
 	}
+
+	// Generate API request body from plan
+	var updateRequest infra_connector.DataPlaneUpdateRequest
+	plan.Tags.ElementsAs(ctx, &updateRequest.Tags, true)
+	updateRequest.DataplaneName = plan.Name.ValueString()
+	updateRequest.AutoUpgrade = plan.AutoUpgrade.ValueBool()
+	updateRequest.Enable = plan.Enabled.ValueBool()
+
+	tflog.Debug(ctx, "hitting update request", map[string]interface{}{
+		"req": updateRequest,
+	})
+	// Update existing cluster
+	err := r.client.InfraConnector.UpdateDataPlane(plan.ID.ValueString(), &updateRequest)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Updating Data Plane",
+			"Could not update data plane, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	if plan.Sync.ValueBool() {
+		tflog.Debug(ctx, "Triggering Sync request")
+		taskResponse, err := r.client.InfraConnector.SyncDataPlane(state.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Updating Data Plane",
+				"Could not trigger data plane sync, error: "+err.Error(),
+			)
+			return
+		}
+		if err = utils.WaitForTask(r.client, taskResponse.TaskId); err != nil {
+			resp.Diagnostics.AddError("Updating data plane",
+				"Sync operation error: "+err.Error())
+			return
+		}
+	}
 	dataPlane, err := r.client.InfraConnector.GetDataPlaneById(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -421,12 +467,12 @@ func (r *dataPlaneResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	// Overwrite items with refreshed state
-	if saveFromDataPlaneResponse(&ctx, &resp.Diagnostics, &state, &dataPlane) != 0 {
+	if saveFromDataPlaneResponse(&ctx, &resp.Diagnostics, &plan, &dataPlane) != 0 {
 		return
 	}
 
 	// Set refreshed state
-	diags = resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -489,6 +535,7 @@ func (r *dataPlaneResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
+	state.Sync = types.BoolValue(false)
 	// Overwrite items with refreshed state
 	if saveFromDataPlaneResponse(&ctx, &resp.Diagnostics, &state, &dataplane) != 0 {
 		return
@@ -516,6 +563,8 @@ func saveFromDataPlaneResponse(ctx *context.Context, diagnostics *diag.Diagnosti
 	state.AccountId = types.StringValue(dataPlane.Account.Id)
 	state.CpBootstrappedCluster = types.BoolValue(dataPlane.DataPlaneOnControlPlane)
 	state.Shared = types.BoolValue(dataPlane.Shared)
+	state.Status = types.StringValue(dataPlane.Status)
+	state.Enabled = types.BoolValue(dataPlane.Enabled)
 	list, diags := types.SetValueFrom(*ctx, types.StringType, dataPlane.Services)
 	if diagnostics.Append(diags...); diags.HasError() {
 		return 1
