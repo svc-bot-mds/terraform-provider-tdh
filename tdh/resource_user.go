@@ -37,15 +37,16 @@ type userResource struct {
 }
 
 type userResourceModel struct {
-	ID           types.String `tfsdk:"id"`
-	Email        types.String `tfsdk:"email"`
-	Status       types.String `tfsdk:"status"`
-	Username     types.String `tfsdk:"username"`
-	PolicyIds    types.Set    `tfsdk:"policy_ids"`
-	RoleIds      []string     `tfsdk:"role_ids"`
-	ServiceRoles types.List   `tfsdk:"service_roles"`
-	OrgRoles     types.List   `tfsdk:"org_roles"`
-	Tags         types.Set    `tfsdk:"tags"`
+	ID            types.String `tfsdk:"id"`
+	Email         types.String `tfsdk:"email"`
+	Status        types.String `tfsdk:"status"`
+	Username      types.String `tfsdk:"username"`
+	PolicyIds     types.Set    `tfsdk:"policy_ids"`
+	RoleIds       []string     `tfsdk:"role_ids"`
+	ServiceRoles  types.List   `tfsdk:"service_roles"`
+	OrgRoles      types.List   `tfsdk:"org_roles"`
+	Tags          types.Set    `tfsdk:"tags"`
+	DeleteFromIdp types.Bool   `tfsdk:"delete_from_idp"`
 }
 
 type RolesModel struct {
@@ -95,6 +96,10 @@ func (r *userResource) Schema(ctx context.Context, _ resource.SchemaRequest, res
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+			},
+			"delete_from_idp": schema.BoolAttribute{
+				MarkdownDescription: "Setting this to `true` will completely delete user from IDP, else only service roles will be removed. By default the value is set to `false` during the user deletion",
+				Optional:            true,
 			},
 			"status": schema.StringAttribute{
 				Description: "Active status of user on TDH.",
@@ -315,7 +320,9 @@ func (r *userResource) Delete(ctx context.Context, request resource.DeleteReques
 	}
 
 	// Submit request to delete TDH Cluster
-	err := r.client.CustomerMetadata.DeleteUser(state.ID.ValueString())
+	err := r.client.CustomerMetadata.DeleteUser(state.ID.ValueString(), &customer_metadata.DeleteUserQuery{
+		DeleteFromIdp: state.DeleteFromIdp.ValueBool(),
+	})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Deleting TDH User",

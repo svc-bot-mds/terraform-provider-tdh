@@ -113,10 +113,13 @@ func (s *Service) GetUser(id string) (*model.User, error) {
 }
 
 // DeleteUser - Submits a request to delete user
-func (s *Service) DeleteUser(id string) error {
+func (s *Service) DeleteUser(id string, query *DeleteUserQuery) error {
 	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Users, id)
 
-	_, err := s.Api.Delete(&urlPath, nil, nil)
+	if query == nil {
+		query.DeleteFromIdp = false
+	}
+	_, err := s.Api.Delete(&urlPath, query, nil)
 	if err != nil {
 		return err
 	}

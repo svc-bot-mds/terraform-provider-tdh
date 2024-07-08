@@ -14,7 +14,7 @@ output "values" {
 }
 
 resource "tdh_user" "sample" {
-  email      = "example-user@vmware.com"
+  email      = "example-user@broadcom.com"
   tags       = ["new-user", "viewer"]
   role_ids   = data.tdh_roles.all.list[*].role_id
   policy_ids = data.tdh_policies.all.list[*].id # filter or select all policies
