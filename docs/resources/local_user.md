@@ -3,12 +3,12 @@
 page_title: "tdh_local_user Resource - tdh"
 subcategory: ""
 description: |-
-  Represents an Local User registered on TDH, can be used to create/update/delete/import a local user.
+  Represents a Local User registered on TDH, can be used to create/update/delete/import a local user.
 ---
 
 # tdh_local_user (Resource)
 
-Represents an Local User registered on TDH, can be used to create/update/delete/import a local user.
+Represents a Local User registered on TDH, can be used to create/update/delete/import a local user.
 
 ## Example Usage
 
@@ -27,7 +27,6 @@ resource "tdh_local_user" "example" {
     new     = "Admin!23"
     confirm = "Admin!23"
   }
-  tags       = ["new-user"]
   policy_ids = data.tdh_policies.local_user.list[0].id # available policies can be known with datasource "tdh_policies"
 }
 ```
@@ -38,7 +37,7 @@ resource "tdh_local_user" "example" {
 ### Required
 
 - `policy_ids` (Set of String) IDs of service policies to be associated with local user.
-- `username` (String) Updating the username results in deletion of existing local user and new user with updated name is created.
+- `username` (String) Name of the local user. **Note:** Updating the name results in deletion of existing local user and new user with updated name is created.
 
 ### Optional
 
@@ -65,6 +64,5 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
-# Local user can be imported by specifying the UUID.
 terraform import tdh_local_user.example d3c49288-7b17-4e78-a6af-257b49e34e53
 ```

@@ -24,9 +24,9 @@ data "tdh_cluster_metadata" "pg" {
 }
 
 resource "tdh_policy" "sample" {
-  name             = "tf-pg-policy"
-  description      = "to allow login and create DB"
-  service_type     = "POSTGRES"
+  name         = "tf-pg-policy"
+  description  = "to allow login and create DB"
+  service_type = "POSTGRES"
   permission_specs = [
     {
       resource   = "cluster:${data.tdh_cluster_metadata.pg.name}"
@@ -87,6 +87,5 @@ Ex: If `permission_id` is "mds:redis:+@read", fill the value "+@read", similarly
 Import is supported using the following syntax:
 
 ```shell
-# Policy can be imported by specifying the UUID.
 terraform import tdh_policy.sample d3c49288-7b17-4e78-a6af-257b49e34e53
 ```

@@ -187,6 +187,35 @@ func (s *Service) UpdateDataPlane(id string, requestBody *DataPlaneUpdateRequest
 	return err
 }
 
+func (s *Service) UpdateDataPlaneServices(requestBody *DataPlaneUpdateServicesRequest) (*model.TaskResponse, error) {
+	if requestBody == nil {
+		return nil, fmt.Errorf("requestBody cannot be nil")
+	}
+	urlPath := fmt.Sprintf("%s/%s/%s/%s", s.Endpoint, Internal, K8sCluster, DataPlaneAddSvc)
+	var response model.TaskResponse
+
+	_, err := s.Api.Patch(&urlPath, requestBody, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (s *Service) SyncDataPlane(id string) (*model.TaskResponse, error) {
+	if strings.TrimSpace(id) == "" {
+		return nil, fmt.Errorf("id cannot be nil")
+	}
+	urlPath := fmt.Sprintf("%s/%s/%s/%s/%s/%s", s.Endpoint, Internal, K8sCluster, DataplaneOnboard, id, Sync)
+	var response model.TaskResponse
+
+	if _, err := s.Api.Post(&urlPath, nil, &response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
 func (s *Service) GetDataPlanes(query *DataPlanesQuery) (model.Paged[model.DataPlane], error) {
 	urlPath := fmt.Sprintf("%s/%s/%s", s.Endpoint, Internal, K8sCluster)
 	var response model.Paged[model.DataPlane]

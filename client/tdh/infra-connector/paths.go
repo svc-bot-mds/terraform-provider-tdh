@@ -2,6 +2,7 @@ package infra_connector
 
 const (
 	K8sCluster       = "k8s-cluster"
+	DataPlaneAddSvc  = "dataplane-add-svc"
 	Resource         = "resource"
 	CloudAccount     = "account"
 	Types            = "types"
@@ -18,6 +19,7 @@ const (
 	Count            = "count"
 	Clusters         = "clusters"
 	DataplaneOnboard = "dataplane-onboard"
+	Sync             = "sync"
 	Eligible         = "eligible"
 	HelmRelase       = "dataplane-helm-release"
 	Release          = "release"

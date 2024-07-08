@@ -22,7 +22,7 @@ output "network_ports" {
 }
 
 resource "tdh_network_policy" "pg" {
-  name = "tf-pg-nw-policy"
+  name         = "tf-pg-nw-policy"
   network_spec = {
     cidr             = "0.0.0.0/32",
     network_port_ids = [for port in data.tdh_network_ports.pg.list : port.id]
@@ -60,6 +60,5 @@ Required:
 Import is supported using the following syntax:
 
 ```shell
-# Network policy can be imported by specifying the UUID.
 terraform import tdh_network_policy.pg d3c49288-7b17-4e78-a6af-257b49e34e53
 ```

@@ -81,7 +81,7 @@ func (r *objectStorageResource) Schema(ctx context.Context, _ resource.SchemaReq
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "Name for the object storage. Updating it will result in creating new object store.",
+				Description: "Name of the object storage. Updating it will result in creating new object store.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -290,7 +290,7 @@ func (r *objectStorageResource) saveFromResponse(state *ObjectStorageResourceMod
 	state.Name = types.StringValue(response.Name)
 	state.Endpoint = types.StringValue(response.Endpoint)
 	state.BucketName = types.StringValue(response.BucketName)
-	state.Region = types.StringValue(response.BucketName)
+	state.Region = types.StringValue(response.Region)
 	return 0
 }
 

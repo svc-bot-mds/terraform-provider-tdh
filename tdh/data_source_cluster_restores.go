@@ -55,7 +55,7 @@ func (d *restoresDataSource) Metadata(_ context.Context, req datasource.Metadata
 
 func (d *restoresDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Used to fetch all the backups available for the service type on TDH.",
+		Description: "Used to fetch all the backup restores available for the service type on TDH.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
@@ -75,14 +75,11 @@ func (d *restoresDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							Description: "Restore ID",
-							Optional:    true,
+							Computed:    true,
 						},
 						"service_type": schema.StringAttribute{
 							Description: "Service Type of the cluster.",
-							Required:    true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("POSTGRES", "MYSQL", "REDIS"),
-							},
+							Computed:    true,
 						},
 						"name": schema.StringAttribute{
 							Description: "Name of the Backup.",
@@ -120,9 +117,11 @@ func (d *restoresDataSource) Read(ctx context.Context, req datasource.ReadReques
 	var restoreList []restoreResponseModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 
-	query := controller.RestoreQuery{}
+	query := controller.RestoreQuery{
+		ServiceType: state.ServiceType.ValueString(),
+	}
 
-	restore, err := d.client.Controller.GetClusterRestores(query)
+	response, err := d.client.Controller.GetClusterRestores(query)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Service Restore",
@@ -131,10 +130,10 @@ func (d *restoresDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	if restore.Page.TotalPages > 1 {
-		for i := 1; i <= restore.Page.TotalPages; i++ {
+	if response.Page.TotalPages > 1 {
+		for i := 1; i <= response.Page.TotalPages; i++ {
 			query.PageQuery.Index = i - 1
-			totalClusters, err := d.client.Controller.GetClusterRestores(query)
+			response, err := d.client.Controller.GetClusterRestores(query)
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Unable to Read Service restore",
@@ -143,16 +142,16 @@ func (d *restoresDataSource) Read(ctx context.Context, req datasource.ReadReques
 				return
 			}
 
-			for _, mdsClusterDTO := range *totalClusters.Get() {
+			for _, restore := range *response.Get() {
 				cluster := restoreResponseModel{
-					Id:                 types.StringValue(mdsClusterDTO.Id),
-					Name:               types.StringValue(mdsClusterDTO.Name),
-					ServiceType:        types.StringValue(mdsClusterDTO.ServiceType),
-					DataPlaneId:        types.StringValue(mdsClusterDTO.DataPlaneId),
-					BackupId:           types.StringValue(mdsClusterDTO.BackupId),
-					BackupName:         types.StringValue(mdsClusterDTO.BackupName),
-					TargetInstance:     types.StringValue(mdsClusterDTO.TargetInstance),
-					TargetInstanceName: types.StringValue(mdsClusterDTO.TargetInstanceName),
+					Id:                 types.StringValue(restore.Id),
+					Name:               types.StringValue(restore.Name),
+					ServiceType:        types.StringValue(restore.ServiceType),
+					DataPlaneId:        types.StringValue(restore.DataPlaneId),
+					BackupId:           types.StringValue(restore.BackupId),
+					BackupName:         types.StringValue(restore.BackupName),
+					TargetInstance:     types.StringValue(restore.TargetInstance),
+					TargetInstanceName: types.StringValue(restore.TargetInstanceName),
 				}
 
 				restoreList = append(restoreList, cluster)
@@ -162,16 +161,16 @@ func (d *restoresDataSource) Read(ctx context.Context, req datasource.ReadReques
 		tflog.Debug(ctx, "READING dto", map[string]interface{}{"dto": restoreList})
 		state.List = append(state.List, restoreList...)
 	} else {
-		for _, mdsClusterDTO := range *restore.Get() {
+		for _, restore := range *response.Get() {
 			cluster := restoreResponseModel{
-				Id:                 types.StringValue(mdsClusterDTO.Id),
-				Name:               types.StringValue(mdsClusterDTO.Name),
-				ServiceType:        types.StringValue(mdsClusterDTO.ServiceType),
-				DataPlaneId:        types.StringValue(mdsClusterDTO.DataPlaneId),
-				BackupId:           types.StringValue(mdsClusterDTO.BackupId),
-				BackupName:         types.StringValue(mdsClusterDTO.BackupName),
-				TargetInstance:     types.StringValue(mdsClusterDTO.TargetInstance),
-				TargetInstanceName: types.StringValue(mdsClusterDTO.TargetInstanceName),
+				Id:                 types.StringValue(restore.Id),
+				Name:               types.StringValue(restore.Name),
+				ServiceType:        types.StringValue(restore.ServiceType),
+				DataPlaneId:        types.StringValue(restore.DataPlaneId),
+				BackupId:           types.StringValue(restore.BackupId),
+				BackupName:         types.StringValue(restore.BackupName),
+				TargetInstance:     types.StringValue(restore.TargetInstance),
+				TargetInstanceName: types.StringValue(restore.TargetInstanceName),
 			}
 
 			tflog.Debug(ctx, "mdsClusterDto dto", map[string]interface{}{"dto": cluster})

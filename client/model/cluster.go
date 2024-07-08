@@ -16,6 +16,7 @@ type Cluster struct {
 	Metadata             *ClusterMetadata `json:"metadata"`
 	Created              string           `json:"created"`
 	LastUpdated          string           `json:"lastUpdated"`
+	StoragePolicyName    string           `json:"storagePolicyName"`
 	IsAuthorized         bool             `json:"isAuthorized,omitempty"`
 	MaintenanceStartTime int64            `json:"maintenanceStartTime,omitempty"`
 	MaintenanceEndTime   int64            `json:"maintenanceEndTime,omitempty"`

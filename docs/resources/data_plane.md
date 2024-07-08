@@ -92,9 +92,13 @@ resource "tdh_data_plane" "example" {
 ### Required
 
 - `account_id` (String) ID of the account to use for data plane operations. Please use datasource `tdh_cloud_accounts` to get the list of available accounts.
+- `k8s_cluster_name` (String) Name of Kubernetes Cluster. Please use datasource `tdh_k8s_clusters` to get the list of available clusters from an account.
+## Notes
+- This field is non-mandatory during the TAS data plane creation.
+- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.
 - `name` (String) Name of the Data Plane
 - `provider_name` (String) Provider name
-- `services` (Set of String) Services to support on this data plane.
+- `services` (Set of String) Services to support on this data plane. Please use datasource `tdh_data_plane_helm_releases` to get the list of available services in a release.
 **Note:** TAS data-plane creation supports `postgres` only.
 - `shared` (Boolean) Shared Data Plane.
 ## Notes
@@ -118,27 +122,26 @@ Please note that TDH needs these communications between the pods to function.
 ## Notes
 - This field is non-mandatory during the TAS data plane creation.
 - It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.
-- `k8s_cluster_name` (String) Name of Kubernetes Cluster. Please use datasource `tdh_k8s_clusters` to get the list of available clusters from an account.
-## Notes
-- This field is non-mandatory during the TAS data plane creation.
-- It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.
+- `enabled` (Boolean) Whether to enable the Data plane.
+**Note:** This field should be omitted or set to true for TAS data-plane creation.
 - `network` (String) Network Details. It's a mandatory field during TAS data-plane creation.
 - `org_id` (String) Organization ID. This filed is not required during TAS data-plane creation
 - `storage_classes` (Set of String) Storage Classes on the data plane.
 ## Notes
 - This field is non-mandatory during the TAS data plane creation.
 - It is a mandatory field during Non TAS (i.e `tkgm`, `tkgs`, `openshift`)	data plane creation.
+- `sync` (Boolean) Set this to `true` whenever syncing is required.
 - `tags` (Set of String) Tags
 
 ### Read-Only
 
 - `id` (String) Auto-generated ID of the data plane after creation, and can be used to import it from TDH to terraform state.
+- `status` (String) Status of the data plane
 
 ## Import
 
 Import is supported using the following syntax:
 
 ```shell
-# Data plane can be imported by specifying the UUID.
 terraform import tdh_data_plane.example d3c49288-7b17-4e78-a6af-257b49e34e53
 ```

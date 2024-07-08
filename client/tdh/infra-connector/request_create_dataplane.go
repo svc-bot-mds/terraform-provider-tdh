@@ -26,4 +26,5 @@ type DataPlaneUpdateRequest struct {
 	DataplaneName string   `json:"dataplaneName"`
 	Tags          []string `json:"tags"`
 	AutoUpgrade   bool     `json:"autoUpgrade"`
+	Enable        bool     `json:"enable"`
 }

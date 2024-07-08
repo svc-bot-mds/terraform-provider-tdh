@@ -3,13 +3,13 @@
 page_title: "tdh_smtp Resource - tdh"
 subcategory: ""
 description: |-
-  Represents SMTP details. We can only edit the smtp details.
+  Represents SMTP details. Only updating existing SMTP details is allowed, so make sure to import it first (any alphanumeric string can be passed as ID).
   Note: For SRE only.
 ---
 
 # tdh_smtp (Resource)
 
-Represents SMTP details. We can only edit the smtp details.
+Represents SMTP details. Only updating existing SMTP details is allowed, so make sure to import it first (any alphanumeric string can be passed as ID).
 **Note:** For SRE only.
 
 ## Example Usage
@@ -35,7 +35,7 @@ resource "tdh_smtp" "custom" {
 - `auth` (String) Whether authentication is enabled or not
 - `from` (String) SMTP - Email Address
 - `host` (String) SMTP - Host Name
-- `password` (String) SMTP - Password
+- `password` (String, Sensitive) SMTP - Password
 - `port` (String) SMTP - Port. Can be passed to import an existing smtp details from TDH to terraform state during the update.
 - `tls` (String) Whether TLS is enabled or not
 - `user_name` (String) SMTP - User name
