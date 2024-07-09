@@ -182,10 +182,10 @@ func (d *certificatesDatasource) convertToTfModels(ctx *context.Context, certifi
 		}
 		tflog.Info(*ctx, "converted certificate Dto", map[string]interface{}{"dto": certificate})
 
-		if certificateDto.Deployemnts == nil {
+		if certificateDto.Deployments == nil {
 			certificate.DataPlaneCount = types.Int64Value(0)
 		} else {
-			keys := reflect.ValueOf(certificateDto.Deployemnts).Len()
+			keys := reflect.ValueOf(certificateDto.Deployments).Len()
 			certificate.DataPlaneCount = types.Int64Value(int64(keys))
 		}
 		certificateList = append(certificateList, certificate)
