@@ -15,23 +15,6 @@ Represents a certificate created on TDH, can be used to create/update/delete/imp
 ## Example Usage
 
 ```terraform
-terraform {
-  required_providers {
-    tdh = {
-      source = "hashicorp.com/svc-bot-mds/tdh"
-    }
-  }
-}
-
-provider "tdh" {
-  host = "https://tdh-cp-prnv.tdh.tendolkar.in/"
-
-  // Authentication using username and password
-  username = "sre@broadcom.com"
-  password = "VMware$123"
-  org_id   = "4ac025c6-ffad-4921-9cdd-67cbfbadb0ea"
-}
-
 data "tdh_provider_types" "create" {
 }
 
