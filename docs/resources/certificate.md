@@ -39,8 +39,9 @@ EOF
 EOF
   // non editable fields during the update
   lifecycle {
-    ignore_changes = [name, domain_name, provider_type, certificate_ca, certificate_key, certificate]
+    ignore_changes = [name, domain_name, provider_type, certificate_ca, certificate_key, certificate, tags]
   }
+  tags = ["cert", "create"]
 }
 ```
 
@@ -55,6 +56,10 @@ EOF
 - `domain_name` (String) Domain Name of the certificate on TDH.
 - `name` (String) Name of the certificate.
 - `provider_type` (String) Provider Type of certificate on TDH.
+
+### Optional
+
+- `tags` (Set of String) Tags
 
 ### Read-Only
 

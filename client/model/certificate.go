@@ -9,5 +9,6 @@ type Certificate struct {
 	CreatedBy   string      `json:"createdBy,omitempty"`
 	OrgId       string      `json:"orgId"`
 	Status      string      `json:"status"`
-	Deployemnts interface{} `json:"resources,omitempty"`
+	Deployments interface{} `json:"resources,omitempty"`
+	Tags        []string    `json:"tags,omitempty"`
 }

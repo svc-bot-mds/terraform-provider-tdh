@@ -29,7 +29,7 @@ output "values" {
 }
 
 resource "tdh_user" "sample" {
-  email      = "example-user@vmware.com"
+  email      = "example-user@broadcom.com"
   tags       = ["new-user", "viewer"]
   role_ids   = data.tdh_roles.all.list[*].role_id
   policy_ids = data.tdh_policies.all.list[*].id # filter or select all policies
@@ -51,6 +51,7 @@ resource "tdh_user" "sample" {
 
 ### Optional
 
+- `delete_from_idp` (Boolean) Setting this to `true` will completely delete user from IDP, else only service roles will be removed. By default the value is set to `false` during the user deletion
 - `policy_ids` (Set of String) IDs of service policies to be associated with user.
 - `tags` (Set of String) Tags or labels to categorise users for ease of finding.
 

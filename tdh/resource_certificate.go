@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -43,6 +44,7 @@ type CertificateResourceModel struct {
 	Certificate    types.String `tfsdk:"certificate"`
 	CertificateCA  types.String `tfsdk:"certificate_ca"`
 	CertificateKey types.String `tfsdk:"certificate_key"`
+	Tags           types.Set    `tfsdk:"tags"`
 }
 
 func (r *certificateResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -114,6 +116,11 @@ func (r *certificateResource) Schema(ctx context.Context, _ resource.SchemaReque
 				MarkdownDescription: "Certificate Key details",
 				Required:            true,
 			},
+			"tags": schema.SetAttribute{
+				Description: "Tags",
+				ElementType: types.StringType,
+				Optional:    true,
+			},
 		},
 	}
 
@@ -141,7 +148,8 @@ func (r *certificateResource) Create(ctx context.Context, req resource.CreateReq
 		Shared:         true,
 	}
 
-	tflog.Info(ctx, "req param", map[string]interface{}{"requestbody": certificateRequest})
+	plan.Tags.ElementsAs(ctx, &certificateRequest.Tags, true)
+	tflog.Info(ctx, "req param", map[string]interface{}{"request-body": certificateRequest})
 	certificate, err := r.client.InfraConnector.CreateCertificate(certificateRequest)
 	if err != nil {
 		apiErr := core.ApiError{}
@@ -155,7 +163,7 @@ func (r *certificateResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	// Map response body to schema and populate Computed attribute values
-	if saveFromCertificateCreateResponse(&plan, certificate) != 0 {
+	if saveFromCertificateCreateResponse(&plan, certificate, &resp.Diagnostics, &ctx) != 0 {
 		return
 	}
 
@@ -210,7 +218,7 @@ func (r *certificateResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	if saveFromCertificateCreateResponse(&state, &certificate) != 0 {
+	if saveFromCertificateCreateResponse(&state, &certificate, &resp.Diagnostics, &ctx) != 0 {
 		return
 	}
 
@@ -270,7 +278,7 @@ func (r *certificateResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	if saveFromCertificateCreateResponse(&state, &certificate) != 0 {
+	if saveFromCertificateCreateResponse(&state, &certificate, &resp.Diagnostics, &ctx) != 0 {
 		return
 	}
 
@@ -285,13 +293,18 @@ func (r *certificateResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func saveFromCertificateCreateResponse(state *CertificateResourceModel,
-	certificateResponse *model.Certificate) int8 {
+	certificateResponse *model.Certificate, diagnostics *diag.Diagnostics, ctx *context.Context) int8 {
 	state.Name = types.StringValue(certificateResponse.Name)
 	state.DomainName = types.StringValue(certificateResponse.DomainName)
 	state.ID = types.StringValue(certificateResponse.Id)
 	state.ProviderType = types.StringValue(certificateResponse.Provider)
 	state.ExpirationTime = types.StringValue(certificateResponse.ExpiryTime)
 	state.CreatedBy = types.StringValue(certificateResponse.CreatedBy)
+	list, diags := types.SetValueFrom(*ctx, types.StringType, certificateResponse.Tags)
+	if diagnostics.Append(diags...); diagnostics.HasError() {
+		return 1
+	}
+	state.Tags = list
 	return 0
 }
 

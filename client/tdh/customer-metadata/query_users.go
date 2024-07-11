@@ -8,3 +8,7 @@ type UsersQuery struct {
 	Names       []string `schema:"name,omitempty"`
 	model.PageQuery
 }
+
+type DeleteUserQuery struct {
+	DeleteFromIdp bool `schema:"deleteFromIDP"`
+}
