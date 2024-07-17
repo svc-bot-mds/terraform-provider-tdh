@@ -99,8 +99,6 @@ func (s *Service) processAuthResponse(response *TokenResponse) error {
 
 	if found {
 		s.Api.IsSre = true
-	} else {
-		s.Api.IsSre = false
 	}
 
 	if s.Api.AuthToUse.OAuthAppType == oauth_type.ApiToken {

@@ -47,7 +47,7 @@ type userResourceModel struct {
 	OrgRoles      types.List   `tfsdk:"org_roles"`
 	Tags          types.Set    `tfsdk:"tags"`
 	DeleteFromIdp types.Bool   `tfsdk:"delete_from_idp"`
-  Organizations types.Set    `tfsdk:"organizations"`
+	Organizations types.Set    `tfsdk:"organizations"`
 	InviteLink    types.String `tfsdk:"invite_link"`
 }
 
@@ -217,33 +217,12 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	plan.Tags.ElementsAs(ctx, &userRequest.Tags, true)
 
-	if r.client.Root.IsSre {
-		if err := r.client.CustomerMetadata.CreateOrgOrSREUser(&userRequest); err != nil {
-			if plan.Organizations.IsNull() {
-				resp.Diagnostics.AddError(
-					"Submitting request to create an Organization User",
-					"Could not create Organization User, unexpected error: "+err.Error(),
-				)
-			} else {
-				resp.Diagnostics.AddError(
-					"Submitting request to create SRE User",
-					"Could not create SRE User, unexpected error: "+err.Error(),
-				)
-			}
-			return
-		}
-	} else {
-		if err := r.client.CustomerMetadata.CreateUser(&userRequest); err != nil {
-			resp.Diagnostics.AddError(
-				"Submitting request to create User",
-				"Could not create User, unexpected error: "+err.Error(),
-			)
-			return
-		}
-	}
-
-	if r.client.Root.IsSre {
-
+	if err := r.client.CustomerMetadata.CreateUser(&userRequest); err != nil {
+		resp.Diagnostics.AddError(
+			"Submitting request to create User",
+			"Could not create User, unexpected error: "+err.Error(),
+		)
+		return
 	}
 
 	userQuery := customer_metadata.UsersQuery{}
@@ -252,7 +231,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	} else {
 		userQuery.Emails = []string{plan.Email.ValueString()}
 	}
-	users, err := r.client.CustomerMetadata.GetUsers(&userQuery, r.client.Root.IsSre)
+	users, err := r.client.CustomerMetadata.GetUsers(&userQuery)
 	tflog.Info(ctx, "yo resp: ", map[string]interface{}{
 		"roles": users,
 	})
@@ -279,7 +258,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	// Map response body to schema and populate Computed attribute values
 	createdUser := &(*users.Get())[0]
 
-	if saveFromUserResponse(&ctx, &resp.Diagnostics, &plan, createdUser, r.client.Root.IsSre) != 0 {
+	if r.saveFromUserResponse(&ctx, &resp.Diagnostics, &plan, createdUser) != 0 {
 		return
 	}
 
@@ -348,7 +327,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	//Update resource state with updated items and timestamp
-	if saveFromUserResponse(&ctx, &resp.Diagnostics, &plan, user, false) != 0 {
+	if r.saveFromUserResponse(&ctx, &resp.Diagnostics, &plan, user) != 0 {
 		return
 	}
 
@@ -410,7 +389,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	query := &customer_metadata.UsersQuery{}
 	if r.client.Root.IsSre {
-		user, err := r.client.CustomerMetadata.GetUsers(query, r.client.Root.IsSre)
+		user, err := r.client.CustomerMetadata.GetUsers(query)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Reading TDH user",
@@ -421,7 +400,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		if user.Page.TotalPages > 1 {
 			for i := 1; i <= user.Page.TotalPages; i++ {
 				query.PageQuery.Index = i - 1
-				page, err := r.client.CustomerMetadata.GetUsers(query, r.client.Root.IsSre)
+				page, err := r.client.CustomerMetadata.GetUsers(query)
 				if err != nil {
 					resp.Diagnostics.AddError(
 						"Unable to Read User",
@@ -432,7 +411,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 				for _, dto := range *page.Get() {
 					if dto.Id == state.ID.ValueString() {
-						if saveFromUserResponse(&ctx, &resp.Diagnostics, &state, &dto, false) != 0 {
+						if r.saveFromUserResponse(&ctx, &resp.Diagnostics, &state, &dto) != 0 {
 							return
 						}
 					}
@@ -442,7 +421,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		} else {
 			for _, dto := range *user.Get() {
 				if dto.Id == state.ID.ValueString() {
-					if saveFromUserResponse(&ctx, &resp.Diagnostics, &state, &dto, false) != 0 {
+					if r.saveFromUserResponse(&ctx, &resp.Diagnostics, &state, &dto) != 0 {
 						return
 					}
 				}
@@ -459,7 +438,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 			return
 		}
 		// Overwrite items with refreshed state
-		if saveFromUserResponse(&ctx, &resp.Diagnostics, &state, user, false) != 0 {
+		if r.saveFromUserResponse(&ctx, &resp.Diagnostics, &state, user) != 0 {
 			return
 		}
 	}
@@ -474,7 +453,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	tflog.Info(ctx, "END__Read")
 }
 
-func saveFromUserResponse(ctx *context.Context, diagnostics *diag.Diagnostics, state *userResourceModel, user *model.User, isSRE bool) int8 {
+func (r *userResource) saveFromUserResponse(ctx *context.Context, diagnostics *diag.Diagnostics, state *userResourceModel, user *model.User) int8 {
 	tflog.Info(*ctx, "Saving response to resourceModel state/plan", map[string]interface{}{"user": *user})
 
 	roles, diags := convertFromRolesDto(ctx, &user.ServiceRoles)
@@ -501,7 +480,7 @@ func saveFromUserResponse(ctx *context.Context, diagnostics *diag.Diagnostics, s
 	}
 	state.Tags = tags
 	state.Username = types.StringValue(user.Name)
-	if isSRE {
+	if r.client.Root.IsSre {
 		state.InviteLink = types.StringValue(user.InviteLink)
 	}
 	return 0
