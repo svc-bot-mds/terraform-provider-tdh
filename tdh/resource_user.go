@@ -47,7 +47,7 @@ type userResourceModel struct {
 	OrgRoles      types.List   `tfsdk:"org_roles"`
 	Tags          types.Set    `tfsdk:"tags"`
 	DeleteFromIdp types.Bool   `tfsdk:"delete_from_idp"`
-	Organizations types.Set    `tfsdk:"organizations"`
+  Organizations types.Set    `tfsdk:"organizations"`
 	InviteLink    types.String `tfsdk:"invite_link"`
 }
 
