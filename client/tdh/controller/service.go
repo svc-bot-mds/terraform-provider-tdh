@@ -255,6 +255,21 @@ func (s *Service) GetClusterMetaData(id string) (*model.ClusterMetaData, error) 
 	return &response, err
 }
 
+// GetOrganizations - Returns the cluster metadata by ID
+func (s *Service) GetOrganizations(query FleetsQuery) (model.Paged[model.OrgModel], error) {
+	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Customers)
+	var response model.Paged[model.OrgModel]
+	if query.Size == 0 {
+		query.Size = defaultPage.Size
+	}
+	_, err := s.Api.Get(&urlPath, query, &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, err
+}
+
 func (s *Service) GetClusterCountByService() ([]model.ClusterCountByService, error) {
 	var response []model.ClusterCountByService
 

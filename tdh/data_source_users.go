@@ -87,7 +87,7 @@ func (d *usersDatasource) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	query := &customer_metadata.UsersQuery{}
 
-	users, err := d.client.CustomerMetadata.GetUsers(query)
+	users, err := d.client.CustomerMetadata.GetUsers(query, d.client.Root.IsSre)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read TDH User Accounts",
@@ -99,7 +99,7 @@ func (d *usersDatasource) Read(ctx context.Context, req datasource.ReadRequest, 
 	if users.Page.TotalPages > 1 {
 		for i := 1; i <= users.Page.TotalPages; i++ {
 			query.PageQuery.Index = i - 1
-			totalUsers, err := d.client.CustomerMetadata.GetUsers(query)
+			totalUsers, err := d.client.CustomerMetadata.GetUsers(query, d.client.Root.IsSre)
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Unable to Read TDH User Accounts",

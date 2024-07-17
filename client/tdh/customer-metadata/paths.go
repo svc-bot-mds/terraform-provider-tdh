@@ -6,4 +6,5 @@ const (
 	LocalUsers = "local-users"
 	Types      = "types"
 	OAuthApps  = "oauthapps"
+	TdhUsers   = "tdh-users"
 )

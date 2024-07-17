@@ -46,14 +46,18 @@ func (s *Service) GetPolicies(query *PoliciesQuery) (model.Paged[model.Policy], 
 }
 
 // GetUsers - Return list of Users
-func (s *Service) GetUsers(query *UsersQuery) (model.Paged[model.User], error) {
+func (s *Service) GetUsers(query *UsersQuery, isSRE bool) (model.Paged[model.User], error) {
 	var response model.Paged[model.User]
 	if query == nil {
 		return response, fmt.Errorf("query cannot be nil")
 	}
-
 	query.AccountType = account_type.USER_ACCOUNT
-	reqUrl := fmt.Sprintf("%s/%s", s.Endpoint, Users)
+	var reqUrl string
+	if isSRE {
+		reqUrl = fmt.Sprintf("%s/%s", s.Endpoint, TdhUsers)
+	} else {
+		reqUrl = fmt.Sprintf("%s/%s", s.Endpoint, Users)
+	}
 
 	if query.Size == 0 {
 		query.Size = defaultPage.Size
@@ -73,6 +77,21 @@ func (s *Service) CreateUser(requestBody *CreateUserRequest) error {
 	}
 	requestBody.AccountType = account_type.USER_ACCOUNT
 	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Users)
+
+	_, err := s.Api.Post(&urlPath, requestBody, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CreateOrgOrSREUser - Submits a request to create organization/SRE user
+func (s *Service) CreateOrgOrSREUser(requestBody *CreateUserRequest) error {
+	if requestBody == nil {
+		return fmt.Errorf("requestBody cannot be nil")
+	}
+	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, TdhUsers)
 
 	_, err := s.Api.Post(&urlPath, requestBody, nil)
 	if err != nil {

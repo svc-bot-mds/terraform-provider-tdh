@@ -8,4 +8,5 @@ type User struct {
 	OrgRoles     []RoleMini `json:"orgRoles,omitempty"`
 	ServiceRoles []RoleMini `json:"serviceRoles"`
 	Tags         []string   `json:"tags"`
+	InviteLink   string     `json:"inviteLink,omitempty"`
 }

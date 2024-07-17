@@ -14,4 +14,5 @@ type Roles struct {
 type RoleMini struct {
 	RoleID string `json:"roleId"`
 	Name   string `json:"name"`
+	Type   string `json:"type"`
 }

@@ -239,6 +239,7 @@ func (p *tdhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewClusterVersionsDataSource,
 		NewServiceExtensionsDataSource,
 		NewClusterTargetVersionsDataSource,
+		NewOrganizationsDatasource,
 	}
 }
 

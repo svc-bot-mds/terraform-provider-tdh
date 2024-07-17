@@ -21,6 +21,7 @@ type Root struct {
 	HttpClient  *http.Client
 	Token       *string
 	TokenGetter func() (any, error)
+	IsSre       bool
 }
 
 func NewService(hostUrl *string, endPoint string, root *Root) *Service {

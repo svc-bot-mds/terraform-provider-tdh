@@ -19,4 +19,5 @@ const (
 	Restore           = "restore"
 	Versions          = "versions"
 	Extensions        = "extensions"
+	Customers         = "mdscustomers"
 )
