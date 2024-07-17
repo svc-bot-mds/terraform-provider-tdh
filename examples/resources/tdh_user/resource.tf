@@ -1,20 +1,3 @@
-terraform {
-  required_providers {
-    tdh = {
-      source = "hashicorp.com/svc-bot-mds/tdh"
-    }
-  }
-}
-
-provider "tdh" {
-  host = "https://tdh-cp-dev.tdh.ak.com"
-
-  // Authentication using username and password
-  username = "sre@broadcom.com"
-  password = "Admin!23"
-  org_id = "9ba341de-f018-42fa-8085-257032bfaf0e"
-}
-
 data "tdh_roles" "all" {
 }
 
