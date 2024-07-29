@@ -6,6 +6,7 @@ type UsersQuery struct {
 	AccountType string   `schema:"accountType,omitempty"`
 	Emails      []string `schema:"email,omitempty"`
 	Names       []string `schema:"name,omitempty"`
+	Email       string   `schema:"email,omitempty"`
 	model.PageQuery
 }
 

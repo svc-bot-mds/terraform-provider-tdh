@@ -86,9 +86,22 @@ func (s *Service) processAuthResponse(response *TokenResponse) error {
 	if token == nil {
 		return err
 	}
-	if s.Api.AuthToUse.OAuthAppType == oauth_type.ApiToken {
-		claims, _ := token.Claims.(jwt.MapClaims)
+	claims, _ := token.Claims.(jwt.MapClaims)
+	var perms = claims["perms"]
+	// Check if the target string StgManagedDataService:SRE exists in the response array
+	found := false
+	for _, item := range perms.([]interface{}) {
+		if item == "StgManagedDataService:SRE" {
+			found = true
+			break
+		}
+	}
 
+	if found {
+		s.Api.IsSre = true
+	}
+
+	if s.Api.AuthToUse.OAuthAppType == oauth_type.ApiToken {
 		s.Api.OrgId = claims["context_name"].(string)
 	}
 

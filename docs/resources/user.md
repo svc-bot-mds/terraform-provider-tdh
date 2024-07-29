@@ -3,12 +3,12 @@
 page_title: "tdh_user Resource - tdh"
 subcategory: ""
 description: |-
-  Represents an User registered on TDH, can be used to create/update/delete/import an user.
+  Represents an User registered on TDH, can be used to create/update/delete/import an user. Only SRE can create another SRE user by not passing values to organizations field. The only operation allowed for SRE is creation of an Organization/SRE user.
 ---
 
 # tdh_user (Resource)
 
-Represents an User registered on TDH, can be used to create/update/delete/import an user.
+Represents an User registered on TDH, can be used to create/update/delete/import an user. Only `SRE` can create another `SRE` user by not passing values to `organizations` field. The only operation allowed for `SRE` is creation of an `Organization/SRE` user.
 
 ## Example Usage
 
@@ -27,6 +27,11 @@ output "values" {
     policies = data.tdh_policies.all
   }
 }
+data "tdh_organizations" "all" {}
+
+output "organizations" {
+  value = data.tdh_organizations.all
+}
 
 resource "tdh_user" "sample" {
   email      = "example-user@broadcom.com"
@@ -34,6 +39,7 @@ resource "tdh_user" "sample" {
   role_ids   = data.tdh_roles.all.list[*].role_id
   policy_ids = data.tdh_policies.all.list[*].id # filter or select all policies
 
+  organizations = [for s in data.tdh_organizations.all.list : s.id if !s.sre_org] # filter the organization data source to get the non sre organizations
   // non editable fields
   lifecycle {
     ignore_changes = [email]
@@ -47,17 +53,19 @@ resource "tdh_user" "sample" {
 ### Required
 
 - `email` (String) Updating the email results in deletion of existing user and new user with updated email/name is created.
-- `role_ids` (Set of String) One or more of (Admin, Developer, Viewer, Operator, Compliance Manager). Please make use of `datasource_roles` to get role_ids.
 
 ### Optional
 
 - `delete_from_idp` (Boolean) Setting this to `true` will completely delete user from IDP, else only service roles will be removed. By default the value is set to `false` during the user deletion
+- `organizations` (Set of String) Set of Organizations Ids. This field is used only by SRE for a creation of the organization users. Use the organization with 	`sre_org` flag set to false
 - `policy_ids` (Set of String) IDs of service policies to be associated with user.
+- `role_ids` (Set of String) One or more of (Admin, Developer, Viewer, Operator, Compliance Manager). Please make use of `datasource_roles` to get role_ids. This is a mandatory for the User creation with Non-SRE credentials
 - `tags` (Set of String) Tags or labels to categorise users for ease of finding.
 
 ### Read-Only
 
 - `id` (String) Auto-generated ID after creating an user, and can be passed to import an existing user from TDH to terraform state.
+- `invite_link` (String) User Invite Link . Only visible for SRE
 - `org_roles` (Attributes List) Roles that determines access level of the user on TDH. (see [below for nested schema](#nestedatt--org_roles))
 - `service_roles` (Attributes List) Roles that determines access level inside services on TDH. (see [below for nested schema](#nestedatt--service_roles))
 - `status` (String) Active status of user on TDH.
@@ -85,5 +93,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import tdh_user.example d3c49288-7b17-4e78-a6af-257b49e34e53
+terraform import tdh_user.sample d3c49288-7b17-4e78-a6af-257b49e34e53
 ```

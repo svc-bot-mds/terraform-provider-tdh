@@ -47,6 +47,8 @@ type userResourceModel struct {
 	OrgRoles      types.List   `tfsdk:"org_roles"`
 	Tags          types.Set    `tfsdk:"tags"`
 	DeleteFromIdp types.Bool   `tfsdk:"delete_from_idp"`
+	Organizations types.Set    `tfsdk:"organizations"`
+	InviteLink    types.String `tfsdk:"invite_link"`
 }
 
 type RolesModel struct {
@@ -81,7 +83,7 @@ func (r *userResource) Schema(ctx context.Context, _ resource.SchemaRequest, res
 	tflog.Info(ctx, "INIT__Schema")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Represents an User registered on TDH, can be used to create/update/delete/import an user.",
+		MarkdownDescription: "Represents an User registered on TDH, can be used to create/update/delete/import an user. Only `SRE` can create another `SRE` user by not passing values to `organizations` field. The only operation allowed for `SRE` is creation of an `Organization/SRE` user.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Auto-generated ID after creating an user, and can be passed to import an existing user from TDH to terraform state.",
@@ -121,8 +123,8 @@ func (r *userResource) Schema(ctx context.Context, _ resource.SchemaRequest, res
 				},
 			},
 			"role_ids": schema.SetAttribute{
-				MarkdownDescription: "One or more of (Admin, Developer, Viewer, Operator, Compliance Manager). Please make use of `datasource_roles` to get role_ids.",
-				Required:            true,
+				MarkdownDescription: "One or more of (Admin, Developer, Viewer, Operator, Compliance Manager). Please make use of `datasource_roles` to get role_ids. This is a mandatory for the User creation with Non-SRE credentials",
+				Optional:            true,
 				ElementType:         types.StringType,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
@@ -168,6 +170,15 @@ func (r *userResource) Schema(ctx context.Context, _ resource.SchemaRequest, res
 					},
 				},
 			},
+			"organizations": schema.SetAttribute{
+				MarkdownDescription: "Set of Organizations Ids. This field is used only by SRE for a creation of the organization users. Use the organization with 	`sre_org` flag set to false",
+				Optional:            true,
+				ElementType:         types.StringType,
+			},
+			"invite_link": schema.StringAttribute{
+				Description: "User Invite Link . Only visible for SRE",
+				Computed:    true,
+			},
 		},
 	}
 
@@ -194,11 +205,18 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	// Generate API request body from plan
 	userRequest := customer_metadata.CreateUserRequest{
-		Usernames:    []string{plan.Email.ValueString()},
-		ServiceRoles: rolesReq,
+		Usernames: []string{plan.Email.ValueString()},
 	}
+	if r.client.Root.IsSre {
+		plan.Organizations.ElementsAs(ctx, &userRequest.Organizations, true)
+	}
+	if (r.client.Root.IsSre && !plan.Organizations.IsNull()) || !r.client.Root.IsSre {
+		userRequest.ServiceRoles = rolesReq
+		plan.PolicyIds.ElementsAs(ctx, &userRequest.PolicyIds, true)
+	}
+
 	plan.Tags.ElementsAs(ctx, &userRequest.Tags, true)
-	plan.PolicyIds.ElementsAs(ctx, &userRequest.PolicyIds, true)
+
 	if err := r.client.CustomerMetadata.CreateUser(&userRequest); err != nil {
 		resp.Diagnostics.AddError(
 			"Submitting request to create User",
@@ -207,10 +225,16 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	users, err := r.client.CustomerMetadata.GetUsers(&customer_metadata.UsersQuery{
-		Emails: []string{plan.Email.ValueString()},
+	userQuery := customer_metadata.UsersQuery{}
+	if r.client.Root.IsSre {
+		userQuery.Email = plan.Email.ValueString()
+	} else {
+		userQuery.Emails = []string{plan.Email.ValueString()}
+	}
+	users, err := r.client.CustomerMetadata.GetUsers(&userQuery)
+	tflog.Info(ctx, "yo resp: ", map[string]interface{}{
+		"roles": users,
 	})
-
 	if err != nil {
 		resp.Diagnostics.AddError("Fetching user",
 			"Could not fetch users, unexpected error: "+err.Error(),
@@ -234,7 +258,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	// Map response body to schema and populate Computed attribute values
 	createdUser := &(*users.Get())[0]
 
-	if saveFromUserResponse(&ctx, &resp.Diagnostics, &plan, createdUser) != 0 {
+	if r.saveFromUserResponse(&ctx, &resp.Diagnostics, &plan, createdUser) != 0 {
 		return
 	}
 
@@ -259,6 +283,13 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
+	if r.client.Root.IsSre {
+		resp.Diagnostics.AddError(
+			"Updating TDH User",
+			"SRE Cannot update the user details",
+		)
+		return
+	}
 	// Generate API request body from plan
 	updateRequest := customer_metadata.UserUpdateRequest{}
 	plan.Tags.ElementsAs(ctx, &updateRequest.Tags, true)
@@ -296,7 +327,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	//Update resource state with updated items and timestamp
-	if saveFromUserResponse(&ctx, &resp.Diagnostics, &plan, user) != 0 {
+	if r.saveFromUserResponse(&ctx, &resp.Diagnostics, &plan, user) != 0 {
 		return
 	}
 
@@ -316,6 +347,14 @@ func (r *userResource) Delete(ctx context.Context, request resource.DeleteReques
 	diags := request.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if r.client.Root.IsSre {
+		resp.Diagnostics.AddError(
+			"Deleting TDH User",
+			"SRE Cannot delete the user",
+		)
 		return
 	}
 
@@ -348,19 +387,60 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	// Get refreshed cluster value from TDH
-	user, err := r.client.CustomerMetadata.GetUser(state.ID.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Reading TDH user",
-			"Could not read TDH user ID "+state.ID.ValueString()+": "+err.Error(),
-		)
-		return
-	}
+	query := &customer_metadata.UsersQuery{}
+	if r.client.Root.IsSre {
+		user, err := r.client.CustomerMetadata.GetUsers(query)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Reading TDH user",
+				"Could not read TDH user ID "+state.ID.ValueString()+": "+err.Error(),
+			)
+			return
+		}
+		if user.Page.TotalPages > 1 {
+			for i := 1; i <= user.Page.TotalPages; i++ {
+				query.PageQuery.Index = i - 1
+				page, err := r.client.CustomerMetadata.GetUsers(query)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						"Unable to Read User",
+						err.Error(),
+					)
+					return
+				}
 
-	// Overwrite items with refreshed state
-	if saveFromUserResponse(&ctx, &resp.Diagnostics, &state, user) != 0 {
-		return
+				for _, dto := range *page.Get() {
+					if dto.Id == state.ID.ValueString() {
+						if r.saveFromUserResponse(&ctx, &resp.Diagnostics, &state, &dto) != 0 {
+							return
+						}
+					}
+				}
+			}
+
+		} else {
+			for _, dto := range *user.Get() {
+				if dto.Id == state.ID.ValueString() {
+					if r.saveFromUserResponse(&ctx, &resp.Diagnostics, &state, &dto) != 0 {
+						return
+					}
+				}
+			}
+		}
+	} else {
+		// Get refreshed cluster value from TDH
+		user, err := r.client.CustomerMetadata.GetUser(state.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Reading TDH user",
+				"Could not read TDH user ID "+state.ID.ValueString()+": "+err.Error(),
+			)
+			return
+		}
+		// Overwrite items with refreshed state
+		if r.saveFromUserResponse(&ctx, &resp.Diagnostics, &state, user) != 0 {
+			return
+		}
 	}
 
 	// Set refreshed state
@@ -373,7 +453,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	tflog.Info(ctx, "END__Read")
 }
 
-func saveFromUserResponse(ctx *context.Context, diagnostics *diag.Diagnostics, state *userResourceModel, user *model.User) int8 {
+func (r *userResource) saveFromUserResponse(ctx *context.Context, diagnostics *diag.Diagnostics, state *userResourceModel, user *model.User) int8 {
 	tflog.Info(*ctx, "Saving response to resourceModel state/plan", map[string]interface{}{"user": *user})
 
 	roles, diags := convertFromRolesDto(ctx, &user.ServiceRoles)
@@ -400,7 +480,9 @@ func saveFromUserResponse(ctx *context.Context, diagnostics *diag.Diagnostics, s
 	}
 	state.Tags = tags
 	state.Username = types.StringValue(user.Name)
-
+	if r.client.Root.IsSre {
+		state.InviteLink = types.StringValue(user.InviteLink)
+	}
 	return 0
 }
 

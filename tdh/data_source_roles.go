@@ -97,12 +97,15 @@ func (d *rolesDatasource) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	// Extract the roles from the unmarshalled struct
 	for _, role := range rolesResponse.Embedded.ServiceRoleDTO[0].Roles {
-		roleList := rolesModel{
-			RoleId:      types.StringValue(role.RoleID),
-			Name:        types.StringValue(role.Name),
-			Description: types.StringValue(role.Description),
+		// list only customer role similar to ui
+		if role.RoleMini.Type == "customer" {
+			roleList := rolesModel{
+				RoleId:      types.StringValue(role.RoleID),
+				Name:        types.StringValue(role.Name),
+				Description: types.StringValue(role.Description),
+			}
+			state.List = append(state.List, roleList)
 		}
-		state.List = append(state.List, roleList)
 	}
 	state.Id = types.StringValue(common.DataSource + common.RolesId)
 	// Set state

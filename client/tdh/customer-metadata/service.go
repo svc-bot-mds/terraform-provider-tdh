@@ -51,9 +51,13 @@ func (s *Service) GetUsers(query *UsersQuery) (model.Paged[model.User], error) {
 	if query == nil {
 		return response, fmt.Errorf("query cannot be nil")
 	}
-
 	query.AccountType = account_type.USER_ACCOUNT
-	reqUrl := fmt.Sprintf("%s/%s", s.Endpoint, Users)
+	var reqUrl string
+	if s.Api.IsSre {
+		reqUrl = fmt.Sprintf("%s/%s", s.Endpoint, TdhUsers)
+	} else {
+		reqUrl = fmt.Sprintf("%s/%s", s.Endpoint, Users)
+	}
 
 	if query.Size == 0 {
 		query.Size = defaultPage.Size
@@ -72,9 +76,14 @@ func (s *Service) CreateUser(requestBody *CreateUserRequest) error {
 		return fmt.Errorf("requestBody cannot be nil")
 	}
 	requestBody.AccountType = account_type.USER_ACCOUNT
-	urlPath := fmt.Sprintf("%s/%s", s.Endpoint, Users)
+	var reqUrl string
+	if s.Api.IsSre {
+		reqUrl = fmt.Sprintf("%s/%s", s.Endpoint, TdhUsers)
+	} else {
+		reqUrl = fmt.Sprintf("%s/%s", s.Endpoint, Users)
+	}
 
-	_, err := s.Api.Post(&urlPath, requestBody, nil)
+	_, err := s.Api.Post(&reqUrl, requestBody, nil)
 	if err != nil {
 		return err
 	}
