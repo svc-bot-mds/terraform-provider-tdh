@@ -68,7 +68,7 @@ resource "tdh_data_plane" "example" {
   auto_upgrade            = true
   services                = data.tdh_data_plane_helm_releases.all.list[0].services
   # can be fetched from the response of "tdh_data_plane_helm_releases" services field
-  cp_bootstrapped_cluster = false
+  cp_bootstrapped_cluster = false # set this to "false" for dedicated data plane creation
   # set to true to Onboard Data Plane on TDH Control Plane
   configure_core_dns      = true
 
@@ -117,7 +117,7 @@ resource "tdh_data_plane" "example" {
 - `configure_core_dns` (Boolean) Turn on publishing the TDH's DNS to core DNS of the K8S cluster. This will enable communication between pods of the control plane and the data plane with control plane pods. Disable this only when the TDH base URL has a forwarder set in corporate DNS or for some specific use case.
 Please note that TDH needs these communications between the pods to function.
 - `cp_bootstrapped_cluster` (Boolean) Whether to onboard Data Plane on a K8s cluster running TDH Control Plane.
-**Note:** Not a required field during TAS data-plane creation.
+**Note:** Not a required field during TAS data-plane creation. For a Dedicated Data Plane creation this filed should be set to `false`.
 - `data_plane_release_id` (String) ID of the Helm Release. Please use datasource `tdh_data_plane_helm_releases` to get this.
 ## Notes
 - This field is non-mandatory during the TAS data plane creation.
