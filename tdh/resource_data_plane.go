@@ -158,7 +158,7 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 			},
 			"cp_bootstrapped_cluster": schema.BoolAttribute{
 				MarkdownDescription: "Whether to onboard Data Plane on a K8s cluster running TDH Control Plane.\n" +
-					"**Note:** Not a required field during TAS data-plane creation.",
+					"**Note:** Not a required field during TAS data-plane creation. For a Dedicated Data Plane creation this filed should be set to `false`.",
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
@@ -260,7 +260,7 @@ func (r *dataPlaneResource) Create(ctx context.Context, req resource.CreateReque
 		ManagedDns:            true,
 		Shared:                true,
 		AutoUpgrade:           false,
-		CpBootstrappedCluster: false,
+		CpBootstrappedCluster: plan.CpBootstrappedCluster.ValueBool(),
 		ConfigureCoreDns:      true,
 	}
 
@@ -639,6 +639,11 @@ func (r *dataPlaneResource) validateDpCreateInputs(plan dataPlaneResourceModel, 
 			return diag
 		} else if !plan.OrgId.IsNull() && plan.Shared.ValueBool() == true {
 			diag.AddError("Invalid inputs", "Cannot create shared data plane for the provider. Please Set the value of 'org_id' to null")
+			return diag
+		}
+
+		if plan.Shared.ValueBool() == false && !plan.OrgId.IsNull() && plan.CpBootstrappedCluster.ValueBool() {
+			diag.AddError("Invalid inputs", "Cannot create dedicated data plane for the provider. Please Set the value of 'cp_bootstrapped_cluster' to false")
 			return diag
 		}
 
