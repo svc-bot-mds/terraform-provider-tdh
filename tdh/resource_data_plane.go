@@ -158,7 +158,7 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 			},
 			"cp_bootstrapped_cluster": schema.BoolAttribute{
 				MarkdownDescription: "Whether to onboard Data Plane on a K8s cluster running TDH Control Plane.\n" +
-					"**Note:** Not a required field during TAS data-plane creation.For a Dedicated Data Plane creation this filed should be set to `false`.",
+					"**Note:** Not a required field during TAS data-plane creation. For a Dedicated Data Plane creation this filed should be set to `false`.",
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
