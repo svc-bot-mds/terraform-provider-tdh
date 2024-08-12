@@ -334,7 +334,7 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 						Optional:            true,
 					},
 					"extensions": schema.SetAttribute{
-						MarkdownDescription: "Set of extensions to be enabled on the cluster *(Specific to service: `POSTGRES`)*. Available values can be fetched using datasource `tdh_service_extensions`.",
+						MarkdownDescription: "Set of extensions (`name`) to be enabled on the cluster *(Specific to service: `POSTGRES`)*. Available values can be fetched using datasource `tdh_service_extensions`.",
 						Optional:            true,
 						ElementType:         types.StringType,
 					},

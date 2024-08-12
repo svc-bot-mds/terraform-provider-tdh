@@ -141,7 +141,7 @@ Required:
 Optional:
 
 - `database` (String) Database name in the cluster. **Required for services:** `POSTGRES` & `MYSQL`.
-- `extensions` (Set of String) Set of extensions to be enabled on the cluster *(Specific to service: `POSTGRES`)*. Available values can be fetched using datasource `tdh_service_extensions`.
+- `extensions` (Set of String) Set of extensions (`name`) to be enabled on the cluster *(Specific to service: `POSTGRES`)*. Available values can be fetched using datasource `tdh_service_extensions`.
 - `object_storage_id` (String) ID of the object storage for backup operations. Can be fetched using datasource `tdh_object_storages`.
 
 

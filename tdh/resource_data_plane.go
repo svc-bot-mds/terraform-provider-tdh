@@ -139,7 +139,7 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				},
 			},
 			"enabled": schema.BoolAttribute{
-				MarkdownDescription: "Whether to enable the Data plane.\n" +
+				MarkdownDescription: "Whether to enable or disable the Data plane after creation.\n" +
 					"**Note:** This field should be omitted or set to true for TAS data-plane creation.",
 				Optional: true,
 				Required: false,
@@ -165,7 +165,7 @@ func (r *dataPlaneResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				},
 			},
 			"org_id": schema.StringAttribute{
-				Description: "Organization ID. This filed is not required during TAS data-plane creation",
+				Description: "Organization ID. This field is not required during TAS data-plane creation",
 				Optional:    true,
 				Validators: []validator.String{
 					validators.UUIDValidator{},
